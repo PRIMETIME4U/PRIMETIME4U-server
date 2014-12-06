@@ -23,17 +23,16 @@ from datetime import datetime
 PY2 = sys.version_info[0] == 2
 if PY2:
     from itertools import izip
-
     text_type = unicode
     int_to_byte = chr
     number_types = (int, long, float)
 else:
     from functools import reduce
-
     izip = zip
     text_type = str
     int_to_byte = operator.methodcaller('to_bytes', 1, 'big')
     number_types = (int, float)
+
 
 try:
     import simplejson as json
@@ -115,7 +114,6 @@ class BadData(Exception):
 
     if PY2:
         __unicode__ = __str__
-
         def __str__(self):
             return self.__unicode__().encode('utf-8')
 
@@ -131,7 +129,7 @@ class BadPayload(BadData):
 
     def __init__(self, message, original_error=None):
         BadData.__init__(self, message)
-        # : If available, the error that indicates why the payload
+        #: If available, the error that indicates why the payload
         #: was not valid.  This might be `None`.
         self.original_error = original_error
 
@@ -144,7 +142,7 @@ class BadSignature(BadData):
 
     def __init__(self, message, payload=None):
         BadData.__init__(self, message)
-        # : The payload that failed the signature test.  In some
+        #: The payload that failed the signature test.  In some
         #: situations you might still want to inspect this, even if
         #: you know it was tampered with.
         #:
@@ -160,7 +158,7 @@ class BadTimeSignature(BadSignature):
     def __init__(self, message, payload=None, date_signed=None):
         BadSignature.__init__(self, message, payload)
 
-        # : If the signature expired this exposes the date of when the
+        #: If the signature expired this exposes the date of when the
         #: signature was created.  This can be helpful in order to
         #: tell the user how long a link has been gone stale.
         #:
@@ -232,7 +230,7 @@ class NoneAlgorithm(SigningAlgorithm):
 class HMACAlgorithm(SigningAlgorithm):
     """This class provides signature generation using HMACs."""
 
-    # : The digest method to use with the MAC algorithm.  This defaults to sha1
+    #: The digest method to use with the MAC algorithm.  This defaults to sha1
     #: but can be changed for any other function in the hashlib module.
     default_digest_method = staticmethod(hashlib.sha1)
 
@@ -267,7 +265,7 @@ class Signer(object):
         `algorithm` was added as an argument to the class constructor.
     """
 
-    # : The digest method to use for the signer.  This defaults to sha1 but can
+    #: The digest method to use for the signer.  This defaults to sha1 but can
     #: be changed for any other function in the hashlib module.
     #:
     #: .. versionchanged:: 0.14
@@ -308,7 +306,7 @@ class Signer(object):
             return self.digest_method(salt + self.secret_key).digest()
         elif self.key_derivation == 'django-concat':
             return self.digest_method(salt + b'signer' +
-                                      self.secret_key).digest()
+                self.secret_key).digest()
         elif self.key_derivation == 'hmac':
             mac = hmac.new(self.secret_key, digestmod=self.digest_method)
             mac.update(salt)
@@ -473,7 +471,7 @@ class Serializer(object):
        constructor.
     """
 
-    # : If a serializer module or class is not passed to the constructor
+    #: If a serializer module or class is not passed to the constructor
     #: this one is picked up.  This currently defaults to :mod:`json`.
     default_serializer = json
 
@@ -513,8 +511,8 @@ class Serializer(object):
             return serializer.loads(payload)
         except Exception as e:
             raise BadPayload('Could not load the payload because an '
-                             'exception ocurred on unserializing the data',
-                             original_error=e)
+                'exception ocurred on unserializing the data',
+                original_error=e)
 
     def dump_payload(self, obj):
         """Dumps the encoded object.  The return value is always a
@@ -586,7 +584,7 @@ class Serializer(object):
                 return False, None
             try:
                 return False, self.load_payload(e.payload,
-                                                **(load_payload_kwargs or {}))
+                    **(load_payload_kwargs or {}))
             except BadPayload:
                 return False, None
 
@@ -638,7 +636,7 @@ class JSONWebSignatureSerializer(Serializer):
         'none': NoneAlgorithm(),
     }
 
-    # : The default algorithm to use for signature generation
+    #: The default algorithm to use for signature generation
     default_algorithm = 'HS256'
 
     default_serializer = compact_json
@@ -662,9 +660,9 @@ class JSONWebSignatureSerializer(Serializer):
             json_payload = base64_decode(base64d_payload)
         except Exception as e:
             raise BadPayload('Could not base64 decode the payload because of '
-                             'an exception', original_error=e)
+                'an exception', original_error=e)
         header = Serializer.load_payload(self, json_header,
-                                         serializer=json)
+            serializer=json)
         if not isinstance(header, dict):
             raise BadPayload('Header payload is not a JSON object')
         payload = Serializer.load_payload(self, json_payload)
@@ -690,7 +688,7 @@ class JSONWebSignatureSerializer(Serializer):
         if algorithm is None:
             algorithm = self.algorithm
         return self.signer(self.secret_key, salt=salt, sep='.',
-                           key_derivation=key_derivation, algorithm=algorithm)
+            key_derivation=key_derivation, algorithm=algorithm)
 
     def make_header(self, header_fields):
         header = header_fields.copy() if header_fields else {}
@@ -798,13 +796,13 @@ class URLSafeSerializerMixin(object):
             json = base64_decode(payload)
         except Exception as e:
             raise BadPayload('Could not base64 decode the payload because of '
-                             'an exception', original_error=e)
+                'an exception', original_error=e)
         if decompress:
             try:
                 json = zlib.decompress(json)
             except Exception as e:
                 raise BadPayload('Could not zlib decompress the payload before '
-                                 'decoding the payload', original_error=e)
+                    'decoding the payload', original_error=e)
         return super(URLSafeSerializerMixin, self).load_payload(json)
 
     def dump_payload(self, obj):
