@@ -40,7 +40,7 @@ class Request(RequestBase):
     specific ones.
     """
 
-    # : the internal URL rule that matched the request.  This can be
+    #: the internal URL rule that matched the request.  This can be
     #: useful to inspect which methods are allowed for the URL from
     #: a before/after handler (``request.url_rule.methods``) etc.
     #:
@@ -85,7 +85,6 @@ class Request(RequestBase):
         instead.
         """
         from warnings import warn
-
         warn(DeprecationWarning('modules were deprecated in favor of '
                                 'blueprints.  Use request.blueprint '
                                 'instead.'), stacklevel=2)
@@ -169,7 +168,7 @@ class Request(RequestBase):
         # subclass that raises a different error for key errors.
         ctx = _request_ctx_stack.top
         if ctx is not None and ctx.app.debug and \
-                        self.mimetype != 'multipart/form-data' and not self.files:
+           self.mimetype != 'multipart/form-data' and not self.files:
             attach_enctype_error_multidict(self)
 
 

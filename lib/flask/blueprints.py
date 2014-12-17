@@ -22,7 +22,7 @@ class BlueprintSetupState(object):
     """
 
     def __init__(self, blueprint, app, options, first_registration):
-        # : a reference to the current application
+        #: a reference to the current application
         self.app = app
 
         #: a reference to the blueprint that created this setup state.
@@ -112,7 +112,6 @@ class Blueprint(_PackageBoundObject):
         """
         if self._got_registered_once and self.warn_on_modifications:
             from warnings import warn
-
             warn(Warning('The blueprint was already registered once '
                          'but is getting modified now.  These changes '
                          'will not show up.'))
@@ -124,11 +123,9 @@ class Blueprint(_PackageBoundObject):
         blueprint is registered a second time on the application, the
         function passed is not called.
         """
-
         def wrapper(state):
             if state.first_registration:
                 func(state)
-
         return self.record(update_wrapper(wrapper, func))
 
     def make_setup_state(self, app, options, first_registration=False):
@@ -159,12 +156,10 @@ class Blueprint(_PackageBoundObject):
         """Like :meth:`Flask.route` but for a blueprint.  The endpoint for the
         :func:`url_for` function is prefixed with the name of the blueprint.
         """
-
         def decorator(f):
             endpoint = options.pop("endpoint", f.__name__)
             self.add_url_rule(rule, endpoint, f, **options)
             return f
-
         return decorator
 
     def add_url_rule(self, rule, endpoint=None, view_func=None, **options):
@@ -174,7 +169,7 @@ class Blueprint(_PackageBoundObject):
         if endpoint:
             assert '.' not in endpoint, "Blueprint endpoint's should not contain dot's"
         self.record(lambda s:
-                    s.add_url_rule(rule, endpoint, view_func, **options))
+            s.add_url_rule(rule, endpoint, view_func, **options))
 
     def endpoint(self, endpoint):
         """Like :meth:`Flask.endpoint` but for a blueprint.  This does not
@@ -183,14 +178,11 @@ class Blueprint(_PackageBoundObject):
         with a `.` it will be registered to the current blueprint, otherwise
         it's an application independent endpoint.
         """
-
         def decorator(f):
             def register_endpoint(state):
                 state.app.view_functions[endpoint] = f
-
             self.record_once(register_endpoint)
             return f
-
         return decorator
 
     def app_template_filter(self, name=None):
@@ -200,11 +192,9 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the filter, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_app_template_filter(f, name=name)
             return f
-
         return decorator
 
     def add_app_template_filter(self, f, name=None):
@@ -215,10 +205,8 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the filter, otherwise the
                      function name will be used.
         """
-
         def register_template(state):
             state.app.jinja_env.filters[name or f.__name__] = f
-
         self.record_once(register_template)
 
     def app_template_test(self, name=None):
@@ -230,11 +218,9 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the test, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_app_template_test(f, name=name)
             return f
-
         return decorator
 
     def add_app_template_test(self, f, name=None):
@@ -247,10 +233,8 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the test, otherwise the
                      function name will be used.
         """
-
         def register_template(state):
             state.app.jinja_env.tests[name or f.__name__] = f
-
         self.record_once(register_template)
 
     def app_template_global(self, name=None):
@@ -262,11 +246,9 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the global, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_app_template_global(f, name=name)
             return f
-
         return decorator
 
     def add_app_template_global(self, f, name=None):
@@ -279,10 +261,8 @@ class Blueprint(_PackageBoundObject):
         :param name: the optional name of the global, otherwise the
                      function name will be used.
         """
-
         def register_template(state):
             state.app.jinja_env.globals[name or f.__name__] = f
-
         self.record_once(register_template)
 
     def before_request(self, f):
@@ -291,7 +271,7 @@ class Blueprint(_PackageBoundObject):
         that blueprint.
         """
         self.record_once(lambda s: s.app.before_request_funcs
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def before_app_request(self, f):
@@ -299,7 +279,7 @@ class Blueprint(_PackageBoundObject):
         before each request, even if outside of a blueprint.
         """
         self.record_once(lambda s: s.app.before_request_funcs
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def before_app_first_request(self, f):
@@ -315,7 +295,7 @@ class Blueprint(_PackageBoundObject):
         that blueprint.
         """
         self.record_once(lambda s: s.app.after_request_funcs
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def after_app_request(self, f):
@@ -323,7 +303,7 @@ class Blueprint(_PackageBoundObject):
         is executed after each request, even if outside of the blueprint.
         """
         self.record_once(lambda s: s.app.after_request_funcs
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def teardown_request(self, f):
@@ -334,7 +314,7 @@ class Blueprint(_PackageBoundObject):
         performed.
         """
         self.record_once(lambda s: s.app.teardown_request_funcs
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def teardown_app_request(self, f):
@@ -343,7 +323,7 @@ class Blueprint(_PackageBoundObject):
         the blueprint.
         """
         self.record_once(lambda s: s.app.teardown_request_funcs
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def context_processor(self, f):
@@ -351,7 +331,7 @@ class Blueprint(_PackageBoundObject):
         function is only executed for requests handled by a blueprint.
         """
         self.record_once(lambda s: s.app.template_context_processors
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def app_context_processor(self, f):
@@ -359,18 +339,16 @@ class Blueprint(_PackageBoundObject):
         function is executed each request, even if outside of the blueprint.
         """
         self.record_once(lambda s: s.app.template_context_processors
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def app_errorhandler(self, code):
         """Like :meth:`Flask.errorhandler` but for a blueprint.  This
         handler is used for all requests, even if outside of the blueprint.
         """
-
         def decorator(f):
             self.record_once(lambda s: s.app.errorhandler(code)(f))
             return f
-
         return decorator
 
     def url_value_preprocessor(self, f):
@@ -379,7 +357,7 @@ class Blueprint(_PackageBoundObject):
         can modify the url values provided.
         """
         self.record_once(lambda s: s.app.url_value_preprocessors
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def url_defaults(self, f):
@@ -388,21 +366,21 @@ class Blueprint(_PackageBoundObject):
         in place.
         """
         self.record_once(lambda s: s.app.url_default_functions
-                         .setdefault(self.name, []).append(f))
+            .setdefault(self.name, []).append(f))
         return f
 
     def app_url_value_preprocessor(self, f):
         """Same as :meth:`url_value_preprocessor` but application wide.
         """
         self.record_once(lambda s: s.app.url_value_preprocessors
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def app_url_defaults(self, f):
         """Same as :meth:`url_defaults` but application wide.
         """
         self.record_once(lambda s: s.app.url_default_functions
-                         .setdefault(None, []).append(f))
+            .setdefault(None, []).append(f))
         return f
 
     def errorhandler(self, code_or_exception):
@@ -416,10 +394,8 @@ class Blueprint(_PackageBoundObject):
         Otherwise works as the :meth:`~flask.Flask.errorhandler` decorator
         of the :class:`~flask.Flask` object.
         """
-
         def decorator(f):
             self.record_once(lambda s: s.app._register_error_handler(
                 self.name, code_or_exception, f))
             return f
-
         return decorator

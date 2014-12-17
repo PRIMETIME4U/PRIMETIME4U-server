@@ -5,7 +5,7 @@
 
     Security related helpers such as secure password hashing tools.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -19,11 +19,12 @@ from operator import xor
 from itertools import starmap
 
 from werkzeug._compat import range_type, PY2, text_type, izip, to_bytes, \
-    string_types, to_native
+     string_types, to_native
 
 
 SALT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 DEFAULT_PBKDF2_ITERATIONS = 1000
+
 
 _pack_int = Struct('>I').pack
 _builtin_safe_str_cmp = getattr(hmac, 'compare_digest', None)
@@ -42,8 +43,6 @@ def _find_hashlib_algorithms():
         if func is not None:
             rv[algo] = func
     return rv
-
-
 _hash_funcs = _find_hashlib_algorithms()
 
 
@@ -92,12 +91,10 @@ def pbkdf2_bin(data, salt, iterations=DEFAULT_PBKDF2_ITERATIONS,
     mac = hmac.HMAC(to_bytes(data), None, hashfunc)
     if not keylen:
         keylen = mac.digest_size
-
     def _pseudorandom(x, mac=mac):
         h = mac.copy()
         h.update(x)
         return bytearray(h.digest())
-
     buf = bytearray()
     for block in range_type(1, -(-keylen // mac.digest_size) + 1):
         rv = u = _pseudorandom(salt + _pack_int(block))
@@ -116,17 +113,25 @@ def safe_str_cmp(a, b):
 
     .. versionadded:: 0.7
     """
+    if isinstance(a, text_type):
+        a = a.encode('utf-8')
+    if isinstance(b, text_type):
+        b = b.encode('utf-8')
+
     if _builtin_safe_str_cmp is not None:
         return _builtin_safe_str_cmp(a, b)
+
     if len(a) != len(b):
         return False
+
     rv = 0
-    if isinstance(a, bytes) and isinstance(b, bytes) and not PY2:
-        for x, y in izip(a, b):
-            rv |= x ^ y
-    else:
+    if PY2:
         for x, y in izip(a, b):
             rv |= ord(x) ^ ord(y)
+    else:
+        for x, y in izip(a, b):
+            rv |= x ^ y
+
     return rv == 0
 
 

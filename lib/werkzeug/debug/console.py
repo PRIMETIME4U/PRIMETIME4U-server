@@ -5,7 +5,7 @@
 
     Interactive console support.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD.
 """
 import sys
@@ -69,7 +69,6 @@ class ThreadedStream(object):
         if not isinstance(sys.stdout, ThreadedStream):
             sys.stdout = ThreadedStream()
         _local.stream = HTMLStringO()
-
     push = staticmethod(push)
 
     def fetch():
@@ -78,7 +77,6 @@ class ThreadedStream(object):
         except AttributeError:
             return ''
         return stream.reset()
-
     fetch = staticmethod(fetch)
 
     def displayhook(obj):
@@ -91,7 +89,6 @@ class ThreadedStream(object):
         if obj is not None:
             _local._current_ipy.locals['_'] = obj
             stream._write(debug_repr(obj))
-
     displayhook = staticmethod(displayhook)
 
     def __setattr__(self, name, value):
@@ -119,6 +116,7 @@ sys.displayhook = ThreadedStream.displayhook
 
 
 class _ConsoleLoader(object):
+
     def __init__(self):
         self._storage = {}
 
@@ -138,16 +136,15 @@ class _ConsoleLoader(object):
 
 def _wrap_compiler(console):
     compile = console.compile
-
     def func(source, filename, symbol):
         code = compile(source, filename, symbol)
         console.loader.register(code, source)
         return code
-
     console.compile = func
 
 
 class _InteractiveConsole(code.InteractiveInterpreter):
+
     def __init__(self, globals, locals):
         code.InteractiveInterpreter.__init__(self, locals)
         self.globals = dict(globals)
@@ -165,7 +162,7 @@ class _InteractiveConsole(code.InteractiveInterpreter):
         try:
             source_to_eval = ''.join(self.buffer + [source])
             if code.InteractiveInterpreter.runsource(self,
-                                                     source_to_eval, '<debugger>', 'single'):
+               source_to_eval, '<debugger>', 'single'):
                 self.more = True
                 self.buffer.append(source)
             else:
@@ -183,13 +180,11 @@ class _InteractiveConsole(code.InteractiveInterpreter):
 
     def showtraceback(self):
         from werkzeug.debug.tbtools import get_current_traceback
-
         tb = get_current_traceback(skip=1)
         sys.stdout._write(tb.render_summary())
 
     def showsyntaxerror(self, filename=None):
         from werkzeug.debug.tbtools import get_current_traceback
-
         tb = get_current_traceback(skip=4)
         sys.stdout._write(tb.render_summary())
 

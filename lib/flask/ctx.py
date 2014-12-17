@@ -15,6 +15,7 @@ import sys
 from functools import update_wrapper
 
 from werkzeug.exceptions import HTTPException
+
 from .globals import _request_ctx_stack, _app_ctx_stack
 from .module import blueprint_is_module
 from .signals import appcontext_pushed, appcontext_popped
@@ -90,14 +91,12 @@ def copy_current_request_context(f):
     top = _request_ctx_stack.top
     if top is None:
         raise RuntimeError('This decorator can only be used at local scopes '
-                           'when a request context is on the stack.  For instance within '
-                           'view functions.')
+            'when a request context is on the stack.  For instance within '
+            'view functions.')
     reqctx = top.copy()
-
     def wrapper(*args, **kwargs):
         with reqctx:
             return f(*args, **kwargs)
-
     return update_wrapper(wrapper, f)
 
 
@@ -176,7 +175,7 @@ class AppContext(object):
             self.app.do_teardown_appcontext(exc)
         rv = _app_ctx_stack.pop()
         assert rv is self, 'Popped wrong app context.  (%r instead of %r)' \
-                           % (rv, self)
+            % (rv, self)
         appcontext_popped.send(self.app)
 
     def __enter__(self):
@@ -259,10 +258,8 @@ class RequestContext(object):
 
     def _get_g(self):
         return _app_ctx_stack.top.g
-
     def _set_g(self, value):
         _app_ctx_stack.top.g = value
-
     g = property(_get_g, _set_g)
     del _get_g, _set_g
 
@@ -276,8 +273,8 @@ class RequestContext(object):
         .. versionadded:: 0.10
         """
         return self.__class__(self.app,
-                              environ=self.request.environ,
-                              request=self.request
+            environ=self.request.environ,
+            request=self.request
         )
 
     def match_request(self):
@@ -357,7 +354,7 @@ class RequestContext(object):
 
         rv = _request_ctx_stack.pop()
         assert rv is self, 'Popped wrong request context.  (%r instead of %r)' \
-                           % (rv, self)
+            % (rv, self)
 
         # get rid of circular dependencies at the end of the request
         # so that we don't require the GC to be active.
@@ -370,7 +367,7 @@ class RequestContext(object):
 
     def auto_pop(self, exc):
         if self.request.environ.get('flask._preserve_context') or \
-                (exc is not None and self.app.preserve_context_on_exception):
+           (exc is not None and self.app.preserve_context_on_exception):
             self.preserved = True
             self._preserved_exc = exc
         else:

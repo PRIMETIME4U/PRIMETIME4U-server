@@ -13,20 +13,16 @@
         from werkzeug.contrib.profiler import ProfilerMiddleware
         app = ProfilerMiddleware(app)
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
-import sys
-import time
-import os.path
-
+import sys, time, os.path
 try:
     try:
         from cProfile import Profile
     except ImportError:
         from profile import Profile
     from pstats import Stats
-
     available = True
 except ImportError:
     available = False
@@ -101,17 +97,17 @@ class ProfilerMiddleware(object):
         p = Profile()
         start = time.time()
         p.runcall(runapp)
-        body = ''.join(response_body)
+        body = b''.join(response_body)
         elapsed = time.time() - start
 
         if self._profile_dir is not None:
             prof_filename = os.path.join(self._profile_dir,
-                                         '%s.%s.%06dms.%d.prof' % (
-                                             environ['REQUEST_METHOD'],
-                                             environ.get('PATH_INFO').strip('/').replace('/', '.') or 'root',
-                                             elapsed * 1000.0,
-                                             time.time()
-                                         ))
+                    '%s.%s.%06dms.%d.prof' % (
+                environ['REQUEST_METHOD'],
+                environ.get('PATH_INFO').strip('/').replace('/', '.') or 'root',
+                elapsed * 1000.0,
+                time.time()
+            ))
             p.dump_stats(prof_filename)
 
         else:
@@ -137,13 +133,10 @@ def make_action(app_factory, hostname='localhost', port=5000,
         from werkzeug.contrib import profiler
         action_profile = profiler.make_action(make_app)
     """
-
     def action(hostname=('h', hostname), port=('p', port),
                threaded=threaded, processes=processes):
         """Start a new development server."""
         from werkzeug.serving import run_simple
-
         app = ProfilerMiddleware(app_factory(), stream, sort_by, restrictions)
         run_simple(hostname, port, app, False, None, threaded, processes)
-
     return action

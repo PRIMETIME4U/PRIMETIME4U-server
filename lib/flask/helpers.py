@@ -17,10 +17,8 @@ import mimetypes
 from time import time
 from zlib import adler32
 from threading import RLock
-from functools import update_wrapper
-
 from werkzeug.routing import BuildError
-
+from functools import update_wrapper
 
 try:
     from werkzeug.urls import url_quote
@@ -40,7 +38,7 @@ from jinja2 import FileSystemLoader
 
 from .signals import message_flashed
 from .globals import session, _request_ctx_stack, _app_ctx_stack, \
-    current_app, request
+     current_app, request
 from ._compat import string_types, text_type
 
 
@@ -104,14 +102,13 @@ def stream_with_context(generator_or_function):
         def decorator(*args, **kwargs):
             gen = generator_or_function()
             return stream_with_context(gen)
-
         return update_wrapper(decorator, generator_or_function)
 
     def generator():
         ctx = _request_ctx_stack.top
         if ctx is None:
             raise RuntimeError('Attempted to stream with context but '
-                               'there was no context in the first place to keep around.')
+                'there was no context in the first place to keep around.')
         with ctx:
             # Dummy sentinel.  Has to be inside the context block or we're
             # not actually keeping the context around.
@@ -359,7 +356,7 @@ def flash(message, category='message'):
     """
     # Original implementation:
     #
-    # session.setdefault('_flashes', []).append((category, message))
+    #     session.setdefault('_flashes', []).append((category, message))
     #
     # This assumed that changes made to mutable structures in the session are
     # are always in sync with the sess on object, which is not true for session
@@ -476,24 +473,23 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
         file = None
     else:
         from warnings import warn
-
         file = filename_or_fp
         filename = getattr(file, 'name', None)
 
         # XXX: this behavior is now deprecated because it was unreliable.
         # removed in Flask 1.0
         if not attachment_filename and not mimetype \
-                and isinstance(filename, string_types):
+           and isinstance(filename, string_types):
             warn(DeprecationWarning('The filename support for file objects '
-                                    'passed to send_file is now deprecated.  Pass an '
-                                    'attach_filename if you want mimetypes to be guessed.'),
-                 stacklevel=2)
+                'passed to send_file is now deprecated.  Pass an '
+                'attach_filename if you want mimetypes to be guessed.'),
+                stacklevel=2)
         if add_etags:
             warn(DeprecationWarning('In future flask releases etags will no '
-                                    'longer be generated for file objects passed to the send_file '
-                                    'function because this behavior was unreliable.  Pass '
-                                    'filenames instead if possible, otherwise attach an etag '
-                                    'yourself based on another value'), stacklevel=2)
+                'longer be generated for file objects passed to the send_file '
+                'function because this behavior was unreliable.  Pass '
+                'filenames instead if possible, otherwise attach an etag '
+                'yourself based on another value'), stacklevel=2)
 
     if filename is not None:
         if not os.path.isabs(filename):
@@ -580,8 +576,8 @@ def safe_join(directory, filename):
         if sep in filename:
             raise NotFound()
     if os.path.isabs(filename) or \
-                    filename == '..' or \
-            filename.startswith('../'):
+       filename == '..' or \
+       filename.startswith('../'):
         raise NotFound()
     return os.path.join(directory, filename)
 
@@ -731,8 +727,9 @@ class locked_cached_property(object):
 
 
 class _PackageBoundObject(object):
+
     def __init__(self, import_name, template_folder=None):
-        # : The name of the package or module.  Do not change this once
+        #: The name of the package or module.  Do not change this once
         #: it was set by the constructor.
         self.import_name = import_name
 
@@ -749,10 +746,8 @@ class _PackageBoundObject(object):
     def _get_static_folder(self):
         if self._static_folder is not None:
             return os.path.join(self.root_path, self._static_folder)
-
     def _set_static_folder(self, value):
         self._static_folder = value
-
     static_folder = property(_get_static_folder, _set_static_folder)
     del _get_static_folder, _set_static_folder
 
@@ -762,10 +757,8 @@ class _PackageBoundObject(object):
                 return None
             return '/' + os.path.basename(self.static_folder)
         return self._static_url_path
-
     def _set_static_url_path(self, value):
         self._static_url_path = value
-
     static_url_path = property(_get_static_url_path, _set_static_url_path)
     del _get_static_url_path, _set_static_url_path
 

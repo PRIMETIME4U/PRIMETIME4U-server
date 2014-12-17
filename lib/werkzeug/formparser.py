@@ -6,7 +6,7 @@
     This module implements the form parsing.  It supports url-encoded forms
     as well as non-nested multipart uploads.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -19,13 +19,12 @@ from functools import update_wrapper
 from werkzeug._compat import to_native, text_type
 from werkzeug.urls import url_decode_stream
 from werkzeug.wsgi import make_line_iter, \
-    get_input_stream, get_content_length
+     get_input_stream, get_content_length
 from werkzeug.datastructures import Headers, FileStorage, MultiDict
 from werkzeug.http import parse_options_header
 
 
-
-# : an iterator that yields empty strings
+#: an iterator that yields empty strings
 _empty_string_iter = repeat('')
 
 #: a regular expression for multipart boundaries
@@ -95,7 +94,6 @@ def parse_form_data(environ, stream_factory=None, charset='utf-8',
 
 def exhaust_stream(f):
     """Helper decorator for methods that exhausts the stream on return."""
-
     def wrapper(self, stream, *args, **kwargs):
         try:
             return f(self, stream, *args, **kwargs)
@@ -108,7 +106,6 @@ def exhaust_stream(f):
                     chunk = stream.read(1024 * 64)
                     if not chunk:
                         break
-
     return update_wrapper(wrapper, f)
 
 
@@ -183,8 +180,8 @@ class FormDataParser(object):
         :return: A tuple in the form ``(stream, form, files)``.
         """
         if self.max_content_length is not None and \
-                        content_length is not None and \
-                        content_length > self.max_content_length:
+           content_length is not None and \
+           content_length > self.max_content_length:
             raise exceptions.RequestEntityTooLarge()
         if options is None:
             options = {}
@@ -206,6 +203,8 @@ class FormDataParser(object):
                                  max_form_memory_size=self.max_form_memory_size,
                                  cls=self.cls)
         boundary = options.get('boundary')
+        if boundary is None:
+            raise ValueError('Missing boundary')
         if isinstance(boundary, text_type):
             boundary = boundary.encode('ascii')
         form, files = parser.parse(stream, boundary, content_length)
@@ -214,8 +213,8 @@ class FormDataParser(object):
     @exhaust_stream
     def _parse_urlencoded(self, stream, mimetype, content_length, options):
         if self.max_form_memory_size is not None and \
-                        content_length is not None and \
-                        content_length > self.max_form_memory_size:
+           content_length is not None and \
+           content_length > self.max_form_memory_size:
             raise exceptions.RequestEntityTooLarge()
         form = url_decode_stream(stream, self.charset,
                                  errors=self.errors, cls=self.cls)
@@ -223,9 +222,9 @@ class FormDataParser(object):
 
     #: mapping of mimetypes to parsing functions
     parse_functions = {
-        'multipart/form-data': _parse_multipart,
-        'application/x-www-form-urlencoded': _parse_urlencoded,
-        'application/x-url-encoded': _parse_urlencoded
+        'multipart/form-data':                  _parse_multipart,
+        'application/x-www-form-urlencoded':    _parse_urlencoded,
+        'application/x-url-encoded':            _parse_urlencoded
     }
 
 
@@ -282,6 +281,7 @@ _end = 'end'
 
 
 class MultiPartParser(object):
+
     def __init__(self, stream_factory=None, charset='utf-8', errors='replace',
                  max_form_memory_size=None, cls=None, buffer_size=64 * 1024):
         self.stream_factory = stream_factory
@@ -331,7 +331,7 @@ class MultiPartParser(object):
     def get_part_encoding(self, headers):
         transfer_encoding = headers.get('content-transfer-encoding')
         if transfer_encoding is not None and \
-                        transfer_encoding in _supported_multipart_encodings:
+           transfer_encoding in _supported_multipart_encodings:
             return transfer_encoding
 
     def get_part_charset(self, headers):
@@ -363,7 +363,7 @@ class MultiPartParser(object):
             self.fail('Missing boundary')
         if not is_valid_multipart_boundary(boundary):
             self.fail('Invalid boundary: %s' % boundary)
-        if len(boundary) > self.buffer_size:  # pragma: no cover
+        if len(boundary) > self.buffer_size: # pragma: no cover
             # this should never happen because we check for a minimum size
             # of 1024 and boundaries may not be longer than 200.  The only
             # situation when this happens is for non debug builds where
@@ -457,7 +457,7 @@ class MultiPartParser(object):
                     cutoff = -1
                 yield _cont, line[:cutoff]
 
-            else:  # pragma: no cover
+            else: # pragma: no cover
                 raise ValueError('unexpected end of part')
 
             # if we have a leftover in the buffer that is not a newline
@@ -510,7 +510,7 @@ class MultiPartParser(object):
                     part_charset = self.get_part_charset(headers)
                     yield ('form',
                            (name, b''.join(container).decode(
-                               part_charset, self.errors)))
+                                part_charset, self.errors)))
 
     def parse(self, file, boundary, content_length):
         formstream, filestream = tee(

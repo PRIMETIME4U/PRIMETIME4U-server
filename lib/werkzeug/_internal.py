@@ -5,7 +5,7 @@
 
     This module provides internally used helpers and constants.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -16,7 +16,7 @@ from datetime import datetime, date
 from itertools import chain
 
 from werkzeug._compat import iter_bytes, text_type, BytesIO, int_to_byte, \
-    range_type
+     range_type, to_native
 
 
 _logger = None
@@ -31,13 +31,14 @@ _legal_cookie_chars = (string.ascii_letters +
                        u"!#$%&'*+-.^_`|~:").encode('ascii')
 
 _cookie_quoting_map = {
-    b',': b'\\054',
-    b';': b'\\073',
-    b'"': b'\\"',
-    b'\\': b'\\\\',
+    b',' : b'\\054',
+    b';' : b'\\073',
+    b'"' : b'\\"',
+    b'\\' : b'\\\\',
 }
 for _i in chain(range_type(32), range_type(127, 256)):
     _cookie_quoting_map[int_to_byte(_i)] = ('\\%03o' % _i).encode('latin1')
+
 
 _octal_re = re.compile(b'\\\\[0-3][0-7][0-7]')
 _quote_re = re.compile(b'[\\\\].')
@@ -54,12 +55,12 @@ _cookie_re = re.compile(b"""(?x)
 
 
 class _Missing(object):
+
     def __repr__(self):
         return 'no value'
 
     def __reduce__(self):
         return '_missing'
-
 
 _missing = _Missing()
 
@@ -76,7 +77,6 @@ def _log(type, message, *args, **kwargs):
     global _logger
     if _logger is None:
         import logging
-
         _logger = logging.getLogger('werkzeug')
         # Only set up a default log handler if the
         # end-user application didn't set anything up.
@@ -147,7 +147,6 @@ def _parse_signature(func):
 
         return new_args, kwargs, missing, extra, extra_positional, \
                arguments, vararg_var, kwarg_var
-
     _signature_cache[func] = parse
     return parse
 
@@ -348,13 +347,10 @@ def _make_cookie_domain(domain):
 
 def _easteregg(app=None):
     """Like the name says.  But who knows how it works?"""
-
     def bzzzzzzz(gyver):
         import base64
         import zlib
-
         return zlib.decompress(base64.b64decode(gyver)).decode('ascii')
-
     gyver = u'\n'.join([x + (77 - len(x)) * u' ' for x in bzzzzzzz(b'''
 eJyFlzuOJDkMRP06xRjymKgDJCDQStBYT8BCgK4gTwfQ2fcFs2a2FzvZk+hvlcRvRJD148efHt9m
 9Xz94dRY5hGt1nrYcXx7us9qlcP9HHNh28rz8dZj+q4rynVFFPdlY4zH873NKCexrDM6zxxRymzz
@@ -387,12 +383,10 @@ krEDuNoJCHNlZYhKpvw4mspVWxqo415n8cD62N9+EfHrAvqQnINStetek7RY2Urv8nxsnGaZfRr/
 nhXbJ6m/yl1LzYqscDZA9QHLNbdaSTTr+kFg3bC0iYbX/eQy0Bv3h4B50/SGYzKAXkCeOLI3bcAt
 mj2Z/FM1vQWgDynsRwNvrWnJHlespkrp8+vO1jNaibm+PhqXPPv30YwDZ6jApe3wUjFQobghvW9p
 7f2zLkGNv8b191cD/3vs9Q833z8t''').splitlines()])
-
     def easteregged(environ, start_response):
         def injecting_start_response(status, headers, exc_info=None):
             headers.append(('X-Powered-By', 'Werkzeug'))
             return start_response(status, headers, exc_info)
-
         if app is not None and environ.get('QUERY_STRING') != 'macgybarchakku':
             return app(environ, injecting_start_response)
         injecting_start_response('200 OK', [('Content-Type', 'text/html')])
@@ -415,5 +409,4 @@ mj2Z/FM1vQWgDynsRwNvrWnJHlespkrp8+vO1jNaibm+PhqXPPv30YwDZ6jApe3wUjFQobghvW9p
 <pre>%s\n\n\n</pre>
 </body>
 </html>''' % gyver).encode('latin1')]
-
     return easteregged

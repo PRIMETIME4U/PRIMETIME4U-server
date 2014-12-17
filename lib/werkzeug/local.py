@@ -5,14 +5,12 @@
 
     This module implements context-local objects.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from functools import update_wrapper
-
 from werkzeug.wsgi import ClosingIterator
 from werkzeug._compat import PY2, implements_bool
-
 
 # since each thread has its own greenlet we can just use those as identifiers
 # for the context.  If greenlets are not available we fall back to the
@@ -122,10 +120,8 @@ class LocalStack(object):
 
     def _get__ident_func__(self):
         return self._local.__ident_func__
-
     def _set__ident_func__(self, value):
         object.__setattr__(self._local, '__ident_func__', value)
-
     __ident_func__ = property(_get__ident_func__, _set__ident_func__)
     del _get__ident_func__, _set__ident_func__
 
@@ -135,7 +131,6 @@ class LocalStack(object):
             if rv is None:
                 raise RuntimeError('object unbound')
             return rv
-
         return LocalProxy(_lookup)
 
     def push(self, obj):
@@ -225,10 +220,8 @@ class LocalManager(object):
         """Wrap a WSGI application so that cleaning up happens after
         request end.
         """
-
         def application(environ, start_response):
             return ClosingIterator(app(environ, start_response), self.cleanup)
-
         return application
 
     def middleware(self, func):

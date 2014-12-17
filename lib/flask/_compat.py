@@ -15,6 +15,7 @@ import sys
 PY2 = sys.version_info[0] == 2
 _identity = lambda x: x
 
+
 if not PY2:
     text_type = str
     string_types = (str,)
@@ -23,6 +24,8 @@ if not PY2:
     iterkeys = lambda d: iter(d.keys())
     itervalues = lambda d: iter(d.values())
     iteritems = lambda d: iter(d.items())
+
+    from io import StringIO
 
     def reraise(tp, value, tb=None):
         if value.__traceback__ is not tb:
@@ -40,7 +43,9 @@ else:
     itervalues = lambda d: d.itervalues()
     iteritems = lambda d: d.iteritems()
 
-    exec ('def reraise(tp, value, tb=None):\n raise tp, value, tb')
+    from cStringIO import StringIO
+
+    exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 
     def implements_to_string(cls):
         cls.__unicode__ = cls.__str__
@@ -61,10 +66,8 @@ def with_metaclass(meta, *bases):
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
-
         def __new__(cls, name, this_bases, d):
             if this_bases is None:
                 return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
-
     return metaclass('temporary_class', None, {})

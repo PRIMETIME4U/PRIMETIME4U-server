@@ -19,9 +19,10 @@ from functools import update_wrapper
 from werkzeug.datastructures import ImmutableDict
 from werkzeug.routing import Map, Rule, RequestRedirect, BuildError
 from werkzeug.exceptions import HTTPException, InternalServerError, \
-    MethodNotAllowed, BadRequest
+     MethodNotAllowed, BadRequest
+
 from .helpers import _PackageBoundObject, url_for, get_flashed_messages, \
-    locked_cached_property, _endpoint_from_view_func, find_package
+     locked_cached_property, _endpoint_from_view_func, find_package
 from . import json
 from .wrappers import Request, Response
 from .config import ConfigAttribute, Config
@@ -30,11 +31,10 @@ from .globals import _request_ctx_stack, request, session, g
 from .sessions import SecureCookieSessionInterface
 from .module import blueprint_is_module
 from .templating import DispatchingJinjaLoader, Environment, \
-    _default_template_ctx_processor
+     _default_template_ctx_processor
 from .signals import request_started, request_finished, got_request_exception, \
-    request_tearing_down, appcontext_tearing_down
+     request_tearing_down, appcontext_tearing_down
 from ._compat import reraise, string_types, text_type, integer_types
-
 
 # a lock used for logger initialization
 _logger_lock = Lock()
@@ -50,18 +50,16 @@ def setupmethod(f):
     """Wraps a method so that it performs a check in debug mode if the
     first request was already handled.
     """
-
     def wrapper_func(self, *args, **kwargs):
         if self.debug and self._got_first_request:
             raise AssertionError('A setup function was called after the '
-                                 'first request was handled.  This usually indicates a bug '
-                                 'in the application where a module was not imported '
-                                 'and decorators or other functionality was called too late.\n'
-                                 'To fix this make sure to import all your view modules, '
-                                 'database models and everything related at a central place '
-                                 'before the application starts serving requests.')
+                'first request was handled.  This usually indicates a bug '
+                'in the application where a module was not imported '
+                'and decorators or other functionality was called too late.\n'
+                'To fix this make sure to import all your view modules, '
+                'database models and everything related at a central place '
+                'before the application starts serving requests.')
         return f(self, *args, **kwargs)
-
     return update_wrapper(wrapper_func, f)
 
 
@@ -141,7 +139,7 @@ class Flask(_PackageBoundObject):
                                      of the application root.
     """
 
-    # : The class that is used for request objects.  See :class:`~flask.Request`
+    #: The class that is used for request objects.  See :class:`~flask.Request`
     #: for more information.
     request_class = Request
 
@@ -168,14 +166,11 @@ class Flask(_PackageBoundObject):
     # Backwards compatibility support
     def _get_request_globals_class(self):
         return self.app_ctx_globals_class
-
     def _set_request_globals_class(self, value):
         from warnings import warn
-
         warn(DeprecationWarning('request_globals_class attribute is now '
                                 'called app_ctx_globals_class'))
         self.app_ctx_globals_class = value
-
     request_globals_class = property(_get_request_globals_class,
                                      _set_request_globals_class)
     del _get_request_globals_class, _set_request_globals_class
@@ -223,7 +218,7 @@ class Flask(_PackageBoundObject):
     #: `PERMANENT_SESSION_LIFETIME` configuration key.  Defaults to
     #: ``timedelta(days=31)``
     permanent_session_lifetime = ConfigAttribute('PERMANENT_SESSION_LIFETIME',
-                                                 get_converter=_make_timedelta)
+        get_converter=_make_timedelta)
 
     #: Enable this if you want to use the X-Sendfile feature.  Keep in
     #: mind that the server has to support this.  This only affects files
@@ -275,29 +270,29 @@ class Flask(_PackageBoundObject):
 
     #: Default configuration parameters.
     default_config = ImmutableDict({
-        'DEBUG': False,
-        'TESTING': False,
-        'PROPAGATE_EXCEPTIONS': None,
-        'PRESERVE_CONTEXT_ON_EXCEPTION': None,
-        'SECRET_KEY': None,
-        'PERMANENT_SESSION_LIFETIME': timedelta(days=31),
-        'USE_X_SENDFILE': False,
-        'LOGGER_NAME': None,
-        'SERVER_NAME': None,
-        'APPLICATION_ROOT': None,
-        'SESSION_COOKIE_NAME': 'session',
-        'SESSION_COOKIE_DOMAIN': None,
-        'SESSION_COOKIE_PATH': None,
-        'SESSION_COOKIE_HTTPONLY': True,
-        'SESSION_COOKIE_SECURE': False,
-        'MAX_CONTENT_LENGTH': None,
-        'SEND_FILE_MAX_AGE_DEFAULT': 12 * 60 * 60,  # 12 hours
-        'TRAP_BAD_REQUEST_ERRORS': False,
-        'TRAP_HTTP_EXCEPTIONS': False,
-        'PREFERRED_URL_SCHEME': 'http',
-        'JSON_AS_ASCII': True,
-        'JSON_SORT_KEYS': True,
-        'JSONIFY_PRETTYPRINT_REGULAR': True,
+        'DEBUG':                                False,
+        'TESTING':                              False,
+        'PROPAGATE_EXCEPTIONS':                 None,
+        'PRESERVE_CONTEXT_ON_EXCEPTION':        None,
+        'SECRET_KEY':                           None,
+        'PERMANENT_SESSION_LIFETIME':           timedelta(days=31),
+        'USE_X_SENDFILE':                       False,
+        'LOGGER_NAME':                          None,
+        'SERVER_NAME':                          None,
+        'APPLICATION_ROOT':                     None,
+        'SESSION_COOKIE_NAME':                  'session',
+        'SESSION_COOKIE_DOMAIN':                None,
+        'SESSION_COOKIE_PATH':                  None,
+        'SESSION_COOKIE_HTTPONLY':              True,
+        'SESSION_COOKIE_SECURE':                False,
+        'MAX_CONTENT_LENGTH':                   None,
+        'SEND_FILE_MAX_AGE_DEFAULT':            12 * 60 * 60, # 12 hours
+        'TRAP_BAD_REQUEST_ERRORS':              False,
+        'TRAP_HTTP_EXCEPTIONS':                 False,
+        'PREFERRED_URL_SCHEME':                 'http',
+        'JSON_AS_ASCII':                        True,
+        'JSON_SORT_KEYS':                       True,
+        'JSONIFY_PRETTYPRINT_REGULAR':          True,
     })
 
     #: The rule object to use for URL rules created.  This is used by
@@ -324,7 +319,6 @@ class Flask(_PackageBoundObject):
                                      template_folder=template_folder)
         if static_path is not None:
             from warnings import warn
-
             warn(DeprecationWarning('static_path is now called '
                                     'static_url_path'), stacklevel=2)
             static_url_path = static_path
@@ -516,15 +510,12 @@ class Flask(_PackageBoundObject):
 
     def _get_error_handlers(self):
         from warnings import warn
-
         warn(DeprecationWarning('error_handlers is deprecated, use the '
-                                'new error_handler_spec attribute instead.'), stacklevel=1)
+            'new error_handler_spec attribute instead.'), stacklevel=1)
         return self._error_handlers
-
     def _set_error_handlers(self, value):
         self._error_handlers = value
         self.error_handler_spec[None] = value
-
     error_handlers = property(_get_error_handlers, _set_error_handlers)
     del _get_error_handlers, _set_error_handlers
 
@@ -589,7 +580,6 @@ class Flask(_PackageBoundObject):
             if self._logger and self._logger.name == self.logger_name:
                 return self._logger
             from flask.logging import create_logger
-
             self._logger = rv = create_logger(self)
             return rv
 
@@ -766,7 +756,6 @@ class Flask(_PackageBoundObject):
                         information.
         """
         from werkzeug.serving import run_simple
-
         if host is None:
             host = '127.0.0.1'
         if port is None:
@@ -866,19 +855,18 @@ class Flask(_PackageBoundObject):
            system.
         """
         assert blueprint_is_module(module), 'register_module requires ' \
-                                            'actual module objects.  Please upgrade to blueprints though.'
+            'actual module objects.  Please upgrade to blueprints though.'
         if not self.enable_modules:
             raise RuntimeError('Module support was disabled but code '
-                               'attempted to register a module named %r' % module)
+                'attempted to register a module named %r' % module)
         else:
             from warnings import warn
-
             warn(DeprecationWarning('Modules are deprecated.  Upgrade to '
-                                    'using blueprints.  Have a look into the documentation for '
-                                    'more information.  If this module was registered by a '
-                                    'Flask-Extension upgrade the extension or contact the author '
-                                    'of that extension instead.  (Registered %r)' % module),
-                 stacklevel=2)
+                'using blueprints.  Have a look into the documentation for '
+                'more information.  If this module was registered by a '
+                'Flask-Extension upgrade the extension or contact the author '
+                'of that extension instead.  (Registered %r)' % module),
+                stacklevel=2)
 
         self.register_blueprint(module, **options)
 
@@ -968,7 +956,7 @@ class Flask(_PackageBoundObject):
         # starting with Flask 0.8 the view_func object can disable and
         # force-enable the automatic options handling.
         provide_automatic_options = getattr(view_func,
-                                            'provide_automatic_options', None)
+            'provide_automatic_options', None)
 
         if provide_automatic_options is None:
             if 'OPTIONS' not in methods:
@@ -1020,12 +1008,10 @@ class Flask(_PackageBoundObject):
                         Starting with Flask 0.6, `OPTIONS` is implicitly
                         added and handled by the standard request handling.
         """
-
         def decorator(f):
             endpoint = options.pop('endpoint', None)
             self.add_url_rule(rule, endpoint, f, **options)
             return f
-
         return decorator
 
     @setupmethod
@@ -1039,11 +1025,9 @@ class Flask(_PackageBoundObject):
 
         :param endpoint: the name of the endpoint
         """
-
         def decorator(f):
             self.view_functions[endpoint] = f
             return f
-
         return decorator
 
     @setupmethod
@@ -1083,11 +1067,9 @@ class Flask(_PackageBoundObject):
 
         :param code: the code as integer for the handler
         """
-
         def decorator(f):
             self._register_error_handler(None, code_or_exception, f)
             return f
-
         return decorator
 
     def register_error_handler(self, code_or_exception, f):
@@ -1125,11 +1107,9 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the filter, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_template_filter(f, name=name)
             return f
-
         return decorator
 
     @setupmethod
@@ -1162,11 +1142,9 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the test, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_template_test(f, name=name)
             return f
-
         return decorator
 
     @setupmethod
@@ -1197,11 +1175,9 @@ class Flask(_PackageBoundObject):
         :param name: the optional name of the global function, otherwise the
                      function name will be used.
         """
-
         def decorator(f):
             self.add_template_global(f, name=name)
             return f
-
         return decorator
 
     @setupmethod
@@ -1455,12 +1431,11 @@ class Flask(_PackageBoundObject):
         :internal:
         """
         if not self.debug \
-                or not isinstance(request.routing_exception, RequestRedirect) \
-                or request.method in ('GET', 'HEAD', 'OPTIONS'):
+           or not isinstance(request.routing_exception, RequestRedirect) \
+           or request.method in ('GET', 'HEAD', 'OPTIONS'):
             raise request.routing_exception
 
         from .debughelpers import FormDataRoutingRedirect
-
         raise FormDataRoutingRedirect(request)
 
     def dispatch_request(self):
@@ -1480,7 +1455,7 @@ class Flask(_PackageBoundObject):
         # if we provide automatic options for this URL and the
         # request came with the OPTIONS method, reply automatically
         if getattr(rule, 'provide_automatic_options', False) \
-                and req.method == 'OPTIONS':
+           and req.method == 'OPTIONS':
             return self.make_default_options_response()
         # otherwise dispatch to the handler for that endpoint
         return self.view_functions[rule.endpoint](**req.view_args)
@@ -1624,7 +1599,7 @@ class Flask(_PackageBoundObject):
         """
         if request is not None:
             return self.url_map.bind_to_environ(request.environ,
-                                                server_name=self.config['SERVER_NAME'])
+                server_name=self.config['SERVER_NAME'])
         # We need at the very least the server name to be set for this
         # to work.
         if self.config['SERVER_NAME'] is not None:
@@ -1803,7 +1778,6 @@ class Flask(_PackageBoundObject):
         function accepts the same arguments).
         """
         from flask.testing import make_test_environ_builder
-
         builder = make_test_environ_builder(self, *args, **kwargs)
         try:
             return self.request_context(builder.get_environ())
@@ -1853,7 +1827,6 @@ class Flask(_PackageBoundObject):
     @property
     def modules(self):
         from warnings import warn
-
         warn(DeprecationWarning('Flask.modules is deprecated, use '
                                 'Flask.blueprints instead'), stacklevel=2)
         return self.blueprints

@@ -22,10 +22,9 @@ except ImportError:
     from urllib.parse import unquote
 
 from werkzeug.http import parse_options_header, parse_cache_control_header, \
-    parse_set_header
+     parse_set_header
 from werkzeug.useragents import UserAgent
 from werkzeug.datastructures import Headers, ResponseCacheControl
-
 
 class CGIRootFix(object):
     """Wrap the application in this middleware if you are using FastCGI or CGI
@@ -51,7 +50,7 @@ class CGIRootFix(object):
         # people's code if they are using this fixer in a test that
         # does not set the SERVER_SOFTWARE key.
         if 'SERVER_SOFTWARE' not in environ or \
-                        environ['SERVER_SOFTWARE'] < 'lighttpd/1.4.28':
+           environ['SERVER_SOFTWARE'] < 'lighttpd/1.4.28':
             environ['PATH_INFO'] = environ.get('SCRIPT_NAME', '') + \
                                    environ.get('PATH_INFO', '')
         environ['SCRIPT_NAME'] = self.app_root.strip('/')
@@ -130,9 +129,9 @@ class ProxyFix(object):
         forwarded_for = getter('HTTP_X_FORWARDED_FOR', '').split(',')
         forwarded_host = getter('HTTP_X_FORWARDED_HOST', '')
         environ.update({
-            'werkzeug.proxy_fix.orig_wsgi_url_scheme': getter('wsgi.url_scheme'),
-            'werkzeug.proxy_fix.orig_remote_addr': getter('REMOTE_ADDR'),
-            'werkzeug.proxy_fix.orig_http_host': getter('HTTP_HOST')
+            'werkzeug.proxy_fix.orig_wsgi_url_scheme':  getter('wsgi.url_scheme'),
+            'werkzeug.proxy_fix.orig_remote_addr':      getter('REMOTE_ADDR'),
+            'werkzeug.proxy_fix.orig_http_host':        getter('HTTP_HOST')
         })
         forwarded_for = [x for x in [x.strip() for x in forwarded_for] if x]
         remote_addr = self.get_remote_addr(forwarded_for)
@@ -174,7 +173,6 @@ class HeaderRewriterFix(object):
                     new_headers.append((key, value))
             new_headers += self.add_headers
             return start_response(status, new_headers, exc_info)
-
         return self.app(environ, rewriting_start_response)
 
 
@@ -198,7 +196,7 @@ class InternetExplorerFix(object):
     # This code was inspired by Django fixers for the same bugs.  The
     # fix_vary and fix_attach fixers were originally implemented in Django
     # by Michael Axiak and is available as part of the Django project:
-    # http://code.djangoproject.com/ticket/4148
+    #     http://code.djangoproject.com/ticket/4148
 
     def __init__(self, app, fix_vary=True, fix_attach=True):
         self.app = app
@@ -237,7 +235,6 @@ class InternetExplorerFix(object):
             headers = Headers(headers)
             self.fix_headers(environ, headers, status)
             return start_response(status, headers.to_wsgi_list(), exc_info)
-
         return self.app(environ, fixing_start_response)
 
     def __call__(self, environ, start_response):

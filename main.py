@@ -10,7 +10,7 @@ app.config['DEBUG'] = True
 @app.route('/')
 def hello():
     """Return a friendly HTTP greeting."""
-    return 'Hello World by Primetime4U'
+    return 'PyCharm e stato scritto da un piccione'
 
 
 @app.errorhandler(404)

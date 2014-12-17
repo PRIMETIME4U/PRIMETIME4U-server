@@ -5,7 +5,7 @@
 
     This module implements WSGI related helpers.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -20,8 +20,8 @@ from datetime import datetime
 from functools import partial, update_wrapper
 
 from werkzeug._compat import iteritems, text_type, string_types, \
-    implements_iterator, make_literal_wrapper, to_unicode, to_bytes, \
-    wsgi_get_bytes, try_coerce_native, PY2
+     implements_iterator, make_literal_wrapper, to_unicode, to_bytes, \
+     wsgi_get_bytes, try_coerce_native, PY2
 from werkzeug._internal import _empty_stream, _encode_idna
 from werkzeug.http import is_resource_modified, http_date
 from werkzeug.urls import uri_to_iri, url_quote, url_parse, url_join
@@ -42,8 +42,8 @@ def responder(f):
 
 def get_current_url(environ, root_only=False, strip_querystring=False,
                     host_only=False, trusted_hosts=None):
-    """A handy helper function that recreates the full URL for the current
-    request or parts of it.  Here an example:
+    """A handy helper function that recreates the full URL as IRI for the
+    current request or parts of it.  Here an example:
 
     >>> from werkzeug.test import create_environ
     >>> env = create_environ("/?param=foo", "http://localhost/script")
@@ -59,6 +59,15 @@ def get_current_url(environ, root_only=False, strip_querystring=False,
     This optionally it verifies that the host is in a list of trusted hosts.
     If the host is not in there it will raise a
     :exc:`~werkzeug.exceptions.SecurityError`.
+
+    Note that the string returned might contain unicode characters as the
+    representation is an IRI not an URI.  If you need an ASCII only
+    representation you can use the :func:`~werkzeug.urls.iri_to_uri`
+    function:
+
+    >>> from werkzeug.urls import iri_to_uri
+    >>> iri_to_uri(get_current_url(env))
+    'http://localhost/script/?param=foo'
 
     :param environ: the WSGI environment to get the current URL from.
     :param root_only: set `True` if you only want the root URL.
@@ -136,12 +145,11 @@ def get_host(environ, trusted_hosts=None):
     else:
         rv = environ['SERVER_NAME']
         if (environ['wsgi.url_scheme'], environ['SERVER_PORT']) not \
-                in (('https', '443'), ('http', '80')):
+           in (('https', '443'), ('http', '80')):
             rv += ':' + environ['SERVER_PORT']
     if trusted_hosts is not None:
         if not host_is_trusted(rv, trusted_hosts):
             from werkzeug.exceptions import SecurityError
-
             raise SecurityError('Host "%s" is not trusted' % rv)
     return rv
 
@@ -364,13 +372,12 @@ def extract_path_info(environ_or_baseurl, path_or_url, charset='utf-8',
                                   same server point to the same
                                   resource.
     """
-
     def _normalize_netloc(scheme, netloc):
         parts = netloc.split(u'@', 1)[-1].split(u':', 1)
         if len(parts) == 2:
             netloc, port = parts
             if (scheme == u'http' and port == u'80') or \
-                    (scheme == u'https' and port == u'443'):
+               (scheme == u'https' and port == u'443'):
                 port = None
         else:
             netloc = parts[0]
@@ -399,8 +406,8 @@ def extract_path_info(environ_or_baseurl, path_or_url, charset='utf-8',
             if scheme not in (u'http', u'https'):
                 return None
     else:
-        if not (base_scheme in (u'http', u'https') and \
-                            base_scheme == cur_scheme):
+        if not (base_scheme in (u'http', u'https') and
+                base_scheme == cur_scheme):
             return None
 
     # are the netlocs compatible?
@@ -490,7 +497,6 @@ class SharedDataMiddleware(object):
             self.exports[key] = loader
         if disallow is not None:
             from fnmatch import fnmatch
-
             self.is_allowed = lambda x: not fnmatch(x, disallow)
         self.fallback_mimetype = fallback_mimetype
 
@@ -513,13 +519,11 @@ class SharedDataMiddleware(object):
 
     def get_package_loader(self, package, package_path):
         from pkg_resources import DefaultProvider, ResourceManager, \
-            get_provider
-
+             get_provider
         loadtime = datetime.utcnow()
         provider = get_provider(package)
         manager = ResourceManager()
         filesystem_bound = isinstance(provider, DefaultProvider)
-
         def loader(path):
             if path is None:
                 return None, None
@@ -535,7 +539,6 @@ class SharedDataMiddleware(object):
                 loadtime,
                 0
             )
-
         return loader
 
     def get_directory_loader(self, directory):
@@ -547,7 +550,6 @@ class SharedDataMiddleware(object):
             if os.path.isfile(path):
                 return os.path.basename(path), self._opener(path)
             return None, None
-
         return loader
 
     def generate_etag(self, mtime, file_size, real_filename):
@@ -956,7 +958,6 @@ class LimitedStream(object):
         :exc:`~werkzeug.exceptions.ClientDisconnected` exception is raised.
         """
         from werkzeug.exceptions import ClientDisconnected
-
         raise ClientDisconnected()
 
     def exhaust(self, chunk_size=1024 * 64):

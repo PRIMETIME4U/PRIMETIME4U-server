@@ -34,7 +34,7 @@ class DebugFilesKeyError(KeyError, AssertionError):
         if form_matches:
             buf.append('\n\nThe browser instead transmitted some file names. '
                        'This was submitted: %s' % ', '.join('"%s"' % x
-                                                            for x in form_matches))
+                            for x in form_matches))
         self.msg = ''.join(buf)
 
     def __str__(self):
@@ -74,7 +74,6 @@ def attach_enctype_error_multidict(request):
     object is accessed.
     """
     oldcls = request.files.__class__
-
     class newcls(oldcls):
         def __getitem__(self, key):
             try:
@@ -83,7 +82,6 @@ def attach_enctype_error_multidict(request):
                 if key not in request.form:
                     raise
                 raise DebugFilesKeyError(request, key)
-
     newcls.__name__ = oldcls.__name__
     newcls.__module__ = oldcls.__module__
     request.files.__class__ = newcls

@@ -54,7 +54,7 @@
                 return e
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import sys
@@ -62,12 +62,11 @@ import sys
 # Because of bootstrapping reasons we need to manually patch ourselves
 # onto our parent module.
 import werkzeug
-
 werkzeug.exceptions = sys.modules[__name__]
 
 from werkzeug._internal import _get_environ
 from werkzeug._compat import iteritems, integer_types, text_type, \
-    implements_to_string
+     implements_to_string
 
 from werkzeug.wrappers import Response
 
@@ -94,12 +93,10 @@ class HTTPException(Exception):
         """This method returns a new subclass of the exception provided that
         also is a subclass of `BadRequest`.
         """
-
         class newcls(cls, exception):
             def __init__(self, arg=None, *args, **kwargs):
                 cls.__init__(self, *args, **kwargs)
                 exception.__init__(self, arg)
-
         newcls.__module__ = sys._getframe(1).f_globals.get('__name__')
         newcls.__name__ = name or cls.__name__ + exception.__name__
         return newcls
@@ -116,15 +113,15 @@ class HTTPException(Exception):
     def get_body(self, environ=None):
         """Get the HTML body."""
         return text_type((
-                             u'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">\n'
-                             u'<title>%(code)s %(name)s</title>\n'
-                             u'<h1>%(name)s</h1>\n'
-                             u'%(description)s\n'
-                         ) % {
-                             'code': self.code,
-                             'name': escape(self.name),
-                             'description': self.get_description(environ)
-                         })
+            u'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">\n'
+            u'<title>%(code)s %(name)s</title>\n'
+            u'<h1>%(name)s</h1>\n'
+            u'%(description)s\n'
+        ) % {
+            'code':         self.code,
+            'name':         escape(self.name),
+            'description':  self.get_description(environ)
+        })
 
     def get_headers(self, environ=None):
         """Get a list of headers."""
@@ -542,17 +539,14 @@ class ServiceUnavailable(HTTPException):
 default_exceptions = {}
 __all__ = ['HTTPException']
 
-
 def _find_exceptions():
     for name, obj in iteritems(globals()):
         try:
             if getattr(obj, 'code', None) is not None:
                 default_exceptions[obj.code] = obj
                 __all__.append(obj.__name__)
-        except TypeError:  # pragma: no cover
+        except TypeError: # pragma: no cover
             continue
-
-
 _find_exceptions()
 del _find_exceptions
 
@@ -581,11 +575,10 @@ class Aborter(object):
             raise LookupError('no exception for %r' % code)
         raise self.mapping[code](*args, **kwargs)
 
-
 abort = Aborter()
 
 
-# : an exception that is used internally to signal both a key error and a
+#: an exception that is used internally to signal both a key error and a
 #: bad request.  Used by a lot of the datastructures.
 BadRequestKeyError = BadRequest.wrap(KeyError)
 

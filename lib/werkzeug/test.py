@@ -5,7 +5,7 @@
 
     This module implements a client to WSGI applications for testing.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import sys
@@ -22,20 +22,20 @@ except ImportError:
     from urllib.request import Request as U2Request
 try:
     from http.cookiejar import CookieJar
-except ImportError:  # Py2
+except ImportError: # Py2
     from cookielib import CookieJar
 
-from werkzeug._compat import iterlists, iteritems, itervalues, to_native, \
-    string_types, text_type, reraise, wsgi_encoding_dance, \
-    make_literal_wrapper
+from werkzeug._compat import iterlists, iteritems, itervalues, to_bytes, \
+     string_types, text_type, reraise, wsgi_encoding_dance, \
+     make_literal_wrapper
 from werkzeug._internal import _empty_stream, _get_environ
 from werkzeug.wrappers import BaseRequest
 from werkzeug.urls import url_encode, url_fix, iri_to_uri, url_unquote, \
-    url_unparse, url_parse
+     url_unparse, url_parse
 from werkzeug.wsgi import get_host, get_current_url, ClosingIterator
 from werkzeug.utils import dump_cookie
 from werkzeug.datastructures import FileMultiDict, MultiDict, \
-    CombinedMultiDict, Headers, FileStorage
+     CombinedMultiDict, Headers, FileStorage
 
 
 def stream_encode_multipart(values, use_tempfile=True, threshold=1024 * 500,
@@ -84,8 +84,8 @@ def stream_encode_multipart(values, use_tempfile=True, threshold=1024 * 500,
                 content_type = getattr(value, 'content_type', None)
                 if content_type is None:
                     content_type = filename and \
-                                   mimetypes.guess_type(filename)[0] or \
-                                   'application/octet-stream'
+                        mimetypes.guess_type(filename)[0] or \
+                        'application/octet-stream'
                 if filename is not None:
                     write('; filename="%s"\r\n' % filename)
                 else:
@@ -97,11 +97,12 @@ def stream_encode_multipart(values, use_tempfile=True, threshold=1024 * 500,
                         break
                     write_binary(chunk)
             else:
-                if isinstance(value, string_types):
-                    value = to_native(value, charset)
-                else:
+                if not isinstance(value, string_types):
                     value = str(value)
-                write('\r\n\r\n' + value)
+                else:
+                    value = to_bytes(value, charset)
+                write('\r\n\r\n')
+                write_binary(value)
             write('\r\n')
     write('--%s--\r\n' % boundary)
 
@@ -122,7 +123,6 @@ def encode_multipart(values, boundary=None, charset='utf-8'):
 def File(fd, filename=None, mimetype=None):
     """Backwards compat."""
     from warnings import warn
-
     warn(DeprecationWarning('werkzeug.test.File is deprecated, use the '
                             'EnvironBuilder or FileStorage instead'))
     return FileStorage(fd, filename=filename, content_type=mimetype)
@@ -268,7 +268,7 @@ class EnvironBuilder(object):
     :param charset: the charset used to encode unicode data.
     """
 
-    # : the server protocol to use.  defaults to HTTP/1.1
+    #: the server protocol to use.  defaults to HTTP/1.1
     server_protocol = 'HTTP/1.1'
 
     #: the wsgi version to use.  defaults to (1, 0)
@@ -330,7 +330,7 @@ class EnvironBuilder(object):
             else:
                 for key, value in _iter_data(data):
                     if isinstance(value, (tuple, dict)) or \
-                            hasattr(value, 'read'):
+                       hasattr(value, 'read'):
                         self._add_file_from_data(key, value)
                     else:
                         self.form.setlistdefault(key).append(value)
@@ -341,7 +341,6 @@ class EnvironBuilder(object):
             self.files.add_file(key, *value)
         elif isinstance(value, dict):
             from warnings import warn
-
             warn(DeprecationWarning('it\'s no longer possible to pass dicts '
                                     'as `data`.  Use tuples or FileStorage '
                                     'objects instead'), stacklevel=2)
@@ -416,7 +415,6 @@ class EnvironBuilder(object):
 
     def form_property(name, storage, doc):
         key = '_' + name
-
         def getter(self):
             if self._input_stream is not None:
                 raise AttributeError('an input stream is defined')
@@ -425,11 +423,9 @@ class EnvironBuilder(object):
                 rv = storage()
                 setattr(self, key, rv)
             return rv
-
         def setter(self, value):
             self._input_stream = None
             setattr(self, key, value)
-
         return property(getter, setter, doc)
 
     form = form_property('form', MultiDict, doc='''
@@ -558,23 +554,23 @@ class EnvironBuilder(object):
         qs = wsgi_encoding_dance(self.query_string)
 
         result.update({
-            'REQUEST_METHOD': self.method,
-            'SCRIPT_NAME': _path_encode(self.script_root),
-            'PATH_INFO': _path_encode(self.path),
-            'QUERY_STRING': qs,
-            'SERVER_NAME': self.server_name,
-            'SERVER_PORT': str(self.server_port),
-            'HTTP_HOST': self.host,
-            'SERVER_PROTOCOL': self.server_protocol,
-            'CONTENT_TYPE': content_type or '',
-            'CONTENT_LENGTH': str(content_length or '0'),
-            'wsgi.version': self.wsgi_version,
-            'wsgi.url_scheme': self.url_scheme,
-            'wsgi.input': input_stream,
-            'wsgi.errors': self.errors_stream,
-            'wsgi.multithread': self.multithread,
-            'wsgi.multiprocess': self.multiprocess,
-            'wsgi.run_once': self.run_once
+            'REQUEST_METHOD':       self.method,
+            'SCRIPT_NAME':          _path_encode(self.script_root),
+            'PATH_INFO':            _path_encode(self.path),
+            'QUERY_STRING':         qs,
+            'SERVER_NAME':          self.server_name,
+            'SERVER_PORT':          str(self.server_port),
+            'HTTP_HOST':            self.host,
+            'SERVER_PROTOCOL':      self.server_protocol,
+            'CONTENT_TYPE':         content_type or '',
+            'CONTENT_LENGTH':       str(content_length or '0'),
+            'wsgi.version':         self.wsgi_version,
+            'wsgi.url_scheme':      self.url_scheme,
+            'wsgi.input':           input_stream,
+            'wsgi.errors':          self.errors_stream,
+            'wsgi.multithread':     self.multithread,
+            'wsgi.multiprocess':    self.multiprocess,
+            'wsgi.run_once':        self.run_once
         })
         for key, value in self.headers.to_wsgi_list():
             result['HTTP_%s' % key.upper().replace('-', '_')] = value
@@ -744,7 +740,7 @@ class Client(object):
         while 1:
             status_code = int(response[1].split(None, 1)[0])
             if status_code not in (301, 302, 303, 305, 307) \
-                    or not follow_redirects:
+               or not follow_redirects:
                 break
             new_location = response[2]['location']
             new_redirect_entry = (new_location, status_code)

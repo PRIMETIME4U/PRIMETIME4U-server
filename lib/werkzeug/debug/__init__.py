@@ -5,21 +5,19 @@
 
     WSGI application traceback debugger.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import json
 import mimetypes
 from os.path import join, dirname, basename, isfile
-
 from werkzeug.wrappers import BaseRequest as Request, BaseResponse as Response
 from werkzeug.debug.tbtools import get_current_traceback, render_console_html
 from werkzeug.debug.console import Console
 from werkzeug.security import gen_salt
 
 
-
-# : import this here because it once was documented as being available
+#: import this here because it once was documented as being available
 #: from this module.  In case there are users left ...
 from werkzeug.debug.repr import debug_repr
 
@@ -70,7 +68,6 @@ class DebuggedApplication(object):
                  show_hidden_frames=False, lodgeit_url=None):
         if lodgeit_url is not None:
             from warnings import warn
-
             warn(DeprecationWarning('Werkzeug now pastes into gists.'))
         if not console_init_func:
             console_init_func = dict
@@ -97,7 +94,7 @@ class DebuggedApplication(object):
             if hasattr(app_iter, 'close'):
                 app_iter.close()
             traceback = get_current_traceback(skip=1, show_hidden_frames=
-            self.show_hidden_frames,
+                                              self.show_hidden_frames,
                                               ignore_system_exceptions=True)
             for frame in traceback.frames:
                 self.frames[frame.id] = frame
@@ -122,7 +119,7 @@ class DebuggedApplication(object):
             else:
                 yield traceback.render_full(evalex=self.evalex,
                                             secret=self.secret) \
-                    .encode('utf-8', 'replace')
+                               .encode('utf-8', 'replace')
 
             traceback.log(environ['wsgi.errors'])
 
@@ -151,7 +148,7 @@ class DebuggedApplication(object):
         filename = join(dirname(__file__), 'shared', basename(filename))
         if isfile(filename):
             mimetype = mimetypes.guess_type(filename)[0] \
-                       or 'application/octet-stream'
+                or 'application/octet-stream'
             f = open(filename, 'rb')
             try:
                 return Response(f.read(), mimetype=mimetype)
@@ -175,14 +172,14 @@ class DebuggedApplication(object):
             if cmd == 'resource' and arg:
                 response = self.get_resource(request, arg)
             elif cmd == 'paste' and traceback is not None and \
-                            secret == self.secret:
+                 secret == self.secret:
                 response = self.paste_traceback(request, traceback)
             elif cmd == 'source' and frame and self.secret == secret:
                 response = self.get_source(request, frame)
             elif self.evalex and cmd is not None and frame is not None and \
-                            self.secret == secret:
+                 self.secret == secret:
                 response = self.execute_command(request, cmd, frame)
         elif self.evalex and self.console_path is not None and \
-                        request.path == self.console_path:
+           request.path == self.console_path:
             response = self.display_console(request)
         return response(environ, start_response)

@@ -85,7 +85,7 @@ r"""
             request.client_session.save_cookie(response)
             return response(environ, start_response)
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import pickle
@@ -129,7 +129,7 @@ class SecureCookie(ModificationTrackingDict):
     :param new: The initial value of the `new` flag.
     """
 
-    # : The hash method to use.  This has to be a module with a new function
+    #: The hash method to use.  This has to be a module with a new function
     #: or a function that creates a hashlib object.  Such as `hashlib.md5`
     #: Subclasses can override this attribute.  The default hash is sha1.
     #: Make sure to wrap this in staticmethod() if you store an arbitrary

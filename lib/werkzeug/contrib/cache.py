@@ -53,7 +53,7 @@
     you have access to it (either as a module global you can import or you just
     put it into your WSGI application).
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import os
@@ -61,14 +61,13 @@ import re
 import tempfile
 from hashlib import md5
 from time import time
-
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
 
 from werkzeug._compat import iteritems, string_types, text_type, \
-    integer_types, to_bytes
+     integer_types, to_bytes
 from werkzeug.posixemulation import rename
 
 
@@ -256,7 +255,7 @@ class SimpleCache(BaseCache):
             timeout = self.default_timeout
         self._prune()
         self._cache[key] = (time() + timeout, pickle.dumps(value,
-                                                           pickle.HIGHEST_PROTOCOL))
+            pickle.HIGHEST_PROTOCOL))
 
     def add(self, key, value, timeout=None):
         if timeout is None:
@@ -264,7 +263,7 @@ class SimpleCache(BaseCache):
         if len(self._cache) > self._threshold:
             self._prune()
         item = (time() + timeout, pickle.dumps(value,
-                                               pickle.HIGHEST_PROTOCOL))
+            pickle.HIGHEST_PROTOCOL))
         self._cache.setdefault(key, item)
 
     def delete(self, key):
@@ -272,7 +271,6 @@ class SimpleCache(BaseCache):
 
 
 _test_memcached_key = re.compile(br'[^\x00-\x21\xff]{1,250}$').match
-
 
 class MemcachedCache(BaseCache):
     """A cache that uses memcached as backend.
@@ -584,7 +582,7 @@ class FileSystemCache(BaseCache):
     :param mode: the file mode wanted for the cache files, default 0600
     """
 
-    # : used for temporary files by the FileSystemCache
+    #: used for temporary files by the FileSystemCache
     _fs_transaction_suffix = '.__wz_cache'
 
     def __init__(self, cache_dir, threshold=500, default_timeout=300, mode=0o600):
@@ -633,7 +631,7 @@ class FileSystemCache(BaseCache):
 
     def _get_filename(self, key):
         if isinstance(key, text_type):
-            key = key.encode('utf-8')  #XXX unicode review
+            key = key.encode('utf-8') #XXX unicode review
         hash = md5(key).hexdigest()
         return os.path.join(self._path, hash)
 

@@ -21,7 +21,6 @@
 
 def setup():
     from ..exthook import ExtensionImporter
-
     importer = ExtensionImporter(['flask_%s', 'flaskext.%s'], __name__)
     importer.install()
 

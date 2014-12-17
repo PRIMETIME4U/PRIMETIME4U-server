@@ -48,7 +48,7 @@ class View(object):
     generated view function!
     """
 
-    # : A for which methods this pluggable view can handle.
+    #: A for which methods this pluggable view can handle.
     methods = None
 
     #: The canonical way to decorate class-based views is to decorate the
@@ -79,7 +79,6 @@ class View(object):
         The arguments passed to :meth:`as_view` are forwarded to the
         constructor of the class.
         """
-
         def view(*args, **kwargs):
             self = view.view_class(*class_args, **class_kwargs)
             return self.dispatch_request(*args, **kwargs)
@@ -104,6 +103,7 @@ class View(object):
 
 
 class MethodViewType(type):
+
     def __new__(cls, name, bases, d):
         rv = type.__new__(cls, name, bases, d)
         if 'methods' not in d:
@@ -139,7 +139,6 @@ class MethodView(with_metaclass(MethodViewType, View)):
 
         app.add_url_rule('/counter', view_func=CounterAPI.as_view('counter'))
     """
-
     def dispatch_request(self, *args, **kwargs):
         meth = getattr(self, request.method.lower(), None)
         # if the request method is HEAD and we don't have a handler for it

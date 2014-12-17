@@ -6,7 +6,7 @@
     Addon module that allows to create a JavaScript function from a map
     that generates rules.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 try:
@@ -19,7 +19,6 @@ except ImportError:
             raise RuntimeError('simplejson required for jsrouting')
 
 from inspect import getmro
-
 from werkzeug.routing import NumberConverter
 from werkzeug._compat import iteritems
 
@@ -184,16 +183,15 @@ def generate_map(map, name='url_map'):
     information, don't use JavaScript generation!
     """
     from warnings import warn
-
     warn(DeprecationWarning('This module is deprecated'))
     map.update()
     rules = []
     converters = []
     for rule in map.iter_rules():
         trace = [{
-                     'is_dynamic': is_dynamic,
-                     'data': data
-                 } for is_dynamic, data in rule._trace]
+            'is_dynamic':   is_dynamic,
+            'data':         data
+        } for is_dynamic, data in rule._trace]
         rule_converters = {}
         for key, converter in iteritems(rule._converters):
             js_func = js_to_url_function(converter)
@@ -204,11 +202,11 @@ def generate_map(map, name='url_map'):
                 index = len(converters) - 1
             rule_converters[key] = index
         rules.append({
-            u'endpoint': rule.endpoint,
-            u'arguments': list(rule.arguments),
-            u'converters': rule_converters,
-            u'trace': trace,
-            u'defaults': rule.defaults
+            u'endpoint':    rule.endpoint,
+            u'arguments':   list(rule.arguments),
+            u'converters':  rule_converters,
+            u'trace':       trace,
+            u'defaults':    rule.defaults
         })
 
     return render_template(name_parts=name and name.split('.') or [],
@@ -219,12 +217,12 @@ def generate_map(map, name='url_map'):
 def generate_adapter(adapter, name='url_for', map_name='url_map'):
     """Generates the url building function for a map."""
     values = {
-        u'server_name': dumps(adapter.server_name),
-        u'script_name': dumps(adapter.script_name),
-        u'subdomain': dumps(adapter.subdomain),
-        u'url_scheme': dumps(adapter.url_scheme),
-        u'name': name,
-        u'map_name': map_name
+        u'server_name':     dumps(adapter.server_name),
+        u'script_name':     dumps(adapter.script_name),
+        u'subdomain':       dumps(adapter.subdomain),
+        u'url_scheme':      dumps(adapter.url_scheme),
+        u'name':            name,
+        u'map_name':        map_name
     }
     return u'''\
 var %(name)s = %(map_name)s(
@@ -260,5 +258,5 @@ return result;''' % conv.fixed_digits
 
 
 js_to_url_functions = {
-    NumberConverter: NumberConverter_js_to_url
+    NumberConverter:    NumberConverter_js_to_url
 }

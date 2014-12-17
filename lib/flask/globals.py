@@ -11,7 +11,6 @@
 """
 
 from functools import partial
-
 from werkzeug.local import LocalStack, LocalProxy
 
 

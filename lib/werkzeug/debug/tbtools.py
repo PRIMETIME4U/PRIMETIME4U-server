@@ -5,10 +5,11 @@
 
     This module provides various traceback related utility functions.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD.
 """
 import re
+
 import os
 import sys
 import json
@@ -32,6 +33,7 @@ try:
     system_exceptions += (GeneratorExit,)
 except NameError:
     pass
+
 
 HEADER = u'''\
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
@@ -138,11 +140,11 @@ SOURCE_LINE_HTML = u'''\
 
 def render_console_html(secret):
     return CONSOLE_HTML % {
-        'evalex': 'true',
-        'console': 'true',
-        'title': 'Console',
-        'secret': secret,
-        'traceback_id': -1
+        'evalex':           'true',
+        'console':          'true',
+        'title':            'Console',
+        'secret':           secret,
+        'traceback_id':     -1
     }
 
 
@@ -183,14 +185,13 @@ class Line(object):
         if self.current:
             rv.append('current')
         return rv
-
     classes = property(classes)
 
     def render(self):
         return SOURCE_LINE_HTML % {
-            'classes': u' '.join(self.classes),
-            'lineno': self.lineno,
-            'code': escape(self.code)
+            'classes':      u' '.join(self.classes),
+            'lineno':       self.lineno,
+            'code':         escape(self.code)
         }
 
 
@@ -253,7 +254,6 @@ class Traceback(object):
     def is_syntax_error(self):
         """Is it a syntax error?"""
         return isinstance(self.exc_value, SyntaxError)
-
     is_syntax_error = property(is_syntax_error)
 
     def exception(self):
@@ -261,7 +261,6 @@ class Traceback(object):
         buf = traceback.format_exception_only(self.exc_type, self.exc_value)
         rv = ''.join(buf).strip()
         return rv.decode('utf-8', 'replace') if PY2 else rv
-
     exception = property(exception)
 
     def log(self, logfile=None):
@@ -322,26 +321,26 @@ class Traceback(object):
             description_wrapper = u'<blockquote>%s</blockquote>'
 
         return SUMMARY_HTML % {
-            'classes': u' '.join(classes),
-            'title': title and u'<h3>%s</h3>' % title or u'',
-            'frames': u'\n'.join(frames),
-            'description': description_wrapper % escape(self.exception)
+            'classes':      u' '.join(classes),
+            'title':        title and u'<h3>%s</h3>' % title or u'',
+            'frames':       u'\n'.join(frames),
+            'description':  description_wrapper % escape(self.exception)
         }
 
     def render_full(self, evalex=False, secret=None):
         """Render the Full HTML page with the traceback info."""
         exc = escape(self.exception)
         return PAGE_HTML % {
-            'evalex': evalex and 'true' or 'false',
-            'console': 'false',
-            'title': exc,
-            'exception': exc,
-            'exception_type': escape(self.exception_type),
-            'summary': self.render_summary(include_title=False),
-            'plaintext': self.plaintext,
-            'plaintext_cs': re.sub('-{2,}', '-', self.plaintext),
-            'traceback_id': self.id,
-            'secret': secret
+            'evalex':           evalex and 'true' or 'false',
+            'console':          'false',
+            'title':            exc,
+            'exception':        exc,
+            'exception_type':   escape(self.exception_type),
+            'summary':          self.render_summary(include_title=False),
+            'plaintext':        self.plaintext,
+            'plaintext_cs':     re.sub('-{2,}', '-', self.plaintext),
+            'traceback_id':     self.id,
+            'secret':           secret
         }
 
     def generate_plaintext_traceback(self):
@@ -358,7 +357,6 @@ class Traceback(object):
 
     def plaintext(self):
         return u'\n'.join(self.generate_plaintext_traceback())
-
     plaintext = cached_property(plaintext)
 
     id = property(lambda x: id(x))
@@ -397,11 +395,11 @@ class Frame(object):
     def render(self):
         """Render a single frame in a traceback."""
         return FRAME_HTML % {
-            'id': self.id,
-            'filename': escape(self.filename),
-            'lineno': self.lineno,
-            'function_name': escape(self.function_name),
-            'current_line': escape(self.current_line.strip())
+            'id':               self.id,
+            'filename':         escape(self.filename),
+            'lineno':           self.lineno,
+            'function_name':    escape(self.function_name),
+            'current_line':     escape(self.current_line.strip())
         }
 
     def get_annotated_lines(self):

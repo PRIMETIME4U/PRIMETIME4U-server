@@ -48,7 +48,7 @@ r"""
                 response.set_cookie('cookie_name', request.session.sid)
             return response(environ, start_response)
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -74,7 +74,7 @@ _sha1_re = re.compile(r'^[a-f0-9]{40}$')
 def _urandom():
     if hasattr(os, 'urandom'):
         return os.urandom(30)
-    return random()
+    return text_type(random()).encode('ascii')
 
 
 def generate_key(salt=None):
@@ -93,7 +93,6 @@ class ModificationTrackingDict(CallbackDict):
     def __init__(self, *args, **kwargs):
         def on_update(self):
             self.modified = True
-
         self.modified = False
         CallbackDict.__init__(self, on_update=on_update)
         dict.update(self, *args, **kwargs)
@@ -187,7 +186,7 @@ class SessionStore(object):
         return self.session_class({}, sid, True)
 
 
-# : used for temporary files by the filesystem session store
+#: used for temporary files by the filesystem session store
 _fs_transaction_suffix = '.__wz_sess'
 
 
@@ -340,11 +339,10 @@ class SessionMiddleware(object):
             if session.should_save:
                 self.store.save(session)
                 headers.append(('Set-Cookie', dump_cookie(self.cookie_name,
-                                                          session.sid, self.cookie_age,
-                                                          self.cookie_expires, self.cookie_path,
-                                                          self.cookie_domain, self.cookie_secure,
-                                                          self.cookie_httponly)))
+                                session.sid, self.cookie_age,
+                                self.cookie_expires, self.cookie_path,
+                                self.cookie_domain, self.cookie_secure,
+                                self.cookie_httponly)))
             return start_response(status, headers, exc_info)
-
         return ClosingIterator(self.app(environ, injecting_start_response),
                                lambda: self.store.save_if_modified(session))

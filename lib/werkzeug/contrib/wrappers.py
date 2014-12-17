@@ -17,11 +17,10 @@
     Afterwards this request object provides the extra functionality of the
     :class:`JSONRequestMixin`.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import codecs
-
 try:
     from simplejson import loads
 except ImportError:
@@ -71,7 +70,7 @@ class ProtobufRequestMixin(object):
     .. _protobuf: http://code.google.com/p/protobuf/
     """
 
-    # : by default the :class:`ProtobufRequestMixin` will raise a
+    #: by default the :class:`ProtobufRequestMixin` will raise a
     #: :exc:`~werkzeug.exceptions.BadRequest` if the object is not
     #: initialized.  You can bypass that check by setting this
     #: attribute to `False`.
@@ -201,7 +200,7 @@ class DynamicCharsetRequestMixin(object):
     .. versionadded:: 0.6
     """
 
-    # : the default charset that is assumed if the content type header
+    #: the default charset that is assumed if the content type header
     #: is missing or does not contain a charset parameter.  The default
     #: is latin1 which is what HTTP specifies as default charset.
     #: You may however want to set this to utf-8 to better support
@@ -253,7 +252,7 @@ class DynamicCharsetResponseMixin(object):
     .. versionadded:: 0.6
     """
 
-    # : the default charset.
+    #: the default charset.
     default_charset = 'utf-8'
 
     def _get_charset(self):

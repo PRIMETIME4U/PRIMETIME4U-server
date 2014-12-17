@@ -18,7 +18,7 @@
                          updated=post.last_update, published=post.pub_date)
             return feed.get_response()
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from datetime import datetime
@@ -118,7 +118,7 @@ class AtomFeed(object):
         self.entries = entries and list(entries) or []
 
         if not hasattr(self.author, '__iter__') \
-                or isinstance(self.author, string_types + (dict,)):
+           or isinstance(self.author, string_types + (dict,)):
             self.author = [self.author]
         for i, author in enumerate(self.author):
             if not isinstance(author, dict):
@@ -170,10 +170,10 @@ class AtomFeed(object):
             yield u'  <link href="%s" />\n' % escape(self.url)
         if self.feed_url:
             yield u'  <link href="%s" rel="self" />\n' % \
-                  escape(self.feed_url)
+                escape(self.feed_url)
         for link in self.links:
             yield u'  <link %s/>\n' % ''.join('%s="%s" ' % \
-                                              (k, escape(link[k])) for k in link)
+                (k, escape(link[k])) for k in link)
         for author in self.author:
             yield u'  <author>\n'
             yield u'    <name>%s</name>\n' % escape(author['name'])
@@ -284,7 +284,7 @@ class FeedEntry(object):
         self.xml_base = kwargs.get('xml_base', feed_url)
 
         if not hasattr(self.author, '__iter__') \
-                or isinstance(self.author, string_types + (dict,)):
+           or isinstance(self.author, string_types + (dict,)):
             self.author = [self.author]
         for i, author in enumerate(self.author):
             if not isinstance(author, dict):
@@ -327,10 +327,10 @@ class FeedEntry(object):
             yield u'  </author>\n'
         for link in self.links:
             yield u'  <link %s/>\n' % ''.join('%s="%s" ' % \
-                                              (k, escape(link[k])) for k in link)
+                (k, escape(link[k])) for k in link)
         for category in self.categories:
             yield u'  <category %s/>\n' % ''.join('%s="%s" ' % \
-                                                  (k, escape(category[k])) for k in category)
+                (k, escape(category[k])) for k in category)
         if self.summary:
             yield u'  ' + _make_text_block('summary', self.summary,
                                            self.summary_type)

@@ -13,29 +13,28 @@
     module.
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
 from time import time, gmtime
-
 try:
     from email.utils import parsedate_tz
-except ImportError:  # pragma: no cover
+except ImportError: # pragma: no cover
     from email.Utils import parsedate_tz
 try:
     from urllib2 import parse_http_list as _parse_list_header
-except ImportError:  # pragma: no cover
+except ImportError: # pragma: no cover
     from urllib.request import parse_http_list as _parse_list_header
 from datetime import datetime, timedelta
 from hashlib import md5
 import base64
 
 from werkzeug._internal import _cookie_quote, _make_cookie_domain, \
-    _cookie_parse_impl
+     _cookie_parse_impl
 from werkzeug._compat import to_unicode, iteritems, text_type, \
-    string_types, try_coerce_native, to_bytes, PY2, \
-    integer_types
+     string_types, try_coerce_native, to_bytes, PY2, \
+     integer_types
 
 
 # incorrect
@@ -47,7 +46,7 @@ _etag_re = re.compile(r'([Ww]/)?(?:"(.*?)"|(.*?))(?:\s*,\s*|$)')
 _unsafe_header_chars = set('()<>@,;:\"/[]?={} \t')
 _quoted_string_re = r'"[^"\\]*(?:\\.[^"\\]*)*"'
 _option_header_piece_re = re.compile(r';\s*(%s|[^\s;=]+)\s*(?:=\s*(%s|[^;]+))?\s*' %
-                                     (_quoted_string_re, _quoted_string_re))
+    (_quoted_string_re, _quoted_string_re))
 
 _entity_headers = frozenset([
     'allow', 'content-encoding', 'content-language', 'content-length',
@@ -60,61 +59,62 @@ _hop_by_hop_headers = frozenset([
     'upgrade'
 ])
 
+
 HTTP_STATUS_CODES = {
-    100: 'Continue',
-    101: 'Switching Protocols',
-    102: 'Processing',
-    200: 'OK',
-    201: 'Created',
-    202: 'Accepted',
-    203: 'Non Authoritative Information',
-    204: 'No Content',
-    205: 'Reset Content',
-    206: 'Partial Content',
-    207: 'Multi Status',
-    226: 'IM Used',  # see RFC 3229
-    300: 'Multiple Choices',
-    301: 'Moved Permanently',
-    302: 'Found',
-    303: 'See Other',
-    304: 'Not Modified',
-    305: 'Use Proxy',
-    307: 'Temporary Redirect',
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    402: 'Payment Required',  # unused
-    403: 'Forbidden',
-    404: 'Not Found',
-    405: 'Method Not Allowed',
-    406: 'Not Acceptable',
-    407: 'Proxy Authentication Required',
-    408: 'Request Timeout',
-    409: 'Conflict',
-    410: 'Gone',
-    411: 'Length Required',
-    412: 'Precondition Failed',
-    413: 'Request Entity Too Large',
-    414: 'Request URI Too Long',
-    415: 'Unsupported Media Type',
-    416: 'Requested Range Not Satisfiable',
-    417: 'Expectation Failed',
-    418: 'I\'m a teapot',  # see RFC 2324
-    422: 'Unprocessable Entity',
-    423: 'Locked',
-    424: 'Failed Dependency',
-    426: 'Upgrade Required',
-    428: 'Precondition Required',  # see RFC 6585
-    429: 'Too Many Requests',
-    431: 'Request Header Fields Too Large',
-    449: 'Retry With',  # proprietary MS extension
-    500: 'Internal Server Error',
-    501: 'Not Implemented',
-    502: 'Bad Gateway',
-    503: 'Service Unavailable',
-    504: 'Gateway Timeout',
-    505: 'HTTP Version Not Supported',
-    507: 'Insufficient Storage',
-    510: 'Not Extended'
+    100:    'Continue',
+    101:    'Switching Protocols',
+    102:    'Processing',
+    200:    'OK',
+    201:    'Created',
+    202:    'Accepted',
+    203:    'Non Authoritative Information',
+    204:    'No Content',
+    205:    'Reset Content',
+    206:    'Partial Content',
+    207:    'Multi Status',
+    226:    'IM Used',              # see RFC 3229
+    300:    'Multiple Choices',
+    301:    'Moved Permanently',
+    302:    'Found',
+    303:    'See Other',
+    304:    'Not Modified',
+    305:    'Use Proxy',
+    307:    'Temporary Redirect',
+    400:    'Bad Request',
+    401:    'Unauthorized',
+    402:    'Payment Required',     # unused
+    403:    'Forbidden',
+    404:    'Not Found',
+    405:    'Method Not Allowed',
+    406:    'Not Acceptable',
+    407:    'Proxy Authentication Required',
+    408:    'Request Timeout',
+    409:    'Conflict',
+    410:    'Gone',
+    411:    'Length Required',
+    412:    'Precondition Failed',
+    413:    'Request Entity Too Large',
+    414:    'Request URI Too Long',
+    415:    'Unsupported Media Type',
+    416:    'Requested Range Not Satisfiable',
+    417:    'Expectation Failed',
+    418:    'I\'m a teapot',        # see RFC 2324
+    422:    'Unprocessable Entity',
+    423:    'Locked',
+    424:    'Failed Dependency',
+    426:    'Upgrade Required',
+    428:    'Precondition Required', # see RFC 6585
+    429:    'Too Many Requests',
+    431:    'Request Header Fields Too Large',
+    449:    'Retry With',           # proprietary MS extension
+    500:    'Internal Server Error',
+    501:    'Not Implemented',
+    502:    'Bad Gateway',
+    503:    'Service Unavailable',
+    504:    'Gateway Timeout',
+    505:    'HTTP Version Not Supported',
+    507:    'Insufficient Storage',
+    510:    'Not Extended'
 }
 
 
@@ -124,7 +124,7 @@ def wsgi_to_bytes(data):
     """
     if isinstance(data, bytes):
         return data
-    return data.encode('latin1')  # XXX: utf8 fallback?
+    return data.encode('latin1') #XXX: utf8 fallback?
 
 
 def bytes_to_wsgi(data):
@@ -287,7 +287,7 @@ def parse_dict_header(value, cls=dict):
     """
     result = cls()
     if not isinstance(value, text_type):
-        # XXX: validate
+        #XXX: validate
         value = bytes_to_wsgi(value)
     for item in _parse_list_header(value):
         if '=' not in item:
@@ -316,7 +316,6 @@ def parse_options_header(value):
     :param value: the header to parse.
     :return: (str, options)
     """
-
     def _tokenize(string):
         for match in _option_header_piece_re.finditer(string):
             key, value = match.groups()
@@ -443,7 +442,7 @@ def parse_authorization_header(value):
             username, password = base64.b64decode(auth_info).split(b':', 1)
         except Exception as e:
             return
-        return Authorization('basic', {'username': bytes_to_wsgi(username),
+        return Authorization('basic', {'username':  bytes_to_wsgi(username),
                                        'password': bytes_to_wsgi(password)})
     elif auth_type == b'digest':
         auth_map = parse_dict_header(auth_info)
@@ -970,10 +969,12 @@ def is_byte_range_valid(start, stop, length):
 
 # circular dependency fun
 from werkzeug.datastructures import Accept, HeaderSet, ETags, Authorization, \
-    WWWAuthenticate, TypeConversionDict, IfRange, Range, ContentRange, \
-    RequestCacheControl
+     WWWAuthenticate, TypeConversionDict, IfRange, Range, ContentRange, \
+     RequestCacheControl
 
 
 # DEPRECATED
 # backwards compatible imports
+from werkzeug.datastructures import MIMEAccept, CharsetAccept, \
+     LanguageAccept, Headers
 from werkzeug.urls import iri_to_uri

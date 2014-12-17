@@ -5,18 +5,20 @@
 
     This module provides mixins and classes with an immutable interface.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
 import sys
 import codecs
 import mimetypes
+from copy import deepcopy
 from itertools import repeat
 
 from werkzeug._internal import _missing, _empty_stream
 from werkzeug._compat import iterkeys, itervalues, iteritems, iterlists, \
-    PY2, text_type, integer_types, string_types, make_literal_wrapper
+     PY2, text_type, integer_types, string_types, make_literal_wrapper, \
+     to_native
 
 
 _locale_delim_re = re.compile(r'[_-]')
@@ -48,20 +50,18 @@ def iter_multi_items(mapping):
 def native_itermethods(names):
     if not PY2:
         return lambda x: x
-
     def setmethod(cls, name):
         itermethod = getattr(cls, name)
         setattr(cls, 'iter%s' % name, itermethod)
         listmethod = lambda self, *a, **kw: list(itermethod(self, *a, **kw))
         listmethod.__doc__ = \
-            'Like :py:meth:`iter%s`, but returns a list.' % name
+                'Like :py:meth:`iter%s`, but returns a list.' % name
         setattr(cls, name, listmethod)
 
     def wrap(cls):
         for name in names:
             setmethod(cls, name)
         return cls
-
     return wrap
 
 
@@ -92,7 +92,6 @@ class ImmutableListMixin(object):
 
     def __iadd__(self, other):
         is_immutable(self)
-
     __imul__ = __iadd__
 
     def __setitem__(self, key, value):
@@ -103,7 +102,6 @@ class ImmutableListMixin(object):
 
     def append(self, item):
         is_immutable(self)
-
     remove = append
 
     def extend(self, iterable):
@@ -232,7 +230,6 @@ class UpdateDictMixin(object):
             if self.on_update is not None:
                 self.on_update(self)
             return rv
-
         oncall.__name__ = name
         return oncall
 
@@ -542,6 +539,10 @@ class MultiDict(TypeConversionDict):
         """Return a shallow copy of this object."""
         return self.__class__(self)
 
+    def deepcopy(self, memo=None):
+        """Return a deep copy of this object."""
+        return self.__class__(deepcopy(self.to_dict(flat=False), memo))
+
     def to_dict(self, flat=True):
         """Return the contents as regular dict.  If `flat` is `True` the
         returned dict will only have the first item present, if `flat` is
@@ -609,6 +610,9 @@ class MultiDict(TypeConversionDict):
 
     def __copy__(self):
         return self.copy()
+
+    def __deepcopy__(self, memo):
+        return self.deepcopy(memo=memo)
 
     def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, list(iteritems(self, multi=True)))
@@ -823,7 +827,7 @@ class OrderedMultiDict(MultiDict):
 
 def _options_header_vkw(value, kw):
     return dump_options_header(value, dict((k.replace('_', '-'), v)
-                                           for k, v in kw.items()))
+                                            for k, v in kw.items()))
 
 
 def _unicodify_header_value(value):
@@ -1096,7 +1100,7 @@ class Headers(object):
             raise TypeError('Value should be unicode.')
         if u'\n' in value or u'\r' in value:
             raise ValueError('Detected newline in header value.  This is '
-                             'a potential security problem')
+                'a potential security problem')
 
     def add_header(self, _key, _value, **_kw):
         """Add a new header tuple to the list.
@@ -1174,7 +1178,6 @@ class Headers(object):
     def to_list(self, charset='iso-8859-1'):
         """Convert the headers into a list suitable for WSGI."""
         from warnings import warn
-
         warn(DeprecationWarning('Method removed, use to_wsgi_list instead'),
              stacklevel=2)
         return self.to_wsgi_list()
@@ -1188,7 +1191,7 @@ class Headers(object):
         :return: list
         """
         if PY2:
-            return [(k, v.encode('latin1')) for k, v in self]
+            return [(to_native(k), v.encode('latin1')) for k, v in self]
         return list(self)
 
     def copy(self):
@@ -1227,12 +1230,10 @@ class ImmutableHeadersMixin(object):
 
     def __setitem__(self, key, value):
         is_immutable(self)
-
     set = __setitem__
 
     def add(self, item):
         is_immutable(self)
-
     remove = add_header = add
 
     def extend(self, iterable):
@@ -1284,7 +1285,7 @@ class EnvironHeaders(ImmutableHeadersMixin, Headers):
     def __iter__(self):
         for key, value in iteritems(self.environ):
             if key.startswith('HTTP_') and key not in \
-                    ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
+               ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
                 yield (key[5:].replace('_', '-').title(),
                        _unicodify_header_value(value))
             elif key in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
@@ -1721,7 +1722,6 @@ class LanguageAccept(Accept):
     def _value_matches(self, value, item):
         def _normalize(language):
             return _locale_delim_re.split(language.lower())
-
         return item == '*' or _normalize(value) == _normalize(item)
 
 
@@ -1734,7 +1734,6 @@ class CharsetAccept(Accept):
                 return codecs.lookup(name).name
             except LookupError:
                 return name.lower()
-
         return item == '*' or _normalize(value) == _normalize(item)
 
 
@@ -2142,7 +2141,7 @@ class IfRange(object):
     """
 
     def __init__(self, etag=None, date=None):
-        # : The etag parsed and unquoted.  Ranges always operate on strong
+        #: The etag parsed and unquoted.  Ranges always operate on strong
         #: etags so the weakness information is not necessary.
         self.etag = etag
         #: The date in parsed format or `None`.
@@ -2172,7 +2171,7 @@ class Range(object):
     """
 
     def __init__(self, units, ranges):
-        # : The units of this range.  Usually "bytes".
+        #: The units of this range.  Usually "bytes".
         self.units = units
         #: A list of ``(begin, end)`` tuples for the range header provided.
         #: The ranges are non-inclusive.
@@ -2233,15 +2232,13 @@ class ContentRange(object):
     def _callback_property(name):
         def fget(self):
             return getattr(self, name)
-
         def fset(self, value):
             setattr(self, name, value)
             if self.on_update is not None:
                 self.on_update(self)
-
         return property(fget, fset)
 
-    # : The units to use, usually "bytes"
+    #: The units to use, usually "bytes"
     units = _callback_property('_units')
     #: The start point of the range or `None`.
     start = _callback_property('_start')
@@ -2348,20 +2345,18 @@ class Authorization(ImmutableDictMixin, dict):
     def qop(self):
         """Indicates what "quality of protection" the client has applied to
         the message for HTTP digest auth."""
-
         def on_update(header_set):
             if not header_set and 'qop' in self:
                 del self['qop']
             elif header_set:
                 self['qop'] = header_set.to_header()
-
         return parse_set_header(self.get('qop'), on_update)
 
 
 class WWWAuthenticate(UpdateDictMixin, dict):
     """Provides simple access to `WWW-Authenticate` headers."""
 
-    # : list of keys that require quoting in the generated header
+    #: list of keys that require quoting in the generated header
     _require_quoting = frozenset(['domain', 'nonce', 'opaque', 'realm'])
 
     def __init__(self, auth_type=None, values=None, on_update=None):
@@ -2381,10 +2376,10 @@ class WWWAuthenticate(UpdateDictMixin, dict):
                    algorithm=None, stale=False):
         """Clear the auth info and enable digest auth."""
         d = {
-            '__auth_type__': 'digest',
-            'realm': realm,
-            'nonce': nonce,
-            'qop': dump_header(qop)
+            '__auth_type__':    'digest',
+            'realm':            realm,
+            'nonce':            nonce,
+            'qop':              dump_header(qop)
         }
         if stale:
             d['stale'] = 'TRUE'
@@ -2403,7 +2398,7 @@ class WWWAuthenticate(UpdateDictMixin, dict):
         auth_type = d.pop('__auth_type__', None) or 'basic'
         return '%s %s' % (auth_type.title(), ', '.join([
             '%s=%s' % (key, quote_header_value(value,
-                                               allow_token=key not in self._require_quoting))
+                       allow_token=key not in self._require_quoting))
             for key, value in iteritems(d)
         ]))
 
@@ -2426,13 +2421,11 @@ class WWWAuthenticate(UpdateDictMixin, dict):
         For more information have a look at the sourcecode to see how the
         regular properties (:attr:`realm` etc.) are implemented.
         """
-
         def _set_value(self, value):
             if value is None:
                 self.pop(name, None)
             else:
                 self[name] = str(value)
-
         return property(lambda x: x.get(name), _set_value, doc=doc)
 
     def _set_property(name, doc=None):
@@ -2442,9 +2435,7 @@ class WWWAuthenticate(UpdateDictMixin, dict):
                     del self[name]
                 elif header_set:
                     self[name] = header_set.to_header()
-
             return parse_set_header(self.get(name), on_update)
-
         return property(fget, doc=doc)
 
     type = auth_property('__auth_type__', doc='''
@@ -2480,13 +2471,11 @@ class WWWAuthenticate(UpdateDictMixin, dict):
         val = self.get('stale')
         if val is not None:
             return val.lower() == 'true'
-
     def _set_stale(self, value):
         if value is None:
             self.pop('stale', None)
         else:
             self['stale'] = value and 'TRUE' or 'FALSE'
-
     stale = property(_get_stale, _set_stale, doc='''
         A flag, indicating that the previous request from the client was
         rejected because the nonce value was stale.''')
@@ -2591,7 +2580,6 @@ class FileStorage(object):
                             :func:`shutil.copyfileobj`.
         """
         from shutil import copyfileobj
-
         close_dst = False
         if isinstance(dst, string_types):
             dst = open(dst, 'wb')
@@ -2628,6 +2616,6 @@ class FileStorage(object):
 
 # circular dependencies
 from werkzeug.http import dump_options_header, dump_header, generate_etag, \
-    quote_header_value, parse_set_header, unquote_etag, quote_etag, \
-    parse_options_header, http_date, is_byte_range_valid
+     quote_header_value, parse_set_header, unquote_etag, quote_etag, \
+     parse_options_header, http_date, is_byte_range_valid
 from werkzeug import exceptions

@@ -5,19 +5,17 @@
 
     This module implements various URL related functions.
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
-from collections import namedtuple
-
 from werkzeug._compat import text_type, PY2, to_unicode, \
-    to_native, implements_to_string, try_coerce_native, \
-    normalize_string_tuple, make_literal_wrapper, \
-    fix_tuple_repr
+     to_native, implements_to_string, try_coerce_native, \
+     normalize_string_tuple, make_literal_wrapper, \
+     fix_tuple_repr
 from werkzeug._internal import _encode_idna, _decode_idna
 from werkzeug.datastructures import MultiDict, iter_multi_items
-
+from collections import namedtuple
 
 
 # A regular expression for what a valid schema looks like
@@ -33,8 +31,9 @@ _hextobyte = dict(
     for a in _hexdigits for b in _hexdigits
 )
 
+
 _URLTuple = fix_tuple_repr(namedtuple('_URLTuple',
-                                      ['scheme', 'netloc', 'path', 'query', 'fragment']))
+    ['scheme', 'netloc', 'path', 'query', 'fragment']))
 
 
 class _URLMixin(object):
@@ -313,7 +312,7 @@ def _url_encode_impl(obj, charset, encode_keys, sort, key):
             key = text_type(key).encode(charset)
         if not isinstance(value, bytes):
             value = text_type(value).encode(charset)
-        yield url_quote(key) + '=' + url_quote_plus(value)
+        yield url_quote_plus(key) + '=' + url_quote_plus(value)
 
 
 def _url_unquote_legacy(value, unsafe=''):
@@ -359,8 +358,8 @@ def url_parse(url, scheme=None, allow_fragments=True):
             if wdelim >= 0:
                 delim = min(delim, wdelim)
         netloc, url = url[2:delim], url[delim:]
-        if ((s('[') in netloc and s(']') not in netloc) or
-                (s(']') in netloc and s('[') not in netloc)):
+        if (s('[') in netloc and s(']') not in netloc) or \
+           (s(']') in netloc and s('[') not in netloc):
             raise ValueError('Invalid IPv6 URL')
 
     if allow_fragments and s('#') in url:
@@ -530,7 +529,7 @@ def uri_to_iri(uri, charset='utf-8', errors='replace'):
                         path, query, fragment))
 
 
-def iri_to_uri(iri, charset='utf-8', errors='strict'):
+def iri_to_uri(iri, charset='utf-8', errors='strict', safe_conversion=False):
     r"""
     Converts any unicode based IRI to an acceptable ASCII URI. Werkzeug always
     uses utf-8 URLs internally because this is what browsers and HTTP do as
@@ -544,13 +543,46 @@ def iri_to_uri(iri, charset='utf-8', errors='strict'):
     >>> iri_to_uri(u'http://üser:pässword@☃.net/påth')
     'http://%C3%BCser:p%C3%A4ssword@xn--n3h.net/p%C3%A5th'
 
+    There is a general problem with IRI and URI conversion with some
+    protocols that appear in the wild that are in violation of the URI
+    specification.  In places where Werkzeug goes through a forced IRI to
+    URI conversion it will set the `safe_conversion` flag which will
+    not perform a conversion if the end result is already ASCII.  This
+    can mean that the return value is not an entirely correct URI but
+    it will not destroy such invalid URLs in the process.
+
+    As an example consider the following two IRIs::
+
+      magnet:?xt=uri:whatever
+      itms-services://?action=download-manifest
+
+    The internal representation after parsing of those URLs is the same
+    and there is no way to reconstruct the original one.  If safe
+    conversion is enabled however this function becomes a noop for both of
+    those strings as they both can be considered URIs.
+
     .. versionadded:: 0.6
+
+    .. versionchanged:: 0.9.6
+       The `safe_conversion` parameter was added.
 
     :param iri: The IRI to convert.
     :param charset: The charset for the URI.
+    :param safe_conversion: indicates if a safe conversion should take place.
+                            For more information see the explanation above.
     """
     if isinstance(iri, tuple):
         iri = url_unparse(iri)
+
+    if safe_conversion:
+        try:
+            native_iri = to_native(iri)
+            ascii_iri = to_native(iri).encode('ascii')
+            if ascii_iri.split() == [ascii_iri]:
+                return native_iri
+        except UnicodeError:
+            pass
+
     iri = url_parse(to_unicode(iri, charset, errors))
 
     netloc = iri.encode_netloc().decode('ascii')
@@ -643,7 +675,6 @@ def url_decode_stream(stream, charset='utf-8', decode_keys=False,
                             returned
     """
     from werkzeug.wsgi import make_chunk_iter
-
     if return_iterator:
         cls = lambda x: x
     elif cls is None:
@@ -780,7 +811,7 @@ def url_join(base, url, allow_fragments=True):
         n = len(segments) - 1
         while i < n:
             if segments[i] == s('..') and \
-                            segments[i - 1] not in (s(''), s('..')):
+               segments[i - 1] not in (s(''), s('..')):
                 del segments[i - 1:i + 1]
                 break
             i += 1
@@ -873,7 +904,7 @@ class Href(object):
             query = dict([(k.endswith('_') and k[:-1] or k, v)
                           for k, v in query.items()])
         path = '/'.join([to_unicode(url_quote(x, self.charset), 'ascii')
-                         for x in path if x is not None]).lstrip('/')
+                        for x in path if x is not None]).lstrip('/')
         rv = self.base
         if path:
             if not rv.endswith('/'):

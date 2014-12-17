@@ -17,35 +17,35 @@
     decoded into an unicode object if possible and if it makes sense.
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from functools import update_wrapper
 from datetime import datetime, timedelta
 
 from werkzeug.http import HTTP_STATUS_CODES, \
-    parse_accept_header, parse_cache_control_header, parse_etags, \
-    parse_date, generate_etag, is_resource_modified, unquote_etag, \
-    quote_etag, parse_set_header, parse_authorization_header, \
-    parse_www_authenticate_header, remove_entity_headers, \
-    parse_options_header, dump_options_header, http_date, \
-    parse_if_range_header, parse_cookie, dump_cookie, \
-    parse_range_header, parse_content_range_header, dump_header
+     parse_accept_header, parse_cache_control_header, parse_etags, \
+     parse_date, generate_etag, is_resource_modified, unquote_etag, \
+     quote_etag, parse_set_header, parse_authorization_header, \
+     parse_www_authenticate_header, remove_entity_headers, \
+     parse_options_header, dump_options_header, http_date, \
+     parse_if_range_header, parse_cookie, dump_cookie, \
+     parse_range_header, parse_content_range_header, dump_header
 from werkzeug.urls import url_decode, iri_to_uri, url_join
 from werkzeug.formparser import FormDataParser, default_stream_factory
 from werkzeug.utils import cached_property, environ_property, \
-    header_property, get_content_type
+     header_property, get_content_type
 from werkzeug.wsgi import get_current_url, get_host, \
-    ClosingIterator, get_input_stream, get_content_length
+     ClosingIterator, get_input_stream, get_content_length
 from werkzeug.datastructures import MultiDict, CombinedMultiDict, Headers, \
-    EnvironHeaders, ImmutableMultiDict, ImmutableTypeConversionDict, \
-    ImmutableList, MIMEAccept, CharsetAccept, LanguageAccept, \
-    ResponseCacheControl, RequestCacheControl, CallbackDict, \
-    ContentRange, iter_multi_items
+     EnvironHeaders, ImmutableMultiDict, ImmutableTypeConversionDict, \
+     ImmutableList, MIMEAccept, CharsetAccept, LanguageAccept, \
+     ResponseCacheControl, RequestCacheControl, CallbackDict, \
+     ContentRange, iter_multi_items
 from werkzeug._internal import _get_environ
 from werkzeug._compat import to_bytes, string_types, text_type, \
-    integer_types, wsgi_decoding_dance, wsgi_get_bytes, \
-    to_unicode, to_native, BytesIO
+     integer_types, wsgi_decoding_dance, wsgi_get_bytes, \
+     to_unicode, to_native, BytesIO
 
 
 def _run_wsgi_app(*args):
@@ -54,7 +54,6 @@ def _run_wsgi_app(*args):
     """
     global _run_wsgi_app
     from werkzeug.test import run_wsgi_app as _run_wsgi_app
-
     return _run_wsgi_app(*args)
 
 
@@ -64,7 +63,6 @@ def _warn_if_string(iterable):
     """
     if isinstance(iterable, string_types):
         from warnings import warn
-
         warn(Warning('response iterable was set to a string.  This appears '
                      'to work but means that the server will send the '
                      'data to the client char, by char.  This is almost '
@@ -132,7 +130,7 @@ class BaseRequest(object):
        data.
     """
 
-    # : the charset for the request, defaults to utf-8
+    #: the charset for the request, defaults to utf-8
     charset = 'utf-8'
 
     #: the error handling procedure for errors, defaults to 'replace'
@@ -255,8 +253,8 @@ class BaseRequest(object):
         :return: request object
         """
         from werkzeug.test import EnvironBuilder
-
         charset = kwargs.pop('charset', cls.charset)
+        kwargs['charset'] = charset
         builder = EnvironBuilder(*args, **kwargs)
         try:
             return builder.get_request(cls)
@@ -286,11 +284,10 @@ class BaseRequest(object):
             request = cls(args[-2])
             with request:
                 return f(*args[:-2] + (request,))(*args[-2:])
-
         return update_wrapper(application, f)
 
     def _get_file_stream(self, total_content_length, content_type, filename=None,
-                         content_length=None):
+                        content_length=None):
         """Called to get a stream for the file upload.
 
         This must provide a file-like class with `read()`, `readline()`
@@ -412,8 +409,8 @@ class BaseRequest(object):
         return get_input_stream(self.environ)
 
     input_stream = environ_property('wsgi.input', 'The WSGI input stream.\n'
-                                                  'In general it\'s a bad idea to use this one because you can easily '
-                                                  'read past the boundary.  Use the :attr:`stream` instead.')
+        'In general it\'s a bad idea to use this one because you can easily '
+        'read past the boundary.  Use the :attr:`stream` instead.')
 
     @cached_property
     def args(self):
@@ -553,7 +550,7 @@ class BaseRequest(object):
 
     @cached_property
     def url(self):
-        """The reconstructed current URL"""
+        """The reconstructed current URL as IRI."""
         return get_current_url(self.environ,
                                trusted_hosts=self.trusted_hosts)
 
@@ -565,13 +562,15 @@ class BaseRequest(object):
 
     @cached_property
     def url_root(self):
-        """The full URL root (with hostname), this is the application root."""
+        """The full URL root (with hostname), this is the application
+        root as IRI.
+        """
         return get_current_url(self.environ, True,
                                trusted_hosts=self.trusted_hosts)
 
     @cached_property
     def host_url(self):
-        """Just the host with scheme."""
+        """Just the host with scheme as IRI."""
         return get_current_url(self.environ, host_only=True,
                                trusted_hosts=self.trusted_hosts)
 
@@ -581,10 +580,10 @@ class BaseRequest(object):
         return get_host(self.environ, trusted_hosts=self.trusted_hosts)
 
     query_string = environ_property('QUERY_STRING', '', read_only=True,
-                                    load_func=wsgi_get_bytes, doc=
+        load_func=wsgi_get_bytes, doc=
         '''The URL parameters as raw bytestring.''')
     method = environ_property('REQUEST_METHOD', 'GET', read_only=True, doc=
-    '''The transmission method. (For example ``'GET'`` or ``'POST'``).''')
+        '''The transmission method. (For example ``'GET'`` or ``'POST'``).''')
 
     @cached_property
     def access_route(self):
@@ -703,7 +702,7 @@ class BaseResponse(object):
                                details.)
     """
 
-    # : the charset of the response.
+    #: the charset of the response.
     charset = 'utf-8'
 
     #: the default status if none is provided.
@@ -847,21 +846,18 @@ class BaseResponse(object):
 
     def _get_status_code(self):
         return self._status_code
-
     def _set_status_code(self, code):
         self._status_code = code
         try:
             self._status = '%d %s' % (code, HTTP_STATUS_CODES[code].upper())
         except KeyError:
             self._status = '%d UNKNOWN' % code
-
     status_code = property(_get_status_code, _set_status_code,
                            doc='The HTTP Status code as number')
     del _get_status_code, _set_status_code
 
     def _get_status(self):
         return self._status
-
     def _set_status(self, value):
         self._status = to_native(value)
         try:
@@ -869,7 +865,6 @@ class BaseResponse(object):
         except ValueError:
             self._status_code = 0
             self._status = '0 %s' % self._status
-
     status = property(_get_status, _set_status, doc='The HTTP Status code')
     del _get_status, _set_status
 
@@ -968,7 +963,6 @@ class BaseResponse(object):
         value of this method is used as application iterator unless
         :attr:`direct_passthrough` was activated.
         """
-        charset = self.charset
         if __debug__:
             _warn_if_string(self.response)
         # Encode in a separate function so that self.response is fetched
@@ -996,8 +990,8 @@ class BaseResponse(object):
                      span the whole domain.
         """
         self.headers.add('Set-Cookie', dump_cookie(key, value, max_age,
-                                                   expires, path, domain, secure, httponly,
-                                                   self.charset))
+                         expires, path, domain, secure, httponly,
+                         self.charset))
 
     def delete_cookie(self, key, path='/', domain=None):
         """Delete a cookie.  Fails silently if key doesn't exist.
@@ -1113,7 +1107,10 @@ class BaseResponse(object):
         if location is not None:
             old_location = location
             if isinstance(location, text_type):
-                location = iri_to_uri(location)
+                # Safe conversion is necessary here as we might redirect
+                # to a broken URI scheme (for instance itms-services).
+                location = iri_to_uri(location, safe_conversion=True)
+
             if self.autocorrect_location_header:
                 current_url = get_current_url(environ, root_only=True)
                 if isinstance(current_url, text_type):
@@ -1124,7 +1121,7 @@ class BaseResponse(object):
 
         # make sure the content location is a URL
         if content_location is not None and \
-                isinstance(content_location, text_type):
+           isinstance(content_location, text_type):
             headers['Content-Location'] = iri_to_uri(content_location)
 
         # remove entity headers and set content length to zero if needed.
@@ -1142,9 +1139,10 @@ class BaseResponse(object):
         # the response.  We however should not do that if we have a 304
         # response.
         if self.automatically_set_content_length and \
-                self.is_sequence and content_length is None and status != 304:
+           self.is_sequence and content_length is None and status != 304:
             try:
-                content_length = sum(len(to_bytes(x, 'ascii')) for x in self.response)
+                content_length = sum(len(to_bytes(x, 'ascii'))
+                                     for x in self.response)
             except UnicodeError:
                 # aha, something non-bytestringy in there, too bad, we
                 # can't safely figure out the length of the response.
@@ -1170,7 +1168,7 @@ class BaseResponse(object):
         """
         status = self.status_code
         if environ['REQUEST_METHOD'] == 'HEAD' or \
-                                100 <= status < 200 or status in (204, 304):
+           100 <= status < 200 or status in (204, 304):
             iterable = ()
         elif self.direct_passthrough:
             if __debug__:
@@ -1325,7 +1323,6 @@ class UserAgentMixin(object):
     def user_agent(self):
         """The current user agent."""
         from werkzeug.useragents import UserAgent
-
         return UserAgent(self.environ)
 
 
@@ -1372,13 +1369,11 @@ class ETagResponseMixin(object):
         directives that MUST be obeyed by all caching mechanisms along the
         request/response chain.
         """
-
         def on_update(cache_control):
             if not cache_control and 'cache-control' in self.headers:
                 del self.headers['cache-control']
             elif cache_control:
                 self.headers['Cache-Control'] = cache_control.to_header()
-
         return parse_cache_control_header(self.headers.get('cache-control'),
                                           on_update,
                                           ResponseCacheControl)
@@ -1457,7 +1452,6 @@ class ETagResponseMixin(object):
                 del self.headers['content-range']
             else:
                 self.headers['Content-Range'] = rng.to_header()
-
         rv = parse_content_range_header(self.headers.get('content-range'),
                                         on_update)
         # always provide a content range object to make the descriptor
@@ -1466,7 +1460,6 @@ class ETagResponseMixin(object):
         if rv is None:
             rv = ContentRange(None, None, None, on_update=on_update)
         return rv
-
     def _set_content_range(self, value):
         if not value:
             del self.headers['content-range']
@@ -1474,7 +1467,6 @@ class ETagResponseMixin(object):
             self.headers['Content-Range'] = value
         else:
             self.headers['Content-Range'] = value.to_header()
-
     content_range = property(_get_content_range, _set_content_range, doc='''
         The `Content-Range` header as
         :class:`~werkzeug.datastructures.ContentRange` object.  Even if the
@@ -1642,7 +1634,6 @@ class CommonResponseDescriptorsMixin(object):
         def on_update(d):
             self.headers['Content-Type'] = \
                 dump_options_header(self.mimetype, d)
-
         d = parse_options_header(self.headers.get('content-type', ''))[1]
         return CallbackDict(d, on_update)
 
@@ -1714,7 +1705,6 @@ class CommonResponseDescriptorsMixin(object):
         elif value.isdigit():
             return datetime.utcnow() + timedelta(seconds=int(value))
         return parse_date(value)
-
     def _set_retry_after(self, value):
         if value is None:
             if 'retry-after' in self.headers:
@@ -1740,9 +1730,7 @@ class CommonResponseDescriptorsMixin(object):
                     del self.headers[name]
                 elif header_set:
                     self.headers[name] = header_set.to_header()
-
             return parse_set_header(self.headers.get(name), on_update)
-
         def fset(self, value):
             if not value:
                 del self.headers[name]
@@ -1750,7 +1738,6 @@ class CommonResponseDescriptorsMixin(object):
                 self.headers[name] = value
             else:
                 self.headers[name] = dump_header(value)
-
         return property(fget, fset, doc=doc)
 
     vary = _set_property('Vary', doc='''
@@ -1780,13 +1767,11 @@ class WWWAuthenticateMixin(object):
     @property
     def www_authenticate(self):
         """The `WWW-Authenticate` header in a parsed form."""
-
         def on_update(www_auth):
             if not www_auth and 'www-authenticate' in self.headers:
                 del self.headers['www-authenticate']
             elif www_auth:
                 self.headers['WWW-Authenticate'] = www_auth.to_header()
-
         header = self.headers.get('www-authenticate')
         return parse_www_authenticate_header(header, on_update)
 

@@ -32,7 +32,7 @@
     instead of a simple start file.
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import with_statement
@@ -59,9 +59,9 @@ except ImportError:
 import werkzeug
 from werkzeug._internal import _log
 from werkzeug._compat import iteritems, PY2, reraise, text_type, \
-    wsgi_encoding_dance
+     wsgi_encoding_dance
 from werkzeug.urls import url_parse, url_unquote
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, BadRequest
 
 
 class WSGIRequestHandler(BaseHTTPRequestHandler, object):
@@ -81,27 +81,27 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
         path_info = url_unquote(request_url.path)
 
         environ = {
-            'wsgi.version': (1, 0),
-            'wsgi.url_scheme': url_scheme,
-            'wsgi.input': self.rfile,
-            'wsgi.errors': sys.stderr,
-            'wsgi.multithread': self.server.multithread,
-            'wsgi.multiprocess': self.server.multiprocess,
-            'wsgi.run_once': False,
+            'wsgi.version':         (1, 0),
+            'wsgi.url_scheme':      url_scheme,
+            'wsgi.input':           self.rfile,
+            'wsgi.errors':          sys.stderr,
+            'wsgi.multithread':     self.server.multithread,
+            'wsgi.multiprocess':    self.server.multiprocess,
+            'wsgi.run_once':        False,
             'werkzeug.server.shutdown':
-                shutdown_server,
-            'SERVER_SOFTWARE': self.server_version,
-            'REQUEST_METHOD': self.command,
-            'SCRIPT_NAME': '',
-            'PATH_INFO': wsgi_encoding_dance(path_info),
-            'QUERY_STRING': wsgi_encoding_dance(request_url.query),
-            'CONTENT_TYPE': self.headers.get('Content-Type', ''),
-            'CONTENT_LENGTH': self.headers.get('Content-Length', ''),
-            'REMOTE_ADDR': self.client_address[0],
-            'REMOTE_PORT': self.client_address[1],
-            'SERVER_NAME': self.server.server_address[0],
-            'SERVER_PORT': str(self.server.server_address[1]),
-            'SERVER_PROTOCOL': self.request_version
+                                    shutdown_server,
+            'SERVER_SOFTWARE':      self.server_version,
+            'REQUEST_METHOD':       self.command,
+            'SCRIPT_NAME':          '',
+            'PATH_INFO':            wsgi_encoding_dance(path_info),
+            'QUERY_STRING':         wsgi_encoding_dance(request_url.query),
+            'CONTENT_TYPE':         self.headers.get('Content-Type', ''),
+            'CONTENT_LENGTH':       self.headers.get('Content-Length', ''),
+            'REMOTE_ADDR':          self.client_address[0],
+            'REMOTE_PORT':          self.client_address[1],
+            'SERVER_NAME':          self.server.server_address[0],
+            'SERVER_PORT':          str(self.server.server_address[1]),
+            'SERVER_PROTOCOL':      self.request_version
         }
 
         for key, value in self.headers.items():
@@ -181,7 +181,6 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
             if self.server.passthrough_errors:
                 raise
             from werkzeug.debug.tbtools import get_current_traceback
-
             traceback = get_current_traceback(ignore_system_exceptions=True)
             try:
                 # if we haven't yet sent the headers but they are set
@@ -265,7 +264,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler, object):
                                          message % args))
 
 
-# : backwards compatible name if someone is subclassing it
+#: backwards compatible name if someone is subclassing it
 BaseRequestHandler = WSGIRequestHandler
 
 
@@ -317,7 +316,6 @@ def make_ssl_devcert(base_path, host=None, cn=None):
     :param cn: the `CN` to use.
     """
     from OpenSSL import crypto
-
     if host is not None:
         cn = '*.%s/CN=%s' % (host, host)
     cert, pkey = generate_adhoc_ssl_pair(cn=cn)
@@ -336,7 +334,6 @@ def make_ssl_devcert(base_path, host=None, cn=None):
 def generate_adhoc_ssl_context():
     """Generates an adhoc SSL context for the development server."""
     from OpenSSL import SSL
-
     cert, pkey = generate_adhoc_ssl_pair()
     ctx = SSL.Context(SSL.SSLv23_METHOD)
     ctx.use_privatekey(pkey)
@@ -347,7 +344,6 @@ def generate_adhoc_ssl_context():
 def load_ssl_context(cert_file, pkey_file):
     """Loads an SSL context from a certificate and private key file."""
     from OpenSSL import SSL
-
     ctx = SSL.Context(SSL.SSLv23_METHOD)
     ctx.use_certificate_file(cert_file)
     ctx.use_privatekey_file(pkey_file)
@@ -359,7 +355,6 @@ def is_ssl_error(error=None):
     if error is None:
         error = sys.exc_info()[1]
     from OpenSSL import SSL
-
     return isinstance(error, SSL.Error)
 
 
@@ -519,7 +514,6 @@ def _reloader_stat_loop(extra_files=None, interval=1):
     :param extra_files: a list of additional files it should watch.
     """
     from itertools import chain
-
     mtimes = {}
     while 1:
         for filename in chain(_iter_module_files(), extra_files or ()):
@@ -548,7 +542,6 @@ def _reloader_inotify(extra_files=None, interval=None):
     # this API changed at one point, support both
     try:
         from pyinotify import EventsCodes as ec
-
         ec.IN_ATTRIB
     except (ImportError, AttributeError):
         import pyinotify as ec
@@ -575,7 +568,7 @@ def _reloader_inotify(extra_files=None, interval=None):
             notif.process_events()
             if notif.check_events(timeout=interval):
                 notif.read_events()
-                # TODO Set timeout to something small and check parent liveliness
+            # TODO Set timeout to something small and check parent liveliness
     finally:
         notif.stop()
     sys.exit(3)
@@ -613,7 +606,6 @@ def restart_with_reloader():
 def run_with_reloader(main_func, extra_files=None, interval=1):
     """Run the given function in an independent python interpreter."""
     import signal
-
     signal.signal(signal.SIGTERM, lambda *args: sys.exit(0))
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         thread.start_new_thread(main_func, ())
@@ -689,11 +681,9 @@ def run_simple(hostname, port, application, use_reloader=False,
     """
     if use_debugger:
         from werkzeug.debug import DebuggedApplication
-
         application = DebuggedApplication(application, use_evalex)
     if static_files:
         from werkzeug.wsgi import SharedDataMiddleware
-
         application = SharedDataMiddleware(application, static_files)
 
     def inner():
@@ -718,7 +708,6 @@ def run_simple(hostname, port, application, use_reloader=False,
         run_with_reloader(inner, extra_files, reloader_interval)
     else:
         inner()
-
 
 def main():
     '''A simple command-line interface for :py:func:`run_simple`.'''
@@ -755,7 +744,6 @@ def main():
         application=app, use_reloader=options.use_reloader,
         use_debugger=options.use_debugger
     )
-
 
 if __name__ == '__main__':
     main()

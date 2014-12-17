@@ -92,25 +92,20 @@
     method is raised.
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
 import posixpath
 from pprint import pformat
 
-try:
-    from urlparse import urljoin
-except ImportError:
-    from urllib.parse import urljoin
-
-from werkzeug.urls import url_encode, url_quote
+from werkzeug.urls import url_encode, url_quote, url_join
 from werkzeug.utils import redirect, format_string
 from werkzeug.exceptions import HTTPException, NotFound, MethodNotAllowed
 from werkzeug._internal import _get_environ, _encode_idna
 from werkzeug._compat import itervalues, iteritems, to_unicode, to_bytes, \
-    text_type, string_types, native_string_result, \
-    implements_to_string, wsgi_decoding_dance
+     text_type, string_types, native_string_result, \
+     implements_to_string, wsgi_decoding_dance
 from werkzeug.datastructures import ImmutableDict, MultiDict
 
 
@@ -138,10 +133,11 @@ _converter_args_re = re.compile(r'''
     )\s*,
 ''', re.VERBOSE | re.UNICODE)
 
+
 _PYTHON_CONSTANTS = {
-    'None': None,
-    'True': True,
-    'False': False
+    'None':     None,
+    'True':     True,
+    'False':    False
 }
 
 
@@ -657,8 +653,8 @@ class Rule(RuleFactory):
             return
         regex = r'^%s%s$' % (
             u''.join(regex_parts),
-            (not self.is_leaf or not self.strict_slashes) and \
-            '(?<!/)(?P<__suffix__>/?)' or ''
+            (not self.is_leaf or not self.strict_slashes) and
+                '(?<!/)(?P<__suffix__>/?)' or ''
         )
         self._regex = re.compile(regex, re.UNICODE)
 
@@ -682,7 +678,7 @@ class Rule(RuleFactory):
                 # tells the map to redirect to the same url but with a
                 # trailing slash
                 if self.strict_slashes and not self.is_leaf and \
-                        not groups.pop('__suffix__'):
+                   not groups.pop('__suffix__'):
                     raise RequestSlash()
                 # if we are not in strict slashes mode we have to remove
                 # a __suffix__
@@ -732,8 +728,8 @@ class Rule(RuleFactory):
 
             if query_vars:
                 url += u'?' + url_encode(query_vars, charset=self.map.charset,
-                                         sort=self.map.sort_parameters,
-                                         key=self.map.sort_key)
+                                        sort=self.map.sort_parameters,
+                                        key=self.map.sort_key)
 
         return domain_part, url
 
@@ -743,8 +739,8 @@ class Rule(RuleFactory):
         :internal:
         """
         return not self.build_only and self.defaults and \
-               self.endpoint == rule.endpoint and self != rule and \
-               self.arguments == rule.arguments
+            self.endpoint == rule.endpoint and self != rule and \
+            self.arguments == rule.arguments
 
     def suitable_for(self, values, method=None):
         """Check if the dict of values has enough data for url generation.
@@ -754,7 +750,7 @@ class Rule(RuleFactory):
         # if a method was given explicitly and that method is not supported
         # by this rule, this rule is not suitable.
         if method is not None and self.methods is not None \
-                and method not in self.methods:
+           and method not in self.methods:
             return False
 
         defaults = self.defaults or ()
@@ -796,7 +792,7 @@ class Rule(RuleFactory):
         :internal:
         """
         return self.alias and 1 or 0, -len(self.arguments), \
-               -len(self.defaults or ())
+            -len(self.defaults or ())
 
     def __eq__(self, other):
         return self.__class__ is other.__class__ and \
@@ -821,8 +817,8 @@ class Rule(RuleFactory):
         return u'<%s %s%s -> %s>' % (
             self.__class__.__name__,
             repr((u''.join(tmp)).lstrip(u'|')).lstrip(u'u'),
-            self.methods is not None and u' (%s)' % \
-            u', '.join(self.methods) or u'',
+            self.methods is not None and u' (%s)' %
+                u', '.join(self.methods) or u'',
             self.endpoint
         )
 
@@ -923,7 +919,7 @@ class NumberConverter(BaseConverter):
             raise ValidationError()
         value = self.num_convert(value)
         if (self.min is not None and value < self.min) or \
-                (self.max is not None and value > self.max):
+           (self.max is not None and value > self.max):
             raise ValidationError()
         return value
 
@@ -971,14 +967,14 @@ class FloatConverter(NumberConverter):
         NumberConverter.__init__(self, map, 0, min, max)
 
 
-# : the default converter mapping for the map.
+#: the default converter mapping for the map.
 DEFAULT_CONVERTERS = {
-    'default': UnicodeConverter,
-    'string': UnicodeConverter,
-    'any': AnyConverter,
-    'path': PathConverter,
-    'int': IntegerConverter,
-    'float': FloatConverter
+    'default':          UnicodeConverter,
+    'string':           UnicodeConverter,
+    'any':              AnyConverter,
+    'path':             PathConverter,
+    'int':              IntegerConverter,
+    'float':            FloatConverter
 }
 
 
@@ -1168,7 +1164,7 @@ class Map(object):
             else:
                 server_name = environ['SERVER_NAME']
                 if (environ['wsgi.url_scheme'], environ['SERVER_PORT']) not \
-                        in (('https', '443'), ('http', '80')):
+                   in (('https', '443'), ('http', '80')):
                     server_name += ':' + environ['SERVER_PORT']
         elif subdomain is None and not self.host_matching:
             server_name = server_name.lower()
@@ -1177,7 +1173,7 @@ class Map(object):
             else:
                 wsgi_server_name = environ.get('SERVER_NAME')
                 if (environ['wsgi.url_scheme'], environ['SERVER_PORT']) not \
-                        in (('https', '443'), ('http', '80')):
+                   in (('https', '443'), ('http', '80')):
                     wsgi_server_name += ':' + environ['SERVER_PORT']
             wsgi_server_name = wsgi_server_name.lower()
             cur_server_name = wsgi_server_name.split('.')
@@ -1391,7 +1387,8 @@ class MapAdapter(object):
                 rv = rule.match(path)
             except RequestSlash:
                 raise RequestRedirect(self.make_redirect_url(
-                    path_info + '/', query_args))
+                    url_quote(path_info, self.map.charset,
+                              safe='/:|+') + '/', query_args))
             except RequestAliasRedirect as e:
                 raise RequestRedirect(self.make_alias_redirect_url(
                     path, rule.endpoint, e.matched_values, method, query_args))
@@ -1412,12 +1409,11 @@ class MapAdapter(object):
                     def _handle_match(match):
                         value = rv[match.group(1)]
                         return rule._converters[match.group(1)].to_url(value)
-
                     redirect_url = _simple_rule_re.sub(_handle_match,
                                                        rule.redirect_to)
                 else:
                     redirect_url = rule.redirect_to(self, **rv)
-                raise RequestRedirect(str(urljoin('%s://%s%s%s' % (
+                raise RequestRedirect(str(url_join('%s://%s%s%s' % (
                     self.url_scheme,
                     self.subdomain and self.subdomain + '.' or '',
                     self.server_name,
@@ -1493,7 +1489,7 @@ class MapAdapter(object):
             if r is rule:
                 break
             if r.provides_defaults_for(rule) and \
-                    r.suitable_for(values, method):
+               r.suitable_for(values, method):
                 values.update(r.defaults)
                 domain_part, path = r.build(values)
                 return self.make_redirect_url(
@@ -1516,8 +1512,7 @@ class MapAdapter(object):
             self.url_scheme,
             self.get_host(domain_part),
             posixpath.join(self.script_name[:-1].lstrip('/'),
-                           url_quote(path_info.lstrip('/'), self.map.charset,
-                                     safe='/:|+')),
+                           path_info.lstrip('/')),
             suffix
         ))
 
@@ -1528,7 +1523,7 @@ class MapAdapter(object):
         if query_args:
             url += '?' + self.encode_query_args(query_args)
         assert url != path, 'detected invalid alias setting.  No canonical ' \
-                            'URL found'
+            'URL found'
         return url
 
     def _partial_build(self, endpoint, values, method, append_unknown):
@@ -1625,9 +1620,9 @@ class MapAdapter(object):
 
         # shortcut this.
         if not force_external and (
-                    (self.map.host_matching and host == self.server_name) or
-                    (not self.map.host_matching and domain_part == self.subdomain)):
-            return str(urljoin(self.script_name, './' + path.lstrip('/')))
+            (self.map.host_matching and host == self.server_name) or
+             (not self.map.host_matching and domain_part == self.subdomain)):
+            return str(url_join(self.script_name, './' + path.lstrip('/')))
         return str('%s://%s%s/%s' % (
             self.url_scheme,
             host,

@@ -8,7 +8,7 @@
     browsers.
 
 
-    :copyright: (c) 2013 by the Werkzeug Team, see AUTHORS for more details.
+    :copyright: (c) 2014 by the Werkzeug Team, see AUTHORS for more details.
     :license: BSD, see LICENSE for more details.
 """
 import re
@@ -187,3 +187,4 @@ class UserAgent(object):
 # it afterwards.  The class itself has the module set to this module so
 # pickle, inspect and similar modules treat the object as if it was really
 # implemented here.
+from werkzeug.wrappers import UserAgentMixin

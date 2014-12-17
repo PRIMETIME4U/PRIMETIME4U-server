@@ -1,11 +1,11 @@
 import sys
 import operator
 import functools
-
 try:
     import builtins
 except ImportError:
     import __builtin__ as builtins
+
 
 PY2 = sys.version_info[0] == 2
 
@@ -27,7 +27,7 @@ if PY2:
 
     iter_bytes = lambda x: iter(x)
 
-    exec ('def reraise(tp, value, tb=None):\n raise tp, value, tb')
+    exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 
     def fix_tuple_repr(obj):
         def __repr__(self):
@@ -36,7 +36,6 @@ if PY2:
                 '%s=%r' % (field, self[index])
                 for index, field in enumerate(cls._fields)
             ))
-
         obj.__repr__ = __repr__
         return obj
 
@@ -53,7 +52,6 @@ if PY2:
     def native_string_result(func):
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs).encode('utf-8')
-
         return functools.update_wrapper(wrapper, func)
 
     def implements_bool(cls):
@@ -61,11 +59,11 @@ if PY2:
         del cls.__bool__
         return cls
 
+    from itertools import imap, izip, ifilter
     range_type = xrange
 
     from StringIO import StringIO
     from cStringIO import StringIO as BytesIO
-
     NativeStringIO = BytesIO
 
     def make_literal_wrapper(reference):
@@ -146,7 +144,6 @@ else:
     range_type = range
 
     from io import StringIO, BytesIO
-
     NativeStringIO = StringIO
 
     def make_literal_wrapper(reference):
@@ -163,7 +160,7 @@ else:
         for arg in tupiter:
             if isinstance(arg, text_type) != is_text:
                 raise TypeError('Cannot mix str and bytes arguments (got %s)'
-                                % repr(tup))
+                    % repr(tup))
         return tup
 
     try_coerce_native = _identity

@@ -11,12 +11,11 @@
 import io
 import uuid
 from datetime import datetime
-
 from .globals import current_app, request
 from ._compat import text_type, PY2
+
 from werkzeug.http import http_date
 from jinja2 import Markup
-
 
 # Use the same json implementation as itsdangerous on which we
 # depend anyways.
@@ -29,6 +28,7 @@ except ImportError:
 # figure out if simplejson escapes slashes.  This behavior was changed
 # from one version to another without reason.
 _slash_escape = '\\/' not in _json.dumps('/')
+
 
 __all__ = ['dump', 'dumps', 'load', 'loads', 'htmlsafe_dump',
            'htmlsafe_dumps', 'JSONDecoder', 'JSONEncoder',
@@ -217,11 +217,11 @@ def jsonify(*args, **kwargs):
     """
     indent = None
     if current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] \
-            and not request.is_xhr:
+        and not request.is_xhr:
         indent = 2
     return current_app.response_class(dumps(dict(*args, **kwargs),
-                                            indent=indent),
-                                      mimetype='application/json')
+        indent=indent),
+        mimetype='application/json')
 
 
 def tojson_filter(obj, **kwargs):

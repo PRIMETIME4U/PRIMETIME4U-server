@@ -12,11 +12,11 @@
 import uuid
 import hashlib
 from datetime import datetime
-
 from werkzeug.http import http_date, parse_date
 from werkzeug.datastructures import CallbackDict
 from . import Markup, json
 from ._compat import iteritems, text_type
+
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 
 
@@ -35,7 +35,7 @@ class SessionMixin(object):
     def _set_permanent(self, value):
         self['_permanent'] = bool(value)
 
-    # : this reflects the ``'_permanent'`` key in the dict.
+    #: this reflects the ``'_permanent'`` key in the dict.
     permanent = property(_get_permanent, _set_permanent)
     del _get_permanent, _set_permanent
 
@@ -75,11 +75,10 @@ class TaggedJSONSerializer(object):
                     return text_type(value)
                 except UnicodeError:
                     raise UnexpectedUnicodeError(u'A byte string with '
-                                                 u'non-ASCII data was passed to the session system '
-                                                 u'which can only store unicode strings.  Consider '
-                                                 u'base64 encoding your string (String was %r)' % value)
+                        u'non-ASCII data was passed to the session system '
+                        u'which can only store unicode strings.  Consider '
+                        u'base64 encoding your string (String was %r)' % value)
             return value
-
         return json.dumps(_tag(value), separators=(',', ':'))
 
     def loads(self, value):
@@ -96,7 +95,6 @@ class TaggedJSONSerializer(object):
             elif the_key == ' d':
                 return parse_date(the_value)
             return obj
-
         return json.loads(value, object_hook=object_hook)
 
 
@@ -109,7 +107,6 @@ class SecureCookieSession(CallbackDict, SessionMixin):
     def __init__(self, initial=None):
         def on_update(self):
             self.modified = True
-
         CallbackDict.__init__(self, initial, on_update)
         self.modified = False
 
@@ -124,7 +121,6 @@ class NullSession(SecureCookieSession):
         raise RuntimeError('the session is unavailable because no secret '
                            'key was set.  Set the secret_key on the '
                            'application to something unique and secret.')
-
     __setitem__ = __delitem__ = clear = pop = popitem = \
         update = setdefault = _fail
     del _fail
@@ -160,7 +156,7 @@ class SessionInterface(object):
     .. versionadded:: 0.8
     """
 
-    # : :meth:`make_null_session` will look here for the class that should
+    #: :meth:`make_null_session` will look here for the class that should
     #: be created when a null session is requested.  Likewise the
     #: :meth:`is_null_session` method will perform a typecheck against
     #: this type.
@@ -272,7 +268,7 @@ class SecureCookieSessionInterface(SessionInterface):
     """The default session interface that stores sessions in signed cookies
     through the :mod:`itsdangerous` module.
     """
-    # : the salt that should be applied on top of the secret key for the
+    #: the salt that should be applied on top of the secret key for the
     #: signing of cookie based sessions.
     salt = 'cookie-session'
     #: the hash function to use for the signature.  The default is sha1
