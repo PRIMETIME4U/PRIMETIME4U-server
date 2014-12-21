@@ -13,3 +13,7 @@ libraries:
   version: "2.6"
 - name: markupsafe
   version: "0.15"
+- name: lxml
+  version: "2.3"
+- name: ssl
+  version: latest
