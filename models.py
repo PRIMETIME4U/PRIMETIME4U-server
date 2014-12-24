@@ -1,5 +1,7 @@
 from google.appengine.ext import ndb
 
+# TODO: try to use https://cloud.google.com/appengine/docs/python/ndb/modelclass#Model_get_or_insert
+
 
 class ModelUtils(object):
     @property
@@ -35,6 +37,8 @@ class Artist(ModelUtils, ndb.Model):
     """
     Simple artist model.
     The id value is the same id of IMDB.
+    When create it remember to declare it:
+        Artist(id="id_IMDB", ..)
     """
     name = ndb.StringProperty(required=True)
     photo = ndb.StringProperty()
@@ -54,6 +58,8 @@ class Movie(ModelUtils, ndb.Model):
     """
     Movie model that follow the description of a film from IMDB site.
     The id value is the same id of IMDB.
+    When create it remember to declare it:
+        Movie(id="id_IMDB", ..)
     """
     title = ndb.StringProperty()
     original_title = ndb.StringProperty()
@@ -141,6 +147,9 @@ class TasteArtist(ModelUtils, ndb.Model):
 class User(ModelUtils, ndb.Model):
     """
     This model represents a user.
+    The id value is the e-mail address of the user.
+    When create it remember to declare it:
+        User(id="email", ..)
     """
     name = ndb.StringProperty(required=True)
     birth_year = ndb.IntegerProperty()
@@ -169,7 +178,7 @@ class User(ModelUtils, ndb.Model):
         :type taste: integer
         :return: None
         """
-        taste_movie = TasteMovie(id=(movie.key.id() + self.key.id()),   # Create the user's taste with unique id
+        taste_movie = TasteMovie(id=(movie.key.id() + self.key.id()),  # Create the user's taste with unique id
                                  taste=taste)
         taste_movie.add_movie(movie)
         taste_movie_key = taste_movie.put()
@@ -191,5 +200,5 @@ class User(ModelUtils, ndb.Model):
         taste_artist.add_artist(artist)
         taste_artist_key = taste_artist.put()
 
-        self.tastes_artists.append(taste_artist_key)    # Append the taste to user's tastes
+        self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
         self.put()
