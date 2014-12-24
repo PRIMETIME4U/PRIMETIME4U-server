@@ -1,6 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect
 
 from werkzeug.exceptions import default_exceptions, HTTPException
+from google.appengine.api import users
+from manage_user import get_current_user
 from tv_scheduling import result_movies_schedule
 
 app = Flask(__name__)
@@ -52,8 +54,54 @@ app = json_api(__name__)
 
 @app.route('/')
 def hello():
-    """Return a friendly HTTP greeting."""
-    return 'PRIMETIME4U, The only app that allows you to plop down to the couch and simply enjoy a movie'
+    """
+    Main view with login page and links for subscription and sign out.
+    :return: HTML page or None (with redirection to home)
+    """
+    user = get_current_user()
+
+    if user:
+
+        if user.is_subscribed():
+
+            return 'Welcome, %s! (<a href="%s">sign out</a>) \n ' \
+                   '(<a href="%s">Unsubscribe!</a>)' \
+                   % (user.nickname(), users.create_logout_url('/'), "/unsubscribe")
+        else:
+
+            return 'Welcome, %s! (<a href="%s">sign out</a>) \n ' \
+                   '(<a href="%s">Subscribe!</a>)' \
+                   % (user.nickname(), users.create_logout_url('/'), "/subscribe")
+    else:
+        return redirect(users.create_login_url())
+
+
+@app.route('/subscribe')
+def subscribe():
+    """
+    View that allow to subscribe current user.
+    :return: None, redirect to home
+    """
+    user = get_current_user()
+
+    if user:
+        user.subscribe()
+
+    return redirect('/')
+
+
+@app.route('/unsubscribe')
+def unsubscribe():
+    """
+    View that allow to unsubscribe current user.
+    :return: None, redirect to home
+    """
+    user = get_current_user()
+
+    if user:
+        user.unsubscribe()
+
+    return redirect('/')
 
 
 @app.route('/schedule/<tv_type>/<day>')
