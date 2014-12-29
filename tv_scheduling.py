@@ -7,7 +7,6 @@ def get_movies_schedule(html_page):
     """
     Parse HTML page and retrieve information about movies schedule as title, original title, channel and time of
     transmission.
-
     :param html_page: HTML page to parse
     :type html_page: string
     :return: list JSON object of movie scraped
@@ -38,7 +37,6 @@ def result_movies_schedule(tv_type, day):
     """
     Get TV movies schedule from www.filmtv.it. You could ask the schedule of today, tomorrow and the day after tomorrow
     of the free TV, SKY TV and Mediaset Premium TV.
-
     :param tv_type: type of TV from get schedule, possible value (free, sky, premium)
     :type tv_type: string
     :param day: interested day, possible value (today, tomorrow, future)
@@ -71,4 +69,4 @@ def result_movies_schedule(tv_type, day):
         raise BadRequest
 
 if __name__ == "__main__":
-    print result_movies_schedule("dtt", "today")
+    print result_movies_schedule("free", "today")

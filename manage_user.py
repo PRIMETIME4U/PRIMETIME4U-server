@@ -23,7 +23,7 @@ class User(users.User):
         Delete user from the datastore.
         :return None
         """
-        user = modelUser.get_by_id(self.email())
+        user = self.get_ndb_user()
         user.key.delete()
 
     def is_subscribed(self):
@@ -32,10 +32,17 @@ class User(users.User):
         :return true if user is subscribed, false otherwise
         :rtype Boolean
         """
-        user = modelUser.get_by_id(self.email())
-        print user
+        user = self.get_ndb_user()
 
         return True if user is not None else False
+
+    def get_ndb_user(self):
+        """
+        Get user from the datastore.
+        :return user from the datastore
+        :rtype models.User
+        """
+        return modelUser.get_by_id(self.email())
 
 
 def get_current_user():

@@ -5,6 +5,9 @@ api_version: 1
 threadsafe: yes
 
 handlers:
+- url: /task/suggest/
+  script: suggest.app
+
 - url: .*
   script: main.app
 

@@ -3,6 +3,7 @@ from flask import Flask, jsonify, redirect
 from werkzeug.exceptions import default_exceptions, HTTPException
 from google.appengine.api import users
 from manage_user import get_current_user
+from send_mail import confirm_subscription, confirm_unsubscription
 from tv_scheduling import result_movies_schedule
 
 app = Flask(__name__)
@@ -86,6 +87,7 @@ def subscribe():
 
     if user:
         user.subscribe()
+        confirm_subscription(user.get_ndb_user())  # Send confirmation mail
 
     return redirect('/')
 
@@ -99,6 +101,7 @@ def unsubscribe():
     user = get_current_user()
 
     if user:
+        confirm_unsubscription(user.get_ndb_user())  # Send confirmation mail
         user.unsubscribe()
 
     return redirect('/')
