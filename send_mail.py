@@ -9,17 +9,15 @@ def confirm_subscription(user):
     :return: None
     """
     message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
-                                subject="Your now subscribed")
+                                subject="PT4U: Subscription confirmed")
 
     message.to = "{} <{}>".format(user.name, user.key.id())
     message.body = """
-    Dear {}:
+    Dear {},
 
-    You are now subscribed to our movie suggest. You only have to
-    wait the daily mail for our movie suggest.
+    You are subscribed to PRIMETIME4U and now you only have to wait the daily mail with our movie proposal.
+    Enjoy our service and leave us a feedback!
 
-    Please let us know if you have any questions and give us
-    some feedback if you want.
 
     The PRIMETIME4U Team
     """.format(user.name)
@@ -35,16 +33,14 @@ def confirm_unsubscription(user):
     :return: None
     """
     message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
-                                subject="Your now unsubscribed")
+                                subject="PT4U: Unsubscription confirmed")
     print user
     message.to = "{} <{}>".format(user.name, user.key.id())
     message.body = """
-    Dear {}:
+    Dear {},
 
-    You are now unsubscribed to our movie suggest.
-
-    Please let us know why you decided it, your feedback is
-    important for us.
+    Thank you for using our service. You will not receive movie proposals anymore.
+    Let us know why you have decided to leave our service. Your feedback is important for us.
 
     The PRIMETIME4U Team
     """.format(user.name)
@@ -62,13 +58,13 @@ def send_suggestion(user, movie):
     :return: None
     """
     message = mail.EmailMessage(sender="PRIMETIME4U Suggestion <support@hale-kite-786.appspotmail.com>",
-                                subject="Your daily movie suggest")
+                                subject="PT4U: Your daily movie proposal")
 
     message.to = "{} <{}>".format(user.name, user.key.id())
     message.body = """
-    Dear {}:
+    Dear {},
 
-    Today we suggest you:
+    Today we propose to you:
 
     Title: {};
     Original Title: {};
