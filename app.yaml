@@ -4,9 +4,17 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+inbound_services:
+- mail
+
 handlers:
 - url: /task/suggest/
   script: suggest.app
+  login: admin
+
+- url: /_ah/mail/.+
+  script: handle_incoming_email.app
+  login: admin
 
 - url: .*
   script: main.app
