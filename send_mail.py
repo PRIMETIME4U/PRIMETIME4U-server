@@ -8,7 +8,7 @@ def confirm_subscription(user):
     :type user: models.User
     :return: None
     """
-    message = mail.EmailMessage(sender="PRIMETIME4U Support <support@primetime4u.com>",
+    message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
                                 subject="Your now subscribed")
 
     message.to = "{} <{}>".format(user.name, user.key.id())
@@ -34,7 +34,7 @@ def confirm_unsubscription(user):
     :type user: models.User
     :return: None
     """
-    message = mail.EmailMessage(sender="PRIMETIME4U Support <support@primetime4u.com>",
+    message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
                                 subject="Your now unsubscribed")
     print user
     message.to = "{} <{}>".format(user.name, user.key.id())
@@ -61,7 +61,7 @@ def send_suggestion(user, movie):
     :type movie: JSON object
     :return: None
     """
-    message = mail.EmailMessage(sender="PRIMETIME4U Suggestion <support@primetime4u.com>",
+    message = mail.EmailMessage(sender="PRIMETIME4U Suggestion <support@hale-kite-786.appspotmail.com>",
                                 subject="Your daily movie suggest")
 
     message.to = "{} <{}>".format(user.name, user.key.id())
