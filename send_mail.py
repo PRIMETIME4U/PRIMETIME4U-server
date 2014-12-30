@@ -64,6 +64,22 @@ def send_suggestion(user, movie):
     message.body = """
     Dear {},
 
+    Thanks for your feedback, it will be helpful in order to improve your PT4U experience!
+
+    The PRIMETIME4U Team
+    """.format(user.name, movie["title"], movie["originalTitle"], movie["channel"], movie["time"])
+
+    message.send()
+
+
+def send_feedback(user):
+    message = mail.EmailMessage(sender="PRIMETIME4U Suggestion <support@hale-kite-786.appspotmail.com>",
+                                subject="PT4U: Thanks for your feedback")
+
+    message.to = "{} <{}>".format(user.name, user.key.id())
+    message.body = """
+    Dear {},
+
     Today we propose to you:
 
     Title: {};
@@ -72,6 +88,6 @@ def send_suggestion(user, movie):
     Time: {}
 
     The PRIMETIME4U Team
-    """.format(user.name, movie["title"], movie["originalTitle"], movie["channel"], movie["time"])
+    """.format(user.name)
 
     message.send()
