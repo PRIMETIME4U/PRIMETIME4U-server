@@ -65,16 +65,17 @@ def hello():
 
         if user.is_subscribed():
 
-            return 'Welcome, %s! (<a href="%s">sign out</a>) \n ' \
-                   '(<a href="%s">Unsubscribe!</a>)' \
-                   % (user.nickname(), users.create_logout_url('/'), "/unsubscribe")
+            return 'Welcome, {}! (<a href="{}">sign out</a>) <br>' \
+                   '<a href="{}">Unsubscribe!</a>' \
+                .format(user.nickname(), users.create_logout_url('/'), "/unsubscribe")
         else:
 
-            return 'Welcome, %s! (<a href="%s">sign out</a>) \n ' \
-                   '(<a href="%s">Subscribe!</a>)' \
-                   % (user.nickname(), users.create_logout_url('/'), "/subscribe")
+            return 'Welcome, {}! (<a href="{}">sign out</a>) <br>' \
+                   '<a href="{}">Subscribe!</a>' \
+                .format(user.nickname(), users.create_logout_url('/'), "/subscribe")
     else:
-        return redirect(users.create_login_url())
+        return 'PRIMETIME4U, The only app that allows you to plop down to the couch and simply enjoy a movie <br>' \
+               '<a href="{}">Sign in</a>'.format(users.create_login_url())
 
 
 @app.route('/subscribe')

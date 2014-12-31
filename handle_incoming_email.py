@@ -1,19 +1,18 @@
-
 import logging
-from flask import Flask
-from manage_user import get_current_user
-from send_mail import send_feedback
+from google.appengine.ext import webapp
 from google.appengine.ext.webapp.mail_handlers import InboundMailHandler
+from send_mail import forward_mail, send_feedback
 
-app = Flask(__name__)
-app.config['DEBUG'] = True
-user = get_current_user()
 
 class LogSenderHandler(InboundMailHandler):
-
     def receive(self, mail_message):
         logging.info("Received a message from: " + mail_message.sender)
-        send_feedback(user)     #mando una mail di ringraziamento del feedback, per provare se funziona la mail ricevuta
+        content_type, encoded = mail_message.bodies(content_type='text/plain').next()
+        body = encoded.decode()
+        logging.info(body)
+
+        send_feedback(mail_message.sender)  # Thank the user
+        forward_mail(mail_message)  # Forward e-mail to admins
 
 
-
+app = webapp.WSGIApplication([LogSenderHandler.mapping()], debug=True)

@@ -34,7 +34,6 @@ def confirm_unsubscription(user):
     """
     message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
                                 subject="PT4U: Unsubscription confirmed")
-    print user
     message.to = "{} <{}>".format(user.name, user.key.id())
     message.body = """
     Dear {},
@@ -61,22 +60,7 @@ def send_suggestion(user, movie):
                                 subject="PT4U: Your daily movie proposal")
 
     message.to = "{} <{}>".format(user.name, user.key.id())
-    message.body = """
-    Dear {},
 
-    Thanks for your feedback, it will be helpful in order to improve your PT4U experience!
-
-    The PRIMETIME4U Team
-    """.format(user.name, movie["title"], movie["originalTitle"], movie["channel"], movie["time"])
-
-    message.send()
-
-
-def send_feedback(user):
-    message = mail.EmailMessage(sender="PRIMETIME4U Suggestion <support@hale-kite-786.appspotmail.com>",
-                                subject="PT4U: Thanks for your feedback")
-
-    message.to = "{} <{}>".format(user.name, user.key.id())
     message.body = """
     Dear {},
 
@@ -88,6 +72,47 @@ def send_feedback(user):
     Time: {}
 
     The PRIMETIME4U Team
-    """.format(user.name)
+    """.format(user.name, movie["title"], movie["originalTitle"], movie["channel"], movie["time"])
 
     message.send()
+
+
+def send_feedback(sender):
+    """
+    Thank the user.
+    :param sender: the sender to thank
+    :type sender: String
+    :return: None
+    """
+    message = mail.EmailMessage(sender="PRIMETIME4U Support <support@hale-kite-786.appspotmail.com>",
+                                subject="PT4U: Thanks for your feedback")
+
+    message.to = "{}".format(sender)
+    message.body = """
+    Dear {},
+
+    Thanks for your feedback, it will be helpful in order to improve your PT4U experience!
+
+    The PRIMETIME4U Team
+    """.format(sender)
+
+    message.send()
+
+
+def forward_mail(mail_message):
+    """
+    Forward mail received to admins.
+    :param mail_message: the mail message
+    :type mail_message: InboundEmailMessage
+    :return: None
+    """
+    content_type, encoded = mail_message.bodies(content_type='text/plain').next()
+    body = encoded.decode()
+    mail.send_mail(sender="support@hale-kite-786.appspotmail.com",
+                   to="Claudio Pastorini <pastorini.claudio@gmail.com>, "
+                      "Dorel Coman <dorelcomanj@gmail.com>, "
+                      "Giovanni Colonna <gc240790@gmail.com>, "
+                      "Marius Ionita <ionita.maryus@gmail.com>",
+                   subject=mail_message.subject,
+                   body=body,
+                   reply_to=mail_message.sender)
