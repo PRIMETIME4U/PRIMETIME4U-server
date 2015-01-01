@@ -19,13 +19,14 @@ def get_movies_schedule(html_page):
 
     movies_node = tree.xpath('//article[@class="item item-scheda item-scheda-film cf option-view-list"]')  # Get movies
     for movie_node in movies_node:
-        title = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/text()')[0].strip()  # Get title
+        title = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/text()')[0].strip().encode(
+            'utf-8')  # Get title
         original_title = movie_node.xpath('.//p[@class="titolo-originale"]/text()')  # Get original title
         if len(original_title) == 0:
             original_title = None
         else:
-            original_title = original_title[0].strip()
-        channel = movie_node.xpath('.//h3[@class="media tv"]/text()')[0].strip()  # Get channel
+            original_title = original_title[0].strip().encode('utf-8')
+        channel = movie_node.xpath('.//h3[@class="media tv"]/text()')[0].strip().encode('utf-8')  # Get channel
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
         movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time})
@@ -54,7 +55,7 @@ def result_movies_schedule(tv_type, day):
     else:
         raise BadRequest
 
-    if tv_type.upper() == "FREE":   # Translate tv_type for get call
+    if tv_type.upper() == "FREE":  # Translate tv_type for get call
         html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
         return get_movies_schedule(html_page)
     elif tv_type.upper() == "SKY":
@@ -67,6 +68,7 @@ def result_movies_schedule(tv_type, day):
         return get_movies_schedule(html_page)
     else:
         raise BadRequest
+
 
 if __name__ == "__main__":
     print result_movies_schedule("free", "today")

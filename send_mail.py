@@ -72,7 +72,10 @@ def send_suggestion(user, movie):
     Time: {}
 
     The PRIMETIME4U Team
-    """.format(user.name, movie["title"], movie["originalTitle"], movie["channel"], movie["time"])
+    """.format(user.name,
+               movie["title"],
+               movie["originalTitle"] if movie["originalTitle"] is not None else movie["title"], movie["channel"],
+               movie["time"])
 
     message.send()
 
