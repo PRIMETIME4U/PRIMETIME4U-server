@@ -16,15 +16,15 @@ We provide also to you for free a simple API in order to get Italian TV schedule
    ```
    http://hale-kite-786.appspot.com/schedule/<type>/<day>
    ```
-   >Where ```<type>``` is one of this:
-   >   * **FREE** for the FREE TV;
-   >   * **SKY** for the SKY TV;
-   >   * **PREMIUM** for the Mediaset Premium TV;
+   Where ```<type>``` is one of this:
+      * **FREE** for the FREE TV;
+      * **SKY** for the SKY TV;
+      * **PREMIUM** for the Mediaset Premium TV;
    
-   >and ```<day>``` instead one of this:
-   >   * **TODAY** for the schedule of today;
-   >   * **TOMORROW** for the schedule of tomorrow;
-   >   * **FUTURE** for the schedule of the day after tomorrow;
+   and ```<day>``` instead one of this:
+      * **TODAY** for the schedule of today;
+      * **TOMORROW** for the schedule of tomorrow;
+      * **FUTURE** for the schedule of the day after tomorrow;
       
 2. The JSON returned is similar to this:
 
