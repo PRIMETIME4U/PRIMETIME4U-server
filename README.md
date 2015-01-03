@@ -21,7 +21,7 @@ We provide also to you for free a simple API in order to get Italian TV schedule
    >   * **SKY** for the SKY TV;
    >   * **PREMIUM** for the Mediaset Premium TV;
    
-   >   and ```<day>``` instead one of this:
+   >and ```<day>``` instead one of this:
    >   * **TODAY** for the schedule of today;
    >   * **TOMORROW** for the schedule of tomorrow;
    >   * **FUTURE** for the schedule of the day after tomorrow;
