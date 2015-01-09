@@ -46,42 +46,4 @@ def retrieve():
 
         obj.put()
 
-
-#
-
-
- # title = ndb.StringProperty()
- #    original_title = ndb.StringProperty()
- #    simple_plot = ndb.StringProperty()
- #    plot = ndb.TextProperty()
- #    genres = ndb.StringProperty(repeated=True)
- #    year = ndb.IntegerProperty()
- #    run_times = ndb.StringProperty()
- #    rated = ndb.StringProperty()
- #    countries = ndb.StringProperty(repeated=True)
- #    directors = ndb.KeyProperty(Artist, repeated=True)
- #    writers = ndb.KeyProperty(Artist, repeated=True)
- #    actors = ndb.KeyProperty(Artist, repeated=True)
- #    trailer = ndb.StringProperty()
- #    poster = ndb.StringProperty()
- #    keywords = ndb.StringProperty(repeated=True)
-    # def addartist():
-    #     obj = Artist(id='nm0004695',
-    #                  name='Jessica Alba',
-    #                  photo='http://ia.media-imdb.com/images/M/MV5BODYxNzE4OTk5Nl5BMl5BanBnXkFtZTcwODYyMDYzMw@@._V1_SY98_CR3,0,67,98_AL_.jpg')
-    #     obj.put()
-    #
-    #     return 'Aggiunta Jessica Alba'
-    #
-    #
-    # @app.route('/addmovie')
-    # def addmovie():
-    #     obj = Movie(id='tt0120667',
-    #                 original_title='Fantastic Four')
-    #     actor = Artist.get_by_id('nm0004695')
-    #     movie_id = obj.put().id()
-    #     movie = Movie.get_by_id(movie_id)
-    #     movie.add_actor(actor)
-    #
-    #     return 'Aggiunto Fantastic Four'
     return 'aggiunto'
