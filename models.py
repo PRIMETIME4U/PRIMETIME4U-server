@@ -21,13 +21,13 @@ class ModelUtils(object):
 
         directors = []
         for director in result['directors']:
-            directors.append(director.get().key.id())  # Get IMDB id of actor instead of entity key
+            directors.append(director.get().key.id())  # Get IMDB id of director instead of entity key
             # directors.append(director.urlsafe())    # Get urlsafe key
         result['directors'] = directors  # Return a list of IMDB id of directors
 
         writers = []
         for writer in result['writers']:
-            writers.append(writer.get().key.id())  # Get IMDB id of actor instead of entity key
+            writers.append(writer.get().key.id())  # Get IMDB id of writer instead of entity key
             # writers.append(writer.urlsafe())    # Get urlsafe key
         result['writers'] = writers  # Return a list of IMDB id of writers
         return result

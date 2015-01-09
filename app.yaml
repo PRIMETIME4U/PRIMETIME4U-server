@@ -8,9 +8,8 @@ inbound_services:
 - mail
 
 handlers:
-- url: /task/suggest/
-  script: suggest.app
-  login: admin
+- url: /task/.*
+  script: task.app
 
 - url: /_ah/mail/.+
   script: handle_incoming_email.app
