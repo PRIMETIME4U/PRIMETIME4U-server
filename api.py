@@ -40,7 +40,8 @@ def tastes(user_id, type):
 
                 movie = Movie.query(Movie.original_title == movie_original_title).get()
                 if movie is None:
-                    movie = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
+                    movie_key = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
+                    movie = Movie.get_by_id(movie_key.id())
 
                 user.add_taste_movie(movie)
                 return get_tastes_movies_list(user, type)
