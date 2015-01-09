@@ -84,8 +84,9 @@ class Movie(ModelUtils, ndb.Model):
         :type actor: Artist
         :return: None
         """
-        self.actors.append(actor.key)
-        self.put()
+        if actor.key not in self.actors:
+            self.actors.append(actor.key)
+            self.put()
 
     def add_director(self, director):
         """
@@ -169,7 +170,7 @@ class User(ModelUtils, ndb.Model):
         self.watched_movies.append(movie.key)
         self.put()
 
-    def add_taste_movie(self, movie, taste):
+    def add_taste_movie(self, movie, taste=1):
         """
         Add user's taste of a movie.
         :param movie: movie to be voted
@@ -178,15 +179,17 @@ class User(ModelUtils, ndb.Model):
         :type taste: integer
         :return: None
         """
+        # TODO: improve, I don't know if it is the best way to see if there is yet TasteArtist
         taste_movie = TasteMovie(id=(movie.key.id() + self.key.id()),  # Create the user's taste with unique id
                                  taste=taste)
         taste_movie.add_movie(movie)
         taste_movie_key = taste_movie.put()
 
-        self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
-        self.put()
+        if taste_movie_key not in self.tastes_movies:
+            self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
+            self.put()
 
-    def add_taste_artist(self, artist, taste):
+    def add_taste_artist(self, artist, taste=1):
         """
         Add user's taste of an artist.
         :param artist: artist to be voted
@@ -195,10 +198,12 @@ class User(ModelUtils, ndb.Model):
         :type taste: integer
         :return: None
         """
+        # TODO: improve, I don't know if it is the best way to see if there is yet TasteArtist
         taste_artist = TasteArtist(id=(artist.key.id() + self.key.id()),
                                    taste=taste)  # Create the user's taste with unique id
         taste_artist.add_artist(artist)
         taste_artist_key = taste_artist.put()
 
-        self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
-        self.put()
+        if taste_artist_key not in self.tastes_artists:
+            self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
+            self.put()
