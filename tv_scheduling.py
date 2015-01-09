@@ -58,35 +58,35 @@ def result_movies_schedule(tv_type, day):
 
     if tv_type.upper() == "FREE":  # Translate tv_type for get call
         tv_type = "free"
-        schedule = memcache.get(tv_type + day)
-        if schedule is not None:
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
+        if schedule is not None:  # Control if it was retrieved
             return schedule
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
             schedule = get_movies_schedule(html_page)
-            memcache.add("free" + day, schedule, 3600)
+            memcache.add("free" + day, schedule, 3600)  # store the schedule in memcache for int seconds
             return schedule
 
     elif tv_type.upper() == "SKY":
         tv_type = "sky"
-        schedule = memcache.get(tv_type + day)
-        if schedule is not None:
-            return schedule
+        schedule = memcache.get(tv_type + day) # Tries to retrieve the schedule in memcache
+        if schedule is not None: # Control if it was retrieved
+            return
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600)
+            memcache.add(tv_type + day, schedule, 3600) # store the schedule in memcache for int seconds
             return schedule
 
     elif tv_type.upper() == "PREMIUM":
         tv_type = "premium"
-        schedule = memcache.get(tv_type + day)
+        schedule = memcache.get(tv_type + day) # Tries to retrieve the schedule in memcache
         if schedule is not None:
             return schedule
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600)
+            memcache.add(tv_type + day, schedule, 3600)# store the schedule in memcache for int seconds
             return schedule
     else:
         raise BadRequest
