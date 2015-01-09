@@ -64,29 +64,29 @@ def result_movies_schedule(tv_type, day):
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
             schedule = get_movies_schedule(html_page)
-            memcache.add("free" + day, schedule, 3600)  # store the schedule in memcache for int seconds
+            memcache.add("free" + day, schedule, 3600)  # Store the schedule in memcache for int seconds
             return schedule
 
     elif tv_type.upper() == "SKY":
         tv_type = "sky"
-        schedule = memcache.get(tv_type + day) # Tries to retrieve the schedule in memcache
-        if schedule is not None: # Control if it was retrieved
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
+        if schedule is not None:  # Control if it was retrieved
             return
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600) # store the schedule in memcache for int seconds
+            memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
             return schedule
 
     elif tv_type.upper() == "PREMIUM":
         tv_type = "premium"
-        schedule = memcache.get(tv_type + day) # Tries to retrieve the schedule in memcache
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
         if schedule is not None:
             return schedule
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600)# store the schedule in memcache for int seconds
+            memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
             return schedule
     else:
         raise BadRequest

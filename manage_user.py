@@ -8,13 +8,26 @@ class User(users.User):
     Class inherit from users.User in order to add some useful methods.
     """
 
-    def subscribe(self):
+    def subscribe(self, name=None, birth_year=None, gender=None):
         """
         Add user in the datastore.
+        :param name:
+        :type name:
+        :param birth_year:
+        :type birth_year:
+        :param gender:
+        :type gender:
         :return None
         """
         user = modelUser(id=self.email(),
                          name=self.nickname())
+
+        if name is not None:
+            user.name = name
+        if birth_year is not None:
+            user.birth_year = int(birth_year)
+        if gender is not None:
+            user.gender = gender.upper()
 
         user.put()
 

@@ -15,6 +15,9 @@ handlers:
   script: handle_incoming_email.app
   login: admin
 
+- url: /api/.*
+  script: api.app
+
 - url: .*
   script: main.app
 
