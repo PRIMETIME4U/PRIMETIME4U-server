@@ -1,3 +1,4 @@
+from google.appengine.api import memcache
 from utilities import *
 import lxml.html
 from werkzeug.exceptions import BadRequest
@@ -56,16 +57,37 @@ def result_movies_schedule(tv_type, day):
         raise BadRequest
 
     if tv_type.upper() == "FREE":  # Translate tv_type for get call
-        html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
-        return get_movies_schedule(html_page)
+        tv_type = "free"
+        schedule = memcache.get(tv_type + day)
+        if schedule is not None:
+            return schedule
+        else:
+            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
+            schedule = get_movies_schedule(html_page)
+            memcache.add("free" + day, schedule, 3600)
+            return schedule
+
     elif tv_type.upper() == "SKY":
         tv_type = "sky"
-        html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
-        return get_movies_schedule(html_page)
+        schedule = memcache.get(tv_type + day)
+        if schedule is not None:
+            return schedule
+        else:
+            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
+            schedule = get_movies_schedule(html_page)
+            memcache.add(tv_type + day, schedule, 3600)
+            return schedule
+
     elif tv_type.upper() == "PREMIUM":
         tv_type = "premium"
-        html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
-        return get_movies_schedule(html_page)
+        schedule = memcache.get(tv_type + day)
+        if schedule is not None:
+            return schedule
+        else:
+            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
+            schedule = get_movies_schedule(html_page)
+            memcache.add(tv_type + day, schedule, 3600)
+            return schedule
     else:
         raise BadRequest
 
