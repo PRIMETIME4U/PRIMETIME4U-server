@@ -1,7 +1,7 @@
 from flask import jsonify, request
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
-from IMDB_retriever import retrieve_movie
+from IMDB_retriever import retrieve_movie, retrieve_artist
 from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
@@ -35,10 +35,14 @@ def tastes(user_id, type):
                 artist_name = request.form['artist_name']  # Get artist_name from POST
 
                 artist = Artist.query(Artist.name == artist_name).get()  # Find artist by name
-                if artist is not None:
-                    user.add_taste_artist(artist)  # Add artist to tastes
-                # else:
-                # retrieve_artist
+                if artist is None:
+                    try:
+                        artist_key = retrieve_artist(artist_name)  # Retrieve if is not in the datastore
+                    except RetrieverError as retriever_error:
+                        raise InternalServerError(retriever_error)
+                    artist = Artist.get_by_id(artist_key.id())
+
+                user.add_taste_artist(artist)  # Add artist to tastes
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
                 movie_original_title = request.form['movie_title']  # Get movie_title from POST

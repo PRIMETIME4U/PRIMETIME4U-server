@@ -66,7 +66,7 @@ class Movie(ModelUtils, ndb.Model):
     simple_plot = ndb.StringProperty()
     plot = ndb.TextProperty()
     genres = ndb.StringProperty(repeated=True)
-    year = ndb.IntegerProperty()
+    year = ndb.StringProperty()
     run_times = ndb.StringProperty()
     rated = ndb.StringProperty()
     countries = ndb.StringProperty(repeated=True)

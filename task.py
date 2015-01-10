@@ -49,4 +49,4 @@ def retrieve():
         except RetrieverError as retriever_error:
             print retriever_error
 
-    return 'Movies of today retrieved'
+    return 'Movies of today retrieved '
