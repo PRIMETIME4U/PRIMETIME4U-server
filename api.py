@@ -15,28 +15,35 @@ app.config['DEBUG'] = True
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
 def tastes(user_id, type):
     """
-
-    :param user_id:
-    :param type:
-    :return:
+    Endpoint that allow to list all tastes by type or add new one.
+    :param user_id: email of the user
+    :param type: string
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
     """
-    user = modelUser.get_by_id(user_id)
+    user = modelUser.get_by_id(user_id) # Get user
 
     if user is not None:
         if request.method == 'POST':
             if type == 'artist':
-                artist_name = request.form['artist_name']
+                artist_name = request.form['artist_name']  # Get artist_name from POST
 
-                artist = Artist.query(Artist.name == artist_name).get()
+                artist = Artist.query(Artist.name == artist_name).get()  # Find artist by name
                 if artist is not None:
-                    user.add_taste_artist(artist)
+                    user.add_taste_artist(artist)  # Add artist to tastes
                 # else:
                 # retrieve_artist
-                return get_tastes_artists_list(user, type)
+                return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                movie_original_title = request.form['movie_title']
+                movie_original_title = request.form['movie_title']  # Get movie_title from POST
 
-                movie = Movie.query(Movie.original_title == movie_original_title).get()
+                movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
                 if movie is None:
                     try:
                         movie_key = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
@@ -44,15 +51,15 @@ def tastes(user_id, type):
                         raise InternalServerError(retriever_error)
                     movie = Movie.get_by_id(movie_key.id())
 
-                user.add_taste_movie(movie)
-                return get_tastes_movies_list(user, type)
+                user.add_taste_movie(movie)  # Add movie to tastes
+                return get_tastes_movies_list(user)  # Return tastes
             else:
                 raise BadRequest
         elif request.method == 'GET':
             if type == 'artist':
-                return get_tastes_artists_list(user, type)
+                return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                return get_tastes_movies_list(user, type)
+                return get_tastes_movies_list(user)  # Return tastes
             else:
                 raise BadRequest
         else:
@@ -65,14 +72,18 @@ def tastes(user_id, type):
 def subscribe():
     """
     Subscribe user from App.
-    :return:
+    :return: confirmation
+        {"code": 0, "data": {"message": "User subscribed successful!", "user_id": user_id}}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is already subscribed
     """
     if request.method == 'POST':
 
-        json_data = request.get_json()
-        user_id = json_data['user_id']
+        json_data = request.get_json()  # Get JSON from POST
+        user_id = json_data['user_id']  # Get user_id
 
-        user = User(email=user_id)
+        user = User(email=user_id)  # Create user
 
         if user.is_subscribed():
             raise InternalServerError(user_id + ' is already subscribed')
@@ -89,11 +100,13 @@ def unsubscribe():
     """
     Unsubscribe user from App.
     :return:
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
     """
     if request.method == 'POST':
-        user_id = request.form['user_id']
+        user_id = request.form['user_id']  # Get user_id from POST
 
-        user = User(email=user_id)
+        user = User(email=user_id)  # Create user
 
         if not user.is_subscribed():
             raise InternalServerError(user_id + ' is not subscribed')
@@ -104,70 +117,49 @@ def unsubscribe():
         raise MethodNotAllowed
 
 
-# @app.route('/addartist')
-# def addartist():
-# obj = Artist(id='nm0004695',
-# name='Jessica Alba',
-# photo='http://ia.media-imdb.com/images/M/MV5BODYxNzE4OTk5Nl5BMl5BanBnXkFtZTcwODYyMDYzMw@@._V1_SY98_CR3,0,67,98_AL_.jpg')
-# obj.put()
-#
-#     return 'Aggiunta Jessica Alba'
-#
-#
-# @app.route('/addmovie')
-# def addmovie():
-#     obj = Movie(id='tt0120667',
-#                 original_title='Fantastic Four')
-#     actor = Artist.get_by_id('nm0004695')
-#     movie_id = obj.put().id()
-#     movie = Movie.get_by_id(movie_id)
-#     movie.add_actor(actor)
-#
-#     return 'Aggiunto Fantastic Four'
-
-
-# TODO: complete docstring
-def get_tastes_artists_list(user, type):
+def get_tastes_artists_list(user):
     """
-
-    :param user:
-    :type user:
-    :param type:
-    :type type:
-    :return:
-    :rtype:
+    Get a readable taste artists list.
+    :param user: user
+    :type user: Models.User
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
     """
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
 
     artists = []
 
-    for taste_artist_id in tastes_artists_id:  # For all key get artist's info an
-        taste_artist = TasteArtist.get_by_id(taste_artist_id.id())
-        artist_id = taste_artist.id_IMDB.id()
-        artist = Artist.get_by_id(artist_id)  # Get artist
-        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo}) # Append Arti
+    for taste_artist_id in tastes_artists_id:
+        taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
+        artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
+        artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "type": type, "tastes": artists})
+        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo})
+
+    return jsonify(code=0, data={"user_id": user.key.id(), "type": "artist", "tastes": artists})
 
 
-def get_tastes_movies_list(user, type):
+def get_tastes_movies_list(user):
     """
-
-    :param user:
-    :type user:
-    :param type:
-    :type type:
-    :return:
-    :rtype:
+    Get a readable taste movies list.
+    :param user: user
+    :type user: Models.User
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
     """
     tastes_movies_id = user.tastes_movies
 
     movies = []
 
     for taste_movie_id in tastes_movies_id:
-        taste_movie = TasteMovie.get_by_id(taste_movie_id.id())
-        movie_id = taste_movie.id_IMDB.id()
-        movie = Movie.get_by_id(movie_id)
+        taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
+        movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
+        movie = Movie.get_by_id(movie_id)  # Get movie by id
+
         movies.append({"id_IMDB": movie_id, "original_title": movie.original_title, "poster": movie.poster})
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "type": type, "tastes": movies})
+    return jsonify(code=0, data={"user_id": user.key.id(), "type": "movie", "tastes": movies})

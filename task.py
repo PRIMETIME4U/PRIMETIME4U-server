@@ -33,8 +33,10 @@ def retrieve():
     Retrieve movie info from IMDB for all movies from today schedule.
     :return: simple confirmation string
     :rtype string
+    :raise RetrieverError: if there is an error from MYAPIFILMS
     """
-    # TODO: retrieve also movie info for sky and premium
+    # TODO: retrieve also movie info for sky and premium #22
+    # TODO: see how it is possible write error on google dashboard
     movies = result_movies_schedule("free", "today")  # Retrieve movies from today schedule
 
     for movie in movies:
@@ -43,10 +45,9 @@ def retrieve():
 
         try:
             retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
-        except ConnectionError:
-            print "ConnectionError, I retry.."
-            retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
-        except RetrieverError as retriever_error:
-            print retriever_error
+        except ConnectionError:  # Connection error.. then retry
+            retrieve_movie(movie_title)
+        except RetrieverError:  # There is some problem.. we do not handle it (now)
+            pass
 
     return 'Movies of today retrieved'
