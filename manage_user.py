@@ -11,12 +11,12 @@ class User(users.User):
     def subscribe(self, name=None, birth_year=None, gender=None):
         """
         Add user in the datastore.
-        :param name:
-        :type name:
-        :param birth_year:
-        :type birth_year:
-        :param gender:
-        :type gender:
+        :param name: name of the user
+        :type name: string
+        :param birth_year: birth year of the user
+        :type birth_year: string
+        :param gender: gender of the user
+        :type gender: string
         :return None
         """
         user = modelUser(id=self.email(),

@@ -6,12 +6,10 @@ from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
+from utilities import RetrieverError
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
-
-# Note: We don't need to call run() since our application is embedded within
-# the App Engine WSGI application server.
 
 
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
@@ -33,14 +31,17 @@ def tastes(user_id, type):
                 if artist is not None:
                     user.add_taste_artist(artist)
                 # else:
-                #   retrieve_artist
+                # retrieve_artist
                 return get_tastes_artists_list(user, type)
             elif type == 'movie':
                 movie_original_title = request.form['movie_title']
 
                 movie = Movie.query(Movie.original_title == movie_original_title).get()
                 if movie is None:
-                    movie_key = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
+                    try:
+                        movie_key = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
+                    except RetrieverError as retriever_error:
+                        raise InternalServerError(retriever_error)
                     movie = Movie.get_by_id(movie_key.id())
 
                 user.add_taste_movie(movie)
@@ -63,7 +64,7 @@ def tastes(user_id, type):
 @app.route('/api/subscribe/', methods=['POST'])
 def subscribe():
     """
-
+    Subscribe user from App.
     :return:
     """
     if request.method == 'POST':
@@ -86,7 +87,7 @@ def subscribe():
 @app.route('/api/unsubscribe/', methods=['POST'])
 def unsubscribe():
     """
-
+    Unsubscribe user from App.
     :return:
     """
     if request.method == 'POST':
@@ -107,8 +108,8 @@ def unsubscribe():
 # def addartist():
 # obj = Artist(id='nm0004695',
 # name='Jessica Alba',
-#                  photo='http://ia.media-imdb.com/images/M/MV5BODYxNzE4OTk5Nl5BMl5BanBnXkFtZTcwODYyMDYzMw@@._V1_SY98_CR3,0,67,98_AL_.jpg')
-#     obj.put()
+# photo='http://ia.media-imdb.com/images/M/MV5BODYxNzE4OTk5Nl5BMl5BanBnXkFtZTcwODYyMDYzMw@@._V1_SY98_CR3,0,67,98_AL_.jpg')
+# obj.put()
 #
 #     return 'Aggiunta Jessica Alba'
 #
@@ -136,15 +137,15 @@ def get_tastes_artists_list(user, type):
     :return:
     :rtype:
     """
-    tastes_artists_id = user.tastes_artists
+    tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
 
     artists = []
 
-    for taste_artist_id in tastes_artists_id:
+    for taste_artist_id in tastes_artists_id:  # For all key get artist's info an
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())
         artist_id = taste_artist.id_IMDB.id()
-        artist = Artist.get_by_id(artist_id)
-        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo})
+        artist = Artist.get_by_id(artist_id)  # Get artist
+        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo}) # Append Arti
 
     return jsonify(code=0, data={"user_id": user.key.id(), "type": type, "tastes": artists})
 
