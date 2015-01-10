@@ -176,6 +176,7 @@ class User(ModelUtils, ndb.Model):
         """
         self.watched_movies.append(movie.key)
         self.date_watched.append(date)
+        self.put()
 
     def add_taste_movie(self, movie, taste=1):
         """
@@ -225,6 +226,7 @@ class User(ModelUtils, ndb.Model):
 
         if type not in self.schedule_type:
             self.schedule_type.append(type)
+            self.put()
 
     def remove_tv_type(self, type):
         """
@@ -233,8 +235,9 @@ class User(ModelUtils, ndb.Model):
         :type type: string representing the type to be removed
         :return: None
         """
-
-        self.schedule_type.remove(type)
+        if type in self.schedule_type:
+            self.schedule_type.remove(type)
+            self.put()
 
 
 
