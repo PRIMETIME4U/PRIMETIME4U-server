@@ -95,8 +95,9 @@ class Movie(ModelUtils, ndb.Model):
         :type director: Artist
         :return: None
         """
-        self.directors.append(director.key)
-        self.put()
+        if director.key not in self.directors:
+            self.directors.append(director.key)
+            self.put()
 
     def add_writer(self, writer):
         """
@@ -105,8 +106,9 @@ class Movie(ModelUtils, ndb.Model):
         :type writer: Artist
         :return: None
         """
-        self.writers.append(writer.key)
-        self.put()
+        if writer.key not in self.writers:
+            self.writers.append(writer.key)
+            self.put()
 
 
 class TasteMovie(ModelUtils, ndb.Model):
