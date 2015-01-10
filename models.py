@@ -1,4 +1,5 @@
 from google.appengine.ext import ndb
+from datetime import date
 
 # TODO: try to use https://cloud.google.com/appengine/docs/python/ndb/modelclass#Model_get_or_insert
 
@@ -157,19 +158,24 @@ class User(ModelUtils, ndb.Model):
     name = ndb.StringProperty(required=True)
     birth_year = ndb.IntegerProperty()
     gender = ndb.StringProperty(choices=["M", "F"])
+    schedule_type = ndb.StringProperty(choices=["free", "mediaset", "sky"], repeated=True)
     watched_movies = ndb.KeyProperty(Movie, repeated=True)
+    date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)
     tastes_artists = ndb.KeyProperty(TasteArtist, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
 
-    def add_watched_movie(self, movie):
+    def add_watched_movie(self, movie, date):
         """
         Add movie to watched movies.
         :param movie: movie to add
         :type movie: Movie
+        :param date: date the movie been watched
+        :type date: date
         :return: None
         """
         self.watched_movies.append(movie.key)
+        self.date_watched.append(date)
         self.put()
 
     def add_taste_movie(self, movie, taste=1):
@@ -209,3 +215,32 @@ class User(ModelUtils, ndb.Model):
         if taste_artist_key not in self.tastes_artists:
             self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
             self.put()
+
+    def add_tv_type(self, type):
+        """
+        Add user's tv type
+        :param type: type of tv to be added
+        :type type: string representing the type
+        :return: None
+        """
+
+        if type not in self.schedule_type:
+            self.schedule_type.append(type)
+            self.put()
+
+    def remove_tv_type(self, type):
+        """
+        Remove user's tv type from list
+        :param type: type of tv to be removed
+        :type type: string representing the type to be removed
+        :return: None
+        """
+        if type in self.schedule_type:
+            self.schedule_type.remove(type)
+            self.put()
+
+
+
+
+
+

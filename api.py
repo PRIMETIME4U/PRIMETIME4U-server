@@ -1,3 +1,4 @@
+from datetime import date
 from flask import jsonify, request
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
@@ -17,7 +18,9 @@ def tastes(user_id, type):
     """
     Endpoint that allow to list all tastes by type or add new one.
     :param user_id: email of the user
+    :type user_id: string
     :param type: string
+    :type type: string
     :return: list of tastes
         {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
         "type": type, "user_id": user_id}
@@ -27,7 +30,7 @@ def tastes(user_id, type):
     :raise BadRequest: if type is neither artist neither movie
     :raise InternalServerError: if there is an error from MYAPIFILMS
     """
-    user = modelUser.get_by_id(user_id) # Get user
+    user = modelUser.get_by_id(user_id)  # Get user
 
     if user is not None:
         if request.method == 'POST':
@@ -66,6 +69,42 @@ def tastes(user_id, type):
                 return get_tastes_movies_list(user)  # Return tastes
             else:
                 raise BadRequest
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
+
+
+@app.route('/api/watched/<user_id>', methods=['GET', 'POST'])
+def watched(user_id):
+    """
+    Endpoint that allow to list all watched movies.
+    :param user_id: email of the user
+    :type user_id: string
+    :return: list of watched movies
+        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
+        "date": date}],"user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'POST':
+            movie_original_title = request.form['movie_title']  # Get movie_title from POST
+
+            movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
+
+            data = date.today()
+            data = data.replace(data.year, data.month, data.day - 1)
+
+            user.add_watched_movie(movie, data)
+            return get_watched_movies_list(user)  # Return tastes
+        elif request.method == 'GET':
+            return get_watched_movies_list(user)  # Return tastes
         else:
             raise MethodNotAllowed
     else:
@@ -167,3 +206,28 @@ def get_tastes_movies_list(user):
         movies.append({"id_IMDB": movie_id, "original_title": movie.original_title, "poster": movie.poster})
 
     return jsonify(code=0, data={"user_id": user.key.id(), "type": "movie", "tastes": movies})
+
+
+def get_watched_movies_list(user):
+    """
+    Get a readable watched movie list.
+    :param user: user
+    :type user: Models.User
+    :return: list of watched movies
+        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
+        "date": date}],"user_id": user_id}
+    :rtype: JSON
+    """
+    watched_movies_id = user.watched_movies  # Get all taste_artists' keys
+
+    movies = []
+
+    for i in range(0, len(watched_movies_id)):
+        watched_movie = Movie.get_by_id(watched_movies_id[i].id())  # Get movie
+
+        date_watched_movie = user.date_watched[i]  # Get date
+
+        movies.append({"id_IMDB": watched_movie.key.id(), "original_title": watched_movie.original_title,
+                       "poster": watched_movie.poster, "date": date_watched_movie.strftime('%d %B %Y')})
+
+    return jsonify(code=0, data={"user_id": user.key.id(), "watched": movies})
