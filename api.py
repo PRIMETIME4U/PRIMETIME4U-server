@@ -7,10 +7,27 @@ from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
+from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
+
+
+@app.route('/api/schedule/<tv_type>/<day>')
+def schedule(tv_type, day):
+    """
+    Returns a JSON containing the TV programming of <tv_type> in the <day>.
+    :param tv_type: type of TV from get schedule, possible value (free, sky, premium)
+    :type tv_type: string
+    :param day: interested day, possible value (today, tomorrow, future)
+    :type day: string
+    :return: schedule
+        {"code": 0, "data": { "day": day, "schedule": [{"channel": channel_name, "originalTitle": original_title,
+        "time": time, "title": title}, .. ], "type": tv_type}}
+    :rtype: JSON
+    """
+    return jsonify(code=0, data={"type": tv_type, "day": day, "schedule": result_movies_schedule(tv_type, day)})
 
 
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
