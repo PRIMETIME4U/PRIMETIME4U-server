@@ -10,6 +10,7 @@ inbound_services:
 handlers:
 - url: /task/.*
   script: task.app
+  login: admin
 
 - url: /_ah/mail/.+
   script: handle_incoming_email.app

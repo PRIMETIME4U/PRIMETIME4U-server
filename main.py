@@ -106,19 +106,3 @@ def unsubscribe():
         user.unsubscribe()
 
     return redirect('/')
-
-
-@app.route('/schedule/<tv_type>/<day>')
-def schedule(tv_type, day):
-    """
-    Returns a JSON containing the TV programming of <tv_type> in the <day>.
-    :param tv_type: type of TV from get schedule, possible value (free, sky, premium)
-    :type tv_type: string
-    :param day: interested day, possible value (today, tomorrow, future)
-    :type day: string
-    :return: schedule
-        {"code": 0, "data": { "day": day, "schedule": [{"channel": channel_name, "originalTitle": original_title,
-        "time": time, "title": title}, .. ], "type": tv_type}}
-    :rtype: JSON
-    """
-    return jsonify(code=0, data={"type": tv_type, "day": day, "schedule": result_movies_schedule(tv_type, day)})

@@ -2,6 +2,7 @@ cron:
 - description: daily movies suggestion
   url: /task/suggest/
   schedule: every 24 hours
+
 - description: retrieve movies info
   url: /task/retrieve/
   schedule: every 24 hours
