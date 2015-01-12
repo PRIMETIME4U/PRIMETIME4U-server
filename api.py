@@ -7,6 +7,7 @@ from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
+from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError
 
 app = json_api(__name__)
