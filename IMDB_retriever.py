@@ -21,27 +21,34 @@ def retrieve_movie(movie_title):
         raise RetrieverError(json_data["code"], json_data["message"])
 
     movie = Movie(id=json_data[0]["idIMDB"],
-                  original_title=json_data[0]["originalTitle"],
-                  plot=json_data[0]["plot"],
-                  poster=json_data[0]["urlPoster"],
-                  rated=json_data[0]["rated"],
-                  run_times=json_data[0]["runtime"][0],
-                  title=json_data[0]["title"],
+                  genres=json_data[0]["genres"],
                   simple_plot=json_data[0]["simplePlot"],
-                  genres=json_data[0]["genres"])
+                  title=json_data[0]["title"],
+                  rated=json_data[0]["rated"],
+                  poster=json_data[0]["urlPoster"],
+                  plot=json_data[0]["plot"],
+                  original_title=json_data[0]["originalTitle"])
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]
         movie.trailer = trailer_url
     except KeyError:
-        pass
+        movie.trailer = None
 
     year = json_data[0]["year"]
     if len(year) > 4:
         year = year[-4:]
 
     movie.year = year
+
+    run_times = json_data[0]["runtime"]
+    if len(run_times) == 0:
+        movie.run_times = None
+    else:
+        movie.run_times = run_times[0]
+
     key = movie.put()
+
     actors_list = json_data[0]["actors"]
     directors_list = json_data[0]["directors"]
     writers_list = json_data[0]["writers"]
