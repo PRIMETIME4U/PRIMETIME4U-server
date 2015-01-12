@@ -22,9 +22,9 @@ def random_suggest():
     users = User.query()  # Get all users
 
     for user in users.iter():
-        send_suggestion(user, random_movie_selection(result_movies_schedule("free", "today")))  # Send suggest for user
+        send_suggestion(user, random_movie_selection(result_movies_schedule('free', 'today')))  # Send suggest for user
 
-    return "Suggestions sended"
+    return 'OK'
 
 
 @app.route('/task/retrieve/')
@@ -35,7 +35,7 @@ def retrieve():
     :rtype string
     """
     # TODO: retrieve also movie info for sky and premium
-    movies = result_movies_schedule("free", "today")  # Retrieve movies from today schedule
+    movies = result_movies_schedule('free', 'today')  # Retrieve movies from today schedule
 
     for movie in movies:
         movie_title = movie['originalTitle'] if movie['originalTitle'] is not None else movie[
@@ -44,9 +44,9 @@ def retrieve():
         try:
             retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
         except ConnectionError:
-            print "ConnectionError, I retry.."
+            print 'ConnectionError, I retry..'
             retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
         except RetrieverError as retriever_error:
             print retriever_error
 
-    return 'Movies of today retrieved '
+    return 'OK'

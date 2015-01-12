@@ -158,7 +158,7 @@ class User(ModelUtils, ndb.Model):
     name = ndb.StringProperty(required=True)
     birth_year = ndb.IntegerProperty()
     gender = ndb.StringProperty(choices=["M", "F"])
-    schedule_type = ndb.StringProperty(choices=["free", "mediaset", "sky"], repeated=True)
+    schedule_type = ndb.StringProperty(choices=["free", "premium", "sky"], repeated=True)
     watched_movies = ndb.KeyProperty(Movie, repeated=True)
     date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)

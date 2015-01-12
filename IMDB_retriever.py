@@ -20,19 +20,19 @@ def retrieve_movie(movie_title):
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
 
-    obj = Movie(id=json_data[0]["idIMDB"],
-                original_title=json_data[0]["originalTitle"],
-                plot=json_data[0]["plot"],
-                poster=json_data[0]["urlPoster"],
-                rated=json_data[0]["rated"],
-                run_times=json_data[0]["runtime"][0],
-                title=json_data[0]["title"],
-                simple_plot=json_data[0]["simplePlot"],
-                genres=json_data[0]["genres"])
+    movie = Movie(id=json_data[0]["idIMDB"],
+                  original_title=json_data[0]["originalTitle"],
+                  plot=json_data[0]["plot"],
+                  poster=json_data[0]["urlPoster"],
+                  rated=json_data[0]["rated"],
+                  run_times=json_data[0]["runtime"][0],
+                  title=json_data[0]["title"],
+                  simple_plot=json_data[0]["simplePlot"],
+                  genres=json_data[0]["genres"])
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]
-        obj.trailer = trailer_url
+        movie.trailer = trailer_url
     except KeyError:
         pass
 
@@ -40,59 +40,53 @@ def retrieve_movie(movie_title):
     if len(year) > 4:
         year = year[-4:]
 
-
-    obj.year = year
-    key = obj.put()
+    movie.year = year
+    key = movie.put()
     actors_list = json_data[0]["actors"]
     directors_list = json_data[0]["directors"]
     writers_list = json_data[0]["writers"]
 
-    retrieve_artists(obj, actors_list, directors_list, writers_list)
+    retrieve_artists(movie, actors_list, directors_list, writers_list)
     return key
 
 
-def retrieve_artists(obj, actors_list, directors_list, writers_list):
+def retrieve_artists(movie, actors_list, directors_list, writers_list):
     """
-
-    :param artist_name:
-    :return:
+    Retrieve all artist in from actors, directors and writers lists.
+    :param movie: Movie object in order to add actors, directors and writers
+    :type movie: Movie
+    :param actors_list: list of actors
+    :type actors_list: list of dict
+    :param directors_list: list of directors
+    :type directors_list: list of dict
+    :param writers_list: list of writers
+    :type writers_list: list of dict
     """
-
-
-
     for json_data in actors_list:
-        act = Artist(id=json_data["actorId"],
-                 name=json_data["actorName"],
-                 photo=json_data["urlPhoto"])
-        act.put()
-        obj.add_actor(act)
-
-
+        actor = Artist(id=json_data["actorId"],
+                       name=json_data["actorName"],
+                       photo=json_data["urlPhoto"])
+        actor.put()
+        movie.add_actor(actor)
 
     for json_data in directors_list:
-        rgs = Artist(id=json_data["nameId"],
-                   name=json_data["name"])
-        rgs.put()
-        obj.add_director(rgs)
-
-
+        director = Artist(id=json_data["nameId"],
+                          name=json_data["name"])
+        director.put()
+        movie.add_director(director)
 
     for json_data in writers_list:
-        wrt = Artist(id=json_data["nameId"],
-                 name=json_data["name"])
-        wrt.put()
-        obj.add_writer(wrt)
+        writer = Artist(id=json_data["nameId"],
+                        name=json_data["name"])
+        writer.put()
+        movie.add_writer(writer)
 
-
-
-
-    return 'Amen'
 
 def retrieve_artist(artist_name):
     """
     Retrieve artist info from IMDB by name of artist.
-    :param name_artist: name of the artist to retrieve info
-    :type name_artist: string
+    :param artist_name: name of the artist to retrieve info
+    :type artist_name: string
     :return: Artist's key
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
@@ -104,11 +98,8 @@ def retrieve_artist(artist_name):
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
 
-    act = Artist(id=json_data["actorId"],
-                 name=json_data["actorName"],
-                 photo=json_data["urlPhoto"])
+    artist = Artist(id=json_data["actorId"],
+                    name=json_data["actorName"],
+                    photo=json_data["urlPhoto"])
 
-    key = act.put()
-
-    return key
-
+    return artist.put()
