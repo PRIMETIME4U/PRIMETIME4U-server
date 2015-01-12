@@ -25,7 +25,6 @@ def retrieve_movie(movie_title):
                   plot=json_data[0]["plot"],
                   poster=json_data[0]["urlPoster"],
                   rated=json_data[0]["rated"],
-                  run_times=json_data[0]["runtime"][0],
                   title=json_data[0]["title"],
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
