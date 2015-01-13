@@ -3,7 +3,7 @@ import requests
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
 BASE_URL_MYAPIFILMS = "http://www.myapifilms.com/"
-
+TV_TYPE = ['free', 'sky', 'premium']
 
 def get(url):
     """

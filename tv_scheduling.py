@@ -31,7 +31,7 @@ def get_movies_schedule(html_page):
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
         movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time})
-
+        print movies_list
     return movies_list
 
 

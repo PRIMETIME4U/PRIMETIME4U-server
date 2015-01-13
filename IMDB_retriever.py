@@ -3,11 +3,13 @@ from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
 
-def retrieve_movie(movie_title):
+def retrieve_movie(movie_title, movie_original_title):
     """
     Retrieve movie info from IMDB by movie title.
     :param movie_title: title of the film to retrieve info
     :type movie_title: string
+    :param movie_original_title: original title of the film to retrieve info
+    :type movie_original_title: string
     :return: Movie's key
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
@@ -21,11 +23,9 @@ def retrieve_movie(movie_title):
         raise RetrieverError(json_data["code"], json_data["message"])
 
     movie = Movie(id=json_data[0]["idIMDB"],
-                  original_title=json_data[0]["originalTitle"],
                   plot=json_data[0]["plot"],
                   poster=json_data[0]["urlPoster"],
                   rated=json_data[0]["rated"],
-                  title=json_data[0]["title"],
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
 
@@ -34,6 +34,16 @@ def retrieve_movie(movie_title):
         movie.trailer = trailer_url
     except KeyError:
         movie.trailer = None
+
+    movie.title = movie_title
+    movie.original_title = movie_original_title
+
+
+    run_times = json_data[0]["runtime"]
+    if len(run_times) == 0:
+        movie.run_times = None
+    else:
+        movie.run_times = run_times[0]
 
     year = json_data[0]["year"]
     if len(year) > 4:

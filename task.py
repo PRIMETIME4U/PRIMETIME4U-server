@@ -6,7 +6,7 @@ from models import User
 from movie_selector import random_movie_selection
 from send_mail import send_suggestion
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError
+from utilities import RetrieverError, TV_TYPE
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -34,19 +34,29 @@ def retrieve():
     :return: simple confirmation string
     :rtype string
     """
-    # TODO: retrieve also movie info for sky and premium
-    movies = result_movies_schedule('free', 'today')  # Retrieve movies from today schedule
 
-    for movie in movies:
-        movie_title = movie['originalTitle'] if movie['originalTitle'] is not None else movie[
-            'title']  # Retrieve movie title
+    for tv_type in TV_TYPE:
+        movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
+        print movies
+        for movie in movies:
+            print movie
+            movie_title = movie['title']
+            movie_original_title = movie['originalTitle']
+            if movie_original_title is None:
+                movie_original_title = movie_title
 
-        try:
-            retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
-        except ConnectionError:
-            print 'ConnectionError, I retry..'
-            retrieve_movie(movie_title)  # Retrieve movie from IMDB by title and store in the datastore
-        except RetrieverError as retriever_error:
-            print retriever_error
+            try:
+                retrieve_movie(movie_title,
+                               movie_original_title)  # Retrieve movie from IMDB by title and store in the datastore
+            except ConnectionError:
+                print 'ConnectionError, I retry..'
+                try:
+                    retrieve_movie(movie_title,
+                                   movie_original_title)  # Retrieve movie from IMDB by title and store in the datastore
+                except Exception:
+                    print 'No connection, next one'
+                    pass
+            except RetrieverError as retriever_error:
+                print retriever_error
 
     return 'OK'
