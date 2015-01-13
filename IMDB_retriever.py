@@ -33,7 +33,7 @@ def retrieve_movie(movie_title):
         trailer_url = json_data[0]["trailer"]["videoURL"]
         movie.trailer = trailer_url
     except KeyError:
-        pass
+        movie.trailer = None
 
     year = json_data[0]["year"]
     if len(year) > 4:
