@@ -35,7 +35,7 @@ def json_api(import_name, **kwargs):
     def make_json_error(ex):
         response = jsonify(errorMessage=str(ex.description) if hasattr(ex, 'description') else str(ex), code=1,
                            errorType=str(ex))
-        response.status_code = (ex.code if isinstance(ex, HTTPException) else 500)
+        response.status_code = 200  # (ex.code if isinstance(ex, HTTPException) else 500)
 
         return response
 
