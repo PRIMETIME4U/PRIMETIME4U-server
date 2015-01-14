@@ -1,7 +1,7 @@
 from google.appengine.api import memcache
 from utilities import *
 import lxml.html
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, InternalServerError
 
 
 def get_movies_schedule(html_page):
@@ -64,19 +64,27 @@ def result_movies_schedule(tv_type, day):
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
             schedule = get_movies_schedule(html_page)
-            memcache.add("free" + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-            return schedule
+
+            if schedule is not None:
+                memcache.add("free" + day, schedule, 3600)  # Store the schedule in memcache for int seconds
+                return schedule
+            else:
+                raise InternalServerError("Errore sono None")
 
     elif tv_type.upper() == "SKY":
         tv_type = "sky"
         schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
         if schedule is not None:  # Control if it was retrieved
-            return
+            return schedule
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-            return schedule
+
+            if schedule is not None:
+                memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
+                return schedule
+            else:
+                raise InternalServerError("Errore sono None")
 
     elif tv_type.upper() == "PREMIUM":
         tv_type = "premium"
@@ -86,8 +94,12 @@ def result_movies_schedule(tv_type, day):
         else:
             html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
             schedule = get_movies_schedule(html_page)
-            memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-            return schedule
+
+            if schedule is not None:
+                memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
+                return schedule
+            else:
+                raise InternalServerError("Errore sono None")
     else:
         raise BadRequest
 

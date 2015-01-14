@@ -37,9 +37,7 @@ def retrieve():
 
     for tv_type in TV_TYPE:
         movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
-        print movies
         for movie in movies:
-            print movie
             movie_title = movie['title']
             movie_original_title = movie['originalTitle']
             if movie_original_title is None:
