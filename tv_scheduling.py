@@ -31,7 +31,6 @@ def get_movies_schedule(html_page):
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
         movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time})
-        print movies_list
     return movies_list
 
 
@@ -56,52 +55,28 @@ def result_movies_schedule(tv_type, day):
     else:
         raise BadRequest
 
-    if tv_type.upper() == "FREE":  # Translate tv_type for get call
-        tv_type = "free"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
-        if schedule is not None:  # Control if it was retrieved
-            return schedule
-        else:
-            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/")
-            schedule = get_movies_schedule(html_page)
+    tv_type = tv_type.lower()
 
-            if schedule is not None:
-                memcache.add("free" + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-                return schedule
-            else:
-                raise InternalServerError("Errore sono None")
-
-    elif tv_type.upper() == "SKY":
-        tv_type = "sky"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
-        if schedule is not None:  # Control if it was retrieved
-            return schedule
-        else:
-            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
-            schedule = get_movies_schedule(html_page)
-
-            if schedule is not None:
-                memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-                return schedule
-            else:
-                raise InternalServerError("Errore sono None")
-
-    elif tv_type.upper() == "PREMIUM":
-        tv_type = "premium"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
-        if schedule is not None:
-            return schedule
-        else:
-            html_page = get(BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type)
-            schedule = get_movies_schedule(html_page)
-
-            if schedule is not None:
-                memcache.add(tv_type + day, schedule, 3600)  # Store the schedule in memcache for int seconds
-                return schedule
-            else:
-                raise InternalServerError("Errore sono None")
+    schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
+    if schedule is not None:  # Control if it was retrieved
+        return schedule
     else:
-        raise BadRequest
+        if tv_type == TV_TYPE[0]:
+            url = BASE_URL_FILMTV_FILM + day + "/stasera/"
+        elif tv_type == TV_TYPE[1] or tv_type == TV_TYPE[2]:
+            url = BASE_URL_FILMTV_FILM + day + "/stasera/" + tv_type
+        else:
+            raise BadRequest
+
+        print url
+        html_page = get(url)
+        schedule = get_movies_schedule(html_page)
+
+        if schedule is not None:
+            memcache.add(tv_type + day, schedule, time_for_tomorrow())  # Store the schedule in memcache
+            return schedule
+        else:
+            raise InternalServerError("Errore sono None")
 
 
 if __name__ == "__main__":

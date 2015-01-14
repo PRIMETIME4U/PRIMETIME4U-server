@@ -11,7 +11,7 @@ from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
 from movie_selector import random_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, NUMBER_SUGGESTIONS
+from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -213,7 +213,7 @@ def proposal(user_id):
                                       "time": movie["time"],
                                       "simple_plot": movie_data_store.simple_plot})
 
-                memcache.add("proposal" + user_id, proposals, 3600)  # Store proposal in memcache for int seconds
+                memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
             return jsonify(code=0, data={"user_id": user.key.id(), "proposal": proposals})
         else:
             raise InternalServerError(user_id + ' is not subscribed')
@@ -246,7 +246,7 @@ def detail(type, id_imdb):
                     raise InternalServerError(retriever_error)
 
                 artist = Artist.get_by_id(artist_key.id())
-            return jsonify(code=0, data={"id_IMDB": id_imdb, "detail": artist.to_dict})
+            return jsonify(code=0, data={"id_IMDB": id_imdb, "type": "artist", "detail": artist.to_dict})
         elif type == 'movie':
             movie = Movie.get_by_id(id_imdb)  # Get movie
 
@@ -257,7 +257,7 @@ def detail(type, id_imdb):
                     raise InternalServerError(retriever_error)
 
                 movie = Movie.get_by_id(artist_key.id())
-            return jsonify(code=0, data={"id_IMDB": id_imdb, "detail": movie.to_dict})
+            return jsonify(code=0, data={"id_IMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
         else:
             raise BadRequest
     else:
