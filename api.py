@@ -2,13 +2,16 @@ from datetime import date
 from flask import jsonify, request
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
-from IMDB_retriever import retrieve_movie, retrieve_artist
+from IMDB_retriever import retrieve_movie_from_title, retrieve_artist_from_name, retrieve_movie_from_id, \
+    retrieve_artist_from_id
+from google.appengine.api import memcache
 from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
+from movie_selector import random_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError
+from utilities import RetrieverError, NUMBER_SUGGESTIONS
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -57,7 +60,7 @@ def tastes(user_id, type):
                 artist = Artist.query(Artist.name == artist_name).get()  # Find artist by name
                 if artist is None:
                     try:
-                        artist_key = retrieve_artist(artist_name)  # Retrieve if is not in the datastore
+                        artist_key = retrieve_artist_from_name(artist_name)  # Retrieve if is not in the datastore
                     except RetrieverError as retriever_error:
                         raise InternalServerError(retriever_error)
                     artist = Artist.get_by_id(artist_key.id())
@@ -70,7 +73,8 @@ def tastes(user_id, type):
                 movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
                 if movie is None:
                     try:
-                        movie_key = retrieve_movie(movie_original_title)  # Retrieve if is not in the datastore
+                        movie_key = retrieve_movie_from_title(
+                            movie_original_title)  # Retrieve if is not in the datastore
                     except RetrieverError as retriever_error:
                         raise InternalServerError(retriever_error)
                     movie = Movie.get_by_id(movie_key.id())
@@ -173,6 +177,90 @@ def unsubscribe():
         else:
             user.unsubscribe()
             return jsonify(code=0, data={"user_id": user_id, "message": "User unsubscribed successful!"})
+    else:
+        raise MethodNotAllowed
+
+
+@app.route('/api/proposal/<user_id>', methods=['GET'])
+def proposal(user_id):
+    """
+    Return the movies proposal for the user.
+    :param user_id: email of the user
+    :type user_id: string
+    :return: list of proposal
+        {"code": 0, "data": {"proposal": [{"channel": channel, "id_IMDB": id_IMDB, "original_title": original_title,
+        "poster": poster, "simple_plot": simple_plot, "time": time}], "user_id": user_id}}
+    :rtype: JSON
+    """
+    if request.method == 'GET':
+
+        user = modelUser.get_by_id(user_id)  # Get user
+
+        if user is not None:
+            proposals = memcache.get("proposal" + user_id)  # Tries to retrieve the proposal from memcache
+            if proposals is None:
+                proposals = []
+
+                for i in range(0, NUMBER_SUGGESTIONS):
+                    movie = random_movie_selection(result_movies_schedule("free", "today"))
+
+                    movie_data_store = Movie.query(
+                        Movie.original_title == movie["originalTitle"]).get()  # Find movie by original title
+
+                    proposals.append({"id_IMDB": movie_data_store.key.id(),
+                                      "original_title": movie["originalTitle"] if movie["originalTitle"] is not None
+                                      else movie["title"], "poster": movie_data_store.poster,
+                                      "channel": movie["channel"],
+                                      "time": movie["time"],
+                                      "simple_plot": movie_data_store.simple_plot})
+
+                memcache.add("proposal" + user_id, proposals, 3600)  # Store proposal in memcache for int seconds
+            return jsonify(code=0, data={"user_id": user.key.id(), "proposal": proposals})
+        else:
+            raise InternalServerError(user_id + ' is not subscribed')
+    else:
+        raise MethodNotAllowed
+
+
+@app.route('/api/detail/<type>/<id_imdb>', methods=['GET'])
+def detail(type, id_imdb):
+    """
+    Return all details in the datastore of an artist of a movie by id_IMDB.
+    :param id_imdb:
+    :type id_imdb: string
+    :return: detail's object:
+        {"code": 0, "data": {"detail": {"name": name, "photo": photo}, "id_IMDB": id_IMDB}}
+        {"code": 0, "data": {"detail": {"actors": [id_IMDB], "countries": [country], "directors": [id_IMDB], "genres":
+        [genre], "keywords": [], "original_title": original_title, "plot": plot, "poster": poster, "rated": rated,
+        "run_times": run_times, "simple_plot": simple_plot, "title": title, "trailer": trailer, "writers": [id_IMDB],
+        "year": year}, "id_IMDB": id_IMDB}}
+    :rtype: JSON
+    """
+    if request.method == 'GET':
+        if type == 'artist':
+            artist = Artist.get_by_id(id_imdb)  # Get movie
+
+            if artist is None:
+                try:
+                    artist_key = retrieve_artist_from_id(id_imdb)  # Retrieve if is not in the datastore
+                except RetrieverError as retriever_error:
+                    raise InternalServerError(retriever_error)
+
+                artist = Artist.get_by_id(artist_key.id())
+            return jsonify(code=0, data={"id_IMDB": id_imdb, "detail": artist.to_dict})
+        elif type == 'movie':
+            movie = Movie.get_by_id(id_imdb)  # Get movie
+
+            if movie is None:
+                try:
+                    artist_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
+                except RetrieverError as retriever_error:
+                    raise InternalServerError(retriever_error)
+
+                movie = Movie.get_by_id(artist_key.id())
+            return jsonify(code=0, data={"id_IMDB": id_imdb, "detail": movie.to_dict})
+        else:
+            raise BadRequest
     else:
         raise MethodNotAllowed
 

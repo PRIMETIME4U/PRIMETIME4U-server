@@ -58,7 +58,7 @@ def result_movies_schedule(tv_type, day):
 
     if tv_type.upper() == "FREE":  # Translate tv_type for get call
         tv_type = "free"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
         if schedule is not None:  # Control if it was retrieved
             return schedule
         else:
@@ -69,7 +69,7 @@ def result_movies_schedule(tv_type, day):
 
     elif tv_type.upper() == "SKY":
         tv_type = "sky"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
         if schedule is not None:  # Control if it was retrieved
             return
         else:
@@ -80,7 +80,7 @@ def result_movies_schedule(tv_type, day):
 
     elif tv_type.upper() == "PREMIUM":
         tv_type = "premium"
-        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule in memcache
+        schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
         if schedule is not None:
             return schedule
         else:

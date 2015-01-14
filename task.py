@@ -1,6 +1,6 @@
 from requests import ConnectionError
 from flask import Flask
-from IMDB_retriever import retrieve_movie
+from IMDB_retriever import retrieve_movie_from_title
 from models import User
 
 from movie_selector import random_movie_selection
@@ -46,13 +46,13 @@ def retrieve():
                 movie_original_title = movie_title
 
             try:
-                retrieve_movie(movie_title,
-                               movie_original_title)  # Retrieve movie from IMDB by title and store in the datastore
+                retrieve_movie_from_title(movie_title,
+                                          movie_original_title)  # Retrieve movie from IMDB by title and store it
             except ConnectionError:
                 print 'ConnectionError, I retry..'
                 try:
-                    retrieve_movie(movie_title,
-                                   movie_original_title)  # Retrieve movie from IMDB by title and store in the datastore
+                    retrieve_movie_from_title(movie_title,
+                                              movie_original_title)  # Retrieve movie from IMDB by title and store it
                 except Exception:
                     print 'No connection, next one'
                     pass
