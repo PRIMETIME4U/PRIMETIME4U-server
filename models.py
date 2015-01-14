@@ -1,6 +1,7 @@
 from google.appengine.ext import ndb
 from datetime import date
 
+from utilities import TV_TYPE
 # TODO: try to use https://cloud.google.com/appengine/docs/python/ndb/modelclass#Model_get_or_insert
 
 
@@ -159,11 +160,12 @@ class User(ModelUtils, ndb.Model):
     name = ndb.StringProperty(required=True)
     birth_year = ndb.IntegerProperty()
     gender = ndb.StringProperty(choices=["M", "F"])
-    schedule_type = ndb.StringProperty(choices=["free", "premium", "sky"], repeated=True)
+    tv_type = ndb.StringProperty(choices=TV_TYPE, repeated=True)
     watched_movies = ndb.KeyProperty(Movie, repeated=True)
     date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)
     tastes_artists = ndb.KeyProperty(TasteArtist, repeated=True)
+    tastes_genres = ndb.StringProperty(repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
 
     def add_watched_movie(self, movie, date):

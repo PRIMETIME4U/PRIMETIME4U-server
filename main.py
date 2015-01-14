@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, redirect
 
-from werkzeug.exceptions import default_exceptions, HTTPException
+from werkzeug.exceptions import default_exceptions
 from google.appengine.api import users
 from manage_user import get_current_user
 from send_mail import confirm_subscription, confirm_unsubscription

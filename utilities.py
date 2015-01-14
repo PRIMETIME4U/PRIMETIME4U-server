@@ -18,6 +18,15 @@ def get(url):
     return requests.get(url).text
 
 
+def time_to_tomorrow():
+    """
+
+    :return:
+    """
+
+    return
+
+
 class RetrieverError(Exception):
     """
     Exception for error in retrieving data from http://www.myapifilms.com/.

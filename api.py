@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from flask import jsonify, request
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
@@ -119,10 +119,9 @@ def watched(user_id):
 
             movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
 
-            data = date.today()
-            data = data.replace(data.year, data.month, data.day - 1)
+            yesterday = date.today() - timedelta(days=1)
 
-            user.add_watched_movie(movie, data)
+            user.add_watched_movie(movie, yesterday)
             return get_watched_movies_list(user)  # Return tastes
         elif request.method == 'GET':
             return get_watched_movies_list(user)  # Return tastes
