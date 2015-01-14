@@ -159,9 +159,11 @@ def retrieve_artist_from_name(artist_name):
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
 
-    artist = Artist(id=json_data["actorId"],
-                    name=json_data["actorName"],
-                    photo=json_data["urlPhoto"])
+    print json_data[0]
+
+    artist = Artist(id=json_data[0]["idIMDB"],
+                    name=json_data[0]["name"],
+                    photo=json_data[0]["urlPhoto"])
 
     return artist.put()
 
@@ -182,8 +184,8 @@ def retrieve_artist_from_id(artist_id):
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
 
-    artist = Artist(id=json_data["actorId"],
-                    name=json_data["actorName"],
-                    photo=json_data["urlPhoto"])
+    artist = Artist(id=json_data[0]["idIMDB"],
+                    name=json_data[0]["name"],
+                    photo=json_data[0]["urlPhoto"])
 
     return artist.put()
