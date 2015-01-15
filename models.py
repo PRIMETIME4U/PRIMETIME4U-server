@@ -177,9 +177,10 @@ class User(ModelUtils, ndb.Model):
         :type date: date
         :return: None
         """
-        self.watched_movies.append(movie.key)
-        self.date_watched.append(date)
-        self.put()
+        if movie.key not in self.watched_movies:
+            self.watched_movies.append(movie.key)
+            self.date_watched.append(date)
+            self.put()
 
     def add_taste_movie(self, movie, taste=1):
         """
