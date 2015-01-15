@@ -10,7 +10,6 @@ from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
 from movie_selector import random_movie_selection
-from task import retrieve
 from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow
 
@@ -35,7 +34,7 @@ def schedule(tv_type, day):
 
 
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
-def tastes(user_id, type):
+def add_tastes(user_id, type):
     """
     Endpoint that allow to list all tastes by type or add new one.
     :param user_id: email of the user
@@ -97,6 +96,45 @@ def tastes(user_id, type):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
+@app.route('/api/tastes/<user_id>/<type>/<id_imdb>', methods=['DELETE'])
+def remove_taste(user_id, type, id_imdb):
+    """
+    Endpoint that allow to list all tastes by type or add new one.
+    :param user_id: email of the user
+    :type user_id: string
+    :param type: string
+    :type type: string
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'DELETE':
+            if type == 'artist':
+                artist = Artist.get_by_id(id_imdb)
+
+                user.remove_taste_artist(artist)  # Remove artist to tastes
+                return get_tastes_artists_list(user)  # Return tastes
+            elif type == 'movie':
+                movie = Movie.get_by_id(id_imdb)
+
+                user.remove_taste_movie(movie)  # Remove movie to tastes
+                return get_tastes_movies_list(user)  # Return tastes
+            else:
+                raise BadRequest
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
+
+
 @app.route('/api/watched/<user_id>', methods=['GET', 'POST'])
 def watched(user_id):
     """
@@ -119,6 +157,13 @@ def watched(user_id):
             movie_original_title = request.form['movie_title']  # Get movie_title from POST
 
             movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
+            if movie is None:
+                try:
+                    movie_key = retrieve_movie_from_title(
+                        movie_original_title)  # Retrieve if is not in the datastore
+                except RetrieverError as retriever_error:
+                    raise InternalServerError(retriever_error)
+                movie = Movie.get_by_id(movie_key.id())
 
             yesterday = date.today() - timedelta(days=1)
 

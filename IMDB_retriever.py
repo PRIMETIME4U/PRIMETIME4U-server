@@ -3,7 +3,7 @@ from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
 
-def retrieve_movie_from_title(movie_title, movie_original_title):
+def retrieve_movie_from_title(movie_original_title, movie_title=None):
     """
     Retrieve movie info from IMDB by movie title.
     :param movie_title: title of the film to retrieve info
@@ -14,7 +14,7 @@ def retrieve_movie_from_title(movie_title, movie_original_title):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
-    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
 
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)

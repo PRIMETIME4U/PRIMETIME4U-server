@@ -219,6 +219,36 @@ class User(ModelUtils, ndb.Model):
             self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
             self.put()
 
+    def remove_taste_movie(self, movie):
+        """
+
+        :param movie:
+        :return:
+        """
+        taste_movie_id = movie.key.id() + self.key.id()
+        taste_movie = TasteMovie.get_by_id(taste_movie_id)
+        taste_movie_key = taste_movie.key
+
+        taste_movie.key.delete()
+        if taste_movie_key in self.tastes_movies:
+            self.tastes_movies.remove(taste_movie_key)
+            self.put()
+
+    def remove_taste_artist(self, artist):
+        """
+
+        :param artist:
+        :return:
+        """
+        taste_artist_id = artist.key.id() + self.key.id()
+        taste_artist = TasteArtist.get_by_id(taste_artist_id)
+        taste_artist_key = taste_artist.key
+
+        taste_artist.key.delete()
+        if taste_artist_key in self.tastes_artists:
+            self.tastes_artists.remove(taste_artist_key)
+            self.put()
+
     def add_tv_type(self, type):
         """
         Add user's tv type
