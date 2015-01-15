@@ -24,7 +24,7 @@ def get(url):
 
 def time_for_tomorrow():
     """
-    This function return the millis for tomorrow from now.
+    This function return the seconds for tomorrow from now.
     :return: millis for tomorrow from now
     :rtype: integer
     """

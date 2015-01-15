@@ -10,6 +10,7 @@ from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
 from models import User as modelUser
 from movie_selector import random_movie_selection
+from task import retrieve
 from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow
 
@@ -206,12 +207,16 @@ def proposal(user_id):
                     movie_data_store = Movie.query(
                         Movie.original_title == movie["originalTitle"]).get()  # Find movie by original title
 
-                    proposals.append({"id_IMDB": movie_data_store.key.id(),
-                                      "original_title": movie["originalTitle"] if movie["originalTitle"] is not None
-                                      else movie["title"], "poster": movie_data_store.poster,
-                                      "channel": movie["channel"],
-                                      "time": movie["time"],
-                                      "simple_plot": movie_data_store.simple_plot})
+                    if movie_data_store is not None:
+                        proposals.append({"id_IMDB": movie_data_store.key.id(),
+                                          "original_title": movie["originalTitle"] if movie["originalTitle"] is not None
+                                          else movie["title"], "poster": movie_data_store.poster,
+                                          "channel": movie["channel"],
+                                          "time": movie["time"],
+                                          "simple_plot": movie_data_store.simple_plot})
+
+                if len(proposals) == 0:
+                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
             return jsonify(code=0, data={"user_id": user.key.id(), "proposal": proposals})

@@ -68,7 +68,6 @@ def result_movies_schedule(tv_type, day):
         else:
             raise BadRequest
 
-        print url
         html_page = get(url)
         schedule = get_movies_schedule(html_page)
 
