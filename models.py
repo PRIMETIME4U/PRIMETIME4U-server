@@ -18,21 +18,21 @@ class ModelUtils(object):
         if type(self) is Movie:
             actors = []
             for actor in result['actors']:
-                actors.append(actor.get().key.id())  # Get IMDB id of actor instead of entity key
-                # actors.append(actor.urlsafe())    # Get urlsafe key
-            result['actors'] = actors  # Return a list of IMDB id of actors
+                actor = Artist.get_by_id(actor.get().key.id())
+                actors.append(actor.name)
+            result['actors'] = actors  # Return a list of actors' name
 
             directors = []
             for director in result['directors']:
-                directors.append(director.get().key.id())  # Get IMDB id of director instead of entity key
-                # directors.append(director.urlsafe())    # Get urlsafe key
-            result['directors'] = directors  # Return a list of IMDB id of directors
+                director = Artist.get_by_id(director.get().key.id())
+                directors.append(director.name)
+            result['directors'] = directors  # Return a list of directors' name
 
             writers = []
             for writer in result['writers']:
-                writers.append(writer.get().key.id())  # Get IMDB id of writer instead of entity key
-                # writers.append(writer.urlsafe())    # Get urlsafe key
-            result['writers'] = writers  # Return a list of IMDB id of writers
+                writer = Artist.get_by_id(writer.get().key.id())
+                writers.append(writer.name)
+            result['writers'] = writers  # Return a list of writers' name
         return result
 
 
