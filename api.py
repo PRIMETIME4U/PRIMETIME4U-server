@@ -235,7 +235,7 @@ def unsubscribe(user_id):
     if request.method == 'DELETE':
 
 
-        user = modelUser.get_by_id(user_id)  # Create user
+        user = User(email = user_id)  # Create user
 
         if user is not None:
             if not user.is_subscribed():
