@@ -16,6 +16,9 @@ class ModelUtils(object):
         result = super(ModelUtils, self).to_dict()
 
         if type(self) is Movie:
+
+            result['genres'] = " | ".join(result['genres'])
+
             actors = []
             for actor in result['actors']:
                 actor = Artist.get_by_id(actor.get().key.id())
