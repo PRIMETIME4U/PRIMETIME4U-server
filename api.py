@@ -224,24 +224,27 @@ def subscribe():
         raise MethodNotAllowed
 
 
-@app.route('/api/unsubscribe/', methods=['POST'])
-def unsubscribe():
+@app.route('/api/unsubscribe/<user_id>', methods=['DELETE'])
+def unsubscribe(user_id):
     """
     Unsubscribe user from App.
     :return:
     :raise MethodNotAllowed: if method is neither POST neither GET
     :raise InternalServerError: if user is not subscribed
     """
-    if request.method == 'POST':
-        user_id = request.form['userId']  # Get user_id from POST
+    if request.method == 'DELETE':
 
-        user = User(email=user_id)  # Create user
 
-        if not user.is_subscribed():
-            raise InternalServerError(user_id + ' is not subscribed')
+        user = modelUser.get_by_id(user_id)  # Create user
+
+        if user is not None:
+            if not user.is_subscribed():
+                raise InternalServerError(user_id + ' is not subscribed')
+            else:
+                user.unsubscribe()
+                return jsonify(code=0, data={"userId": user_id, "message": "User unsubscribed successful!"})
         else:
-            user.unsubscribe()
-            return jsonify(code=0, data={"userId": user_id, "message": "User unsubscribed successful!"})
+            raise InternalServerError(user_id + ' is not subscribed')
     else:
         raise MethodNotAllowed
 
