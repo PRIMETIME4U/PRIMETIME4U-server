@@ -233,7 +233,7 @@ def unsubscribe():
     :raise InternalServerError: if user is not subscribed
     """
     if request.method == 'POST':
-        user_id = request.form['user_id']  # Get user_id from POST
+        user_id = request.form['userId']  # Get user_id from POST
 
         user = User(email=user_id)  # Create user
 
