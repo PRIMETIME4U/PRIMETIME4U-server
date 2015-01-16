@@ -2,8 +2,7 @@ from datetime import date, timedelta
 from flask import jsonify, request
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
-from IMDB_retriever import retrieve_movie_from_title, retrieve_artist_from_name, retrieve_movie_from_id, \
-    retrieve_artist_from_id
+from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id
 from google.appengine.api import memcache
 from main import json_api
 from manage_user import User
@@ -26,7 +25,7 @@ def schedule(tv_type, day):
     :param day: interested day, possible value (today, tomorrow, future)
     :type day: string
     :return: schedule
-        {"code": 0, "data": { "day": day, "schedule": [{"channel": channel_name, "originalTitle": original_title,
+        {"code": 0, "data": {"day": day, "schedule": [{"channel": channel_name, "originalTitle": original_title,
         "time": time, "title": title}, .. ], "type": tv_type}}
     :rtype: JSON
     """
@@ -61,12 +60,12 @@ def add_tastes(user_id, type):
                 if json_data is None:
                     raise BadRequest
 
-                artist_name = json_data['artist_name']  # Get artist_name
+                id_imdb = json_data['idIMDB']  # Get id
 
-                artist = Artist.query(Artist.name == artist_name).get()  # Find artist by name
+                artist = Artist.get_by_id(id_imdb)  # Find movie by id
                 if artist is None:
                     try:
-                        artist_key = retrieve_artist_from_name(artist_name)  # Retrieve if is not in the datastore
+                        artist_key = retrieve_artist_from_id(id_imdb)  # Retrieve if is not in the datastore
                     except RetrieverError as retriever_error:
                         raise InternalServerError(retriever_error)
                     artist = Artist.get_by_id(artist_key.id())
@@ -79,13 +78,12 @@ def add_tastes(user_id, type):
                 if json_data is None:
                     raise BadRequest
 
-                movie_original_title = json_data['movie_title']  # Get movie_title
+                id_imdb = json_data['idIMDB']  # Get id
 
-                movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
+                movie = Movie.get_by_id(id_imdb)  # Find movie by id
                 if movie is None:
                     try:
-                        movie_key = retrieve_movie_from_title(
-                            movie_original_title)  # Retrieve if is not in the datastore
+                        movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
                     except RetrieverError as retriever_error:
                         raise InternalServerError(retriever_error)
                     movie = Movie.get_by_id(movie_key.id())
@@ -118,8 +116,8 @@ def remove_taste(user_id, type, id_imdb):
     :param type: string
     :type type: string
     :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
-        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"idIMDB": id_IMDB, "originalTitle": original_title, "poster": poster_url}],
+        "type": type, "userId": user_id}
     :rtype: JSON
     :raise MethodNotAllowed: if method is neither POST neither GET
     :raise InternalServerError: if user is not subscribed
@@ -173,13 +171,12 @@ def watched(user_id):
             if json_data is None:
                 raise BadRequest
 
-            movie_original_title = json_data['movie_title']  # Get movie_title
+            id_imdb = json_data['idIMDB']  # Get id
 
-            movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
+            movie = Movie.get_by_id(id_imdb)  # Find movie by id
             if movie is None:
                 try:
-                    movie_key = retrieve_movie_from_title(
-                        movie_original_title)  # Retrieve if is not in the datastore
+                    movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
                 except RetrieverError as retriever_error:
                     raise InternalServerError(retriever_error)
                 movie = Movie.get_by_id(movie_key.id())
@@ -213,16 +210,16 @@ def subscribe():
         if json_data is None:
             raise BadRequest
 
-        user_id = json_data['user_id']  # Get user_id
+        user_id = json_data['userId']  # Get user_id
 
         user = User(email=user_id)  # Create user
 
         if user.is_subscribed():
             raise InternalServerError(user_id + ' is already subscribed')
         else:
-            user.subscribe(name=json_data['user_name'], birth_year=json_data['user_birth_year'],
-                           gender=json_data['user_gender'])
-            return jsonify(code=0, data={"user_id": user_id, "message": "User subscribed successful!"})
+            user.subscribe(name=json_data['userName'], birth_year=json_data['userBirthYear'],
+                           gender=json_data['userGender'])
+            return jsonify(code=0, data={"userId": user_id, "message": "User subscribed successful!"})
     else:
         raise MethodNotAllowed
 
@@ -244,7 +241,7 @@ def unsubscribe():
             raise InternalServerError(user_id + ' is not subscribed')
         else:
             user.unsubscribe()
-            return jsonify(code=0, data={"user_id": user_id, "message": "User unsubscribed successful!"})
+            return jsonify(code=0, data={"userId": user_id, "message": "User unsubscribed successful!"})
     else:
         raise MethodNotAllowed
 
@@ -276,18 +273,18 @@ def proposal(user_id):
                         Movie.original_title == movie["originalTitle"]).get()  # Find movie by original title
 
                     if movie_data_store is not None:
-                        proposals.append({"id_IMDB": movie_data_store.key.id(),
-                                          "original_title": movie["originalTitle"] if movie["originalTitle"] is not None
+                        proposals.append({"idIMDB": movie_data_store.key.id(),
+                                          "originalTitle": movie["originalTitle"] if movie["originalTitle"] is not None
                                           else movie["title"], "poster": movie_data_store.poster,
                                           "channel": movie["channel"],
                                           "time": movie["time"],
-                                          "simple_plot": movie_data_store.simple_plot})
+                                          "simplePlot": movie_data_store.simple_plot})
 
                 if len(proposals) == 0:
                     raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
-            return jsonify(code=0, data={"user_id": user.key.id(), "proposal": proposals})
+            return jsonify(code=0, data={"userId": user.key.id(), "proposal": proposals})
         else:
             raise InternalServerError(user_id + ' is not subscribed')
     else:
@@ -301,9 +298,9 @@ def detail(type, id_imdb):
     :param id_imdb:
     :type id_imdb: string
     :return: detail's object:
-        {"code": 0, "data": {"detail": {"name": name, "photo": photo}, "id_IMDB": id_IMDB}}
-        {"code": 0, "data": {"detail": {"actors": [id_IMDB], "countries": [country], "directors": [id_IMDB], "genres":
-        [genre], "keywords": [], "original_title": original_title, "plot": plot, "poster": poster, "rated": rated,
+        {"code": 0, "data": {"detail": {"name": name, "photo": photo}, "idIMDB": id_IMDB}}
+        {"code": 0, "data": {"detail": {"actors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "countries": [country], "directors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "genres":
+        genres, "keywords": [], "original_title": original_title, "plot": plot, "poster": poster, "rated": rated,
         "run_times": run_times, "simple_plot": simple_plot, "title": title, "trailer": trailer, "writers": [id_IMDB],
         "year": year}, "id_IMDB": id_IMDB}}
     :rtype: JSON
@@ -319,7 +316,7 @@ def detail(type, id_imdb):
                     raise InternalServerError(retriever_error)
 
                 artist = Artist.get_by_id(artist_key.id())
-            return jsonify(code=0, data={"id_IMDB": id_imdb, "type": "artist", "detail": artist.to_dict})
+            return jsonify(code=0, data={"idIMDB": id_imdb, "type": "artist", "detail": artist.to_dict})
         elif type == 'movie':
             movie = Movie.get_by_id(id_imdb)  # Get movie
 
@@ -330,7 +327,7 @@ def detail(type, id_imdb):
                     raise InternalServerError(retriever_error)
 
                 movie = Movie.get_by_id(movie_key.id())
-            return jsonify(code=0, data={"id_IMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
+            return jsonify(code=0, data={"idIMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
         else:
             raise BadRequest
     else:
@@ -343,8 +340,8 @@ def get_tastes_artists_list(user):
     :param user: user
     :type user: Models.User
     :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
-        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"idIMDB": id,"name": name, "photo": photo_url}],
+        "type": type, "userId": user_id}
     :rtype: JSON
     """
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
@@ -356,9 +353,9 @@ def get_tastes_artists_list(user):
         artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
         artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo})
+        artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "type": "artist", "tastes": artists})
+    return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
 
 
 def get_tastes_movies_list(user):
@@ -367,8 +364,8 @@ def get_tastes_movies_list(user):
     :param user: user
     :type user: Models.User
     :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
-        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
+        "type": type, "userId": user_id}
     :rtype: JSON
     """
     tastes_movies_id = user.tastes_movies
@@ -380,9 +377,9 @@ def get_tastes_movies_list(user):
         movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"id_IMDB": movie_id, "original_title": movie.original_title, "poster": movie.poster})
+        movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "type": "movie", "tastes": movies})
+    return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
 
 
 def get_tastes_list(user):
@@ -391,8 +388,8 @@ def get_tastes_list(user):
     :param user: user
     :type user: Models.User
     :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
-        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
+        "type": type, "userId": user_id}
     :rtype: JSON
     """
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
@@ -404,7 +401,7 @@ def get_tastes_list(user):
         artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
         artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo})
+        artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
 
     tastes_movies_id = user.tastes_movies
 
@@ -415,9 +412,9 @@ def get_tastes_list(user):
         movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"id_IMDB": movie_id, "original_title": movie.original_title, "poster": movie.poster})
+        movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
+    return jsonify(code=0, data={"userId": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
 
 
 def get_watched_movies_list(user):
@@ -426,8 +423,8 @@ def get_watched_movies_list(user):
     :param user: user
     :type user: Models.User
     :return: list of watched movies
-        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
-        "date": date}],"user_id": user_id}
+        {"code": 0, "data": {"movies": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url,
+        "date": date}],"userId": user_id}
     :rtype: JSON
     """
     watched_movies_id = user.watched_movies  # Get all taste_artists' keys
@@ -442,10 +439,10 @@ def get_watched_movies_list(user):
 
         taste_movie = TasteMovie.get_by_id(watched_movie_id + user.key.id())  # Get taste
 
-        movies.append({"id_IMDB": watched_movie.key.id(),
-                       "original_title": watched_movie.original_title,
+        movies.append({"idIMDB": watched_movie.key.id(),
+                       "originalTitle": watched_movie.original_title,
                        "poster": watched_movie.poster,
                        "date": date_watched_movie.strftime('%d %B %Y'),
                        "tasted": 1 if taste_movie is not None else 0})
 
-    return jsonify(code=0, data={"user_id": user.key.id(), "watched": movies})
+    return jsonify(code=0, data={"userId": user.key.id(), "watched": movies})
