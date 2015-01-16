@@ -34,27 +34,34 @@ def retrieve():
     :return: simple confirmation string
     :rtype string
     """
-
+    #movie_retry = []
     for tv_type in TV_TYPE:
         movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
         for movie in movies:
+            #print movie
             movie_title = movie['title']
             movie_original_title = movie['originalTitle']
+            movie_url = movie['movieUrl']
             if movie_original_title is None:
                 movie_original_title = movie_title
-
             try:
                 retrieve_movie_from_title(movie_title,
-                                          movie_original_title)  # Retrieve movie from IMDB by title and store it
-            except ConnectionError:
-                print 'ConnectionError, I retry..'
+                                          movie_original_title, movie_url)  # Retrieve movie from IMDB by title and store it
+            except Exception:
+                print 'Retry..'
                 try:
                     retrieve_movie_from_title(movie_title,
-                                              movie_original_title)  # Retrieve movie from IMDB by title and store it
+                                              movie_original_title, movie_url)  # Retrieve movie from IMDB by title and store it
                 except Exception:
                     print 'No connection, next one'
+                    #movie_retry.append(movie_title)
                     pass
-            except RetrieverError as retriever_error:
-                print retriever_error
+
+            #print movie_retry
+
+        # x = 0
+        # while len(movie_retry) > x:
+        #     retrieve_movie_from_title(movie_retry[x]["title"], movie_retry[x]["originalTile"])
+        #     x += 1
 
     return 'OK'

@@ -1,9 +1,10 @@
 import json
+import lxml
 from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
 
-def retrieve_movie_from_title(movie_title, movie_original_title):
+def retrieve_movie_from_title(movie_title, movie_original_title, movie_url):
     """
     Retrieve movie info from IMDB by movie title.
     :param movie_title: title of the film to retrieve info
@@ -22,12 +23,18 @@ def retrieve_movie_from_title(movie_title, movie_original_title):
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
 
+
     movie = Movie(id=json_data[0]["idIMDB"],
                   plot=json_data[0]["plot"],
                   poster=json_data[0]["urlPoster"],
                   rated=json_data[0]["rated"],
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
+
+    #html_page_plot = get(movie_url).encode('utf-8')
+    #tree = lxml.html.fromstring(html_page_plot)
+    #plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')
+    #movie.plot_it = str(plot_it)   # Save movie italian plot
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]
