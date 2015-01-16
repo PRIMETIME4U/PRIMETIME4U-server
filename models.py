@@ -19,19 +19,19 @@ class ModelUtils(object):
             actors = []
             for actor in result['actors']:
                 actor = Artist.get_by_id(actor.get().key.id())
-                actors.append(actor.name)
+                actors.append(actor.to_dict)
             result['actors'] = actors  # Return a list of actors' name
 
             directors = []
             for director in result['directors']:
                 director = Artist.get_by_id(director.get().key.id())
-                directors.append(director.name)
+                directors.append(director.to_dict)
             result['directors'] = directors  # Return a list of directors' name
 
             writers = []
             for writer in result['writers']:
                 writer = Artist.get_by_id(writer.get().key.id())
-                writers.append(writer.name)
+                writers.append(writer.to_dict)
             result['writers'] = writers  # Return a list of writers' name
         return result
 

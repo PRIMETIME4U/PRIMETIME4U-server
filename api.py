@@ -55,7 +55,13 @@ def add_tastes(user_id, type):
     if user is not None:
         if request.method == 'POST':
             if type == 'artist':
-                artist_name = request.form['artist_name']  # Get artist_name from POST
+
+                json_data = request.get_json()  # Get JSON from POST
+
+                if json_data is None:
+                    raise BadRequest
+
+                artist_name = json_data['artist_name']  # Get artist_name
 
                 artist = Artist.query(Artist.name == artist_name).get()  # Find artist by name
                 if artist is None:
@@ -68,7 +74,12 @@ def add_tastes(user_id, type):
                 user.add_taste_artist(artist)  # Add artist to tastes
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                movie_original_title = request.form['movie_title']  # Get movie_title from POST
+                json_data = request.get_json()  # Get JSON from POST
+
+                if json_data is None:
+                    raise BadRequest
+
+                movie_original_title = json_data['movie_title']  # Get movie_title
 
                 movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
                 if movie is None:
@@ -88,6 +99,8 @@ def add_tastes(user_id, type):
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
                 return get_tastes_movies_list(user)  # Return tastes
+            elif type == 'all':
+                return get_tastes_list(user)  # Return tastes
             else:
                 raise BadRequest
         else:
@@ -154,7 +167,13 @@ def watched(user_id):
 
     if user is not None:
         if request.method == 'POST':
-            movie_original_title = request.form['movie_title']  # Get movie_title from POST
+
+            json_data = request.get_json()  # Get JSON from POST
+
+            if json_data is None:
+                raise BadRequest
+
+            movie_original_title = json_data['movie_title']  # Get movie_title
 
             movie = Movie.query(Movie.original_title == movie_original_title).get()  # Find movie by original title
             if movie is None:
@@ -190,6 +209,10 @@ def subscribe():
     if request.method == 'POST':
 
         json_data = request.get_json()  # Get JSON from POST
+
+        if json_data is None:
+            raise BadRequest
+
         user_id = json_data['user_id']  # Get user_id
 
         user = User(email=user_id)  # Create user
@@ -302,11 +325,11 @@ def detail(type, id_imdb):
 
             if movie is None:
                 try:
-                    artist_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
+                    movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
                 except RetrieverError as retriever_error:
                     raise InternalServerError(retriever_error)
 
-                movie = Movie.get_by_id(artist_key.id())
+                movie = Movie.get_by_id(movie_key.id())
             return jsonify(code=0, data={"id_IMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
         else:
             raise BadRequest
@@ -362,6 +385,41 @@ def get_tastes_movies_list(user):
     return jsonify(code=0, data={"user_id": user.key.id(), "type": "movie", "tastes": movies})
 
 
+def get_tastes_list(user):
+    """
+    Get a readable taste artists list.
+    :param user: user
+    :type user: Models.User
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
+    """
+    tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
+
+    artists = []
+
+    for taste_artist_id in tastes_artists_id:
+        taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
+        artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
+        artist = Artist.get_by_id(artist_id)  # Get artist by id
+
+        artists.append({"id_IMDB": artist_id, "name": artist.name, "photo": artist.photo})
+
+    tastes_movies_id = user.tastes_movies
+
+    movies = []
+
+    for taste_movie_id in tastes_movies_id:
+        taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
+        movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
+        movie = Movie.get_by_id(movie_id)  # Get movie by id
+
+        movies.append({"id_IMDB": movie_id, "original_title": movie.original_title, "poster": movie.poster})
+
+    return jsonify(code=0, data={"user_id": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
+
+
 def get_watched_movies_list(user):
     """
     Get a readable watched movie list.
@@ -377,11 +435,17 @@ def get_watched_movies_list(user):
     movies = []
 
     for i in range(0, len(watched_movies_id)):
-        watched_movie = Movie.get_by_id(watched_movies_id[i].id())  # Get movie
+        watched_movie_id = watched_movies_id[i].id()
+        watched_movie = Movie.get_by_id(watched_movie_id)  # Get movie
 
         date_watched_movie = user.date_watched[i]  # Get date
 
-        movies.append({"id_IMDB": watched_movie.key.id(), "original_title": watched_movie.original_title,
-                       "poster": watched_movie.poster, "date": date_watched_movie.strftime('%d %B %Y')})
+        taste_movie = TasteMovie.get_by_id(watched_movie_id + user.key.id())  # Get taste
+
+        movies.append({"id_IMDB": watched_movie.key.id(),
+                       "original_title": watched_movie.original_title,
+                       "poster": watched_movie.poster,
+                       "date": date_watched_movie.strftime('%d %B %Y'),
+                       "tasted": 1 if taste_movie is not None else 0})
 
     return jsonify(code=0, data={"user_id": user.key.id(), "watched": movies})

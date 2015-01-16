@@ -31,7 +31,9 @@ def time_for_tomorrow():
     now = datetime.now()
     tomorrow = datetime.replace(now + timedelta(days=1), hour=0, minute=0, second=0)
     delta = tomorrow - now
-    return ((delta.days * 24 * 60 * 60 + delta.seconds) * 1000 + delta.microseconds / 1000.0) / 1000
+    seconds = ((delta.days * 24 * 60 * 60 + delta.seconds) * 1000 + delta.microseconds / 1000.0) / 1000
+    print "Seconds for tomorrow: " + seconds
+    return seconds
 
 
 class RetrieverError(Exception):
