@@ -3,6 +3,26 @@ cron:
   url: /task/suggest/
   schedule: every 24 hours
 
-- description: retrieve movies info
-  url: /task/retrieve/
-  schedule: every 24 hours
+- description: retrieve free schedule
+  url: /api/schedule/free/today
+  schedule: every day 00:00
+
+- description: retrieve sky schedule
+  url: /api/schedule/sky/today
+  schedule: every day 00:00
+
+- description: retrieve premium schedule
+  url: /api/schedule/premium/today
+  schedule: every day 00:00
+
+- description: retrieve free movies info
+  url: /task/retrieve/free
+  schedule: every day 01:00
+
+- description: retrieve sky movies info
+  url: /task/retrieve/sky
+  schedule: every day 01:00
+
+- description: retrieve premium movies info
+  url: /task/retrieve/premium
+  schedule: every day 01:00

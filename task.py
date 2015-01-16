@@ -1,5 +1,6 @@
 from requests import ConnectionError
 from flask import Flask
+from werkzeug.exceptions import BadRequest
 from IMDB_retriever import retrieve_movie_from_title
 from models import User
 
@@ -27,15 +28,15 @@ def random_suggest():
     return 'OK'
 
 
-@app.route('/task/retrieve/')
-def retrieve():
+@app.route('/task/retrieve/<tv_type>')
+def retrieve(tv_type):
     """
     Retrieve movie info from IMDB for all movies from today schedule.
     :return: simple confirmation string
     :rtype string
     """
 
-    for tv_type in TV_TYPE:
+    if tv_type in TV_TYPE:
         movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
         for movie in movies:
             movie_title = movie['title']
@@ -57,4 +58,6 @@ def retrieve():
             except RetrieverError as retriever_error:
                 print retriever_error
 
-    return 'OK'
+        return 'OK'
+    else:
+        raise BadRequest
