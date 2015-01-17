@@ -1,4 +1,5 @@
 import requests
+import logging
 from datetime import timedelta, datetime
 from werkzeug.exceptions import InternalServerError
 
@@ -32,7 +33,7 @@ def time_for_tomorrow():
     tomorrow = datetime.replace(now + timedelta(days=1), hour=0, minute=0, second=0)
     delta = tomorrow - now
     seconds = ((delta.days * 24 * 60 * 60 + delta.seconds) * 1000 + delta.microseconds / 1000.0) / 1000
-    print "Seconds for tomorrow: " + str(seconds)
+    logging.info("Seconds for tomorrow: " + str(seconds))
     return seconds
 
 

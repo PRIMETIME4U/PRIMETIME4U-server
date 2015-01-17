@@ -73,6 +73,7 @@ def result_movies_schedule(tv_type, day):
 
         if schedule is not None:
             memcache.add(tv_type + day, schedule, time_for_tomorrow())  # Store the schedule in memcache
+            logging.info("Added in memcache %s", tv_type + day)
             return schedule
         else:
             raise InternalServerError("Errore sono None")

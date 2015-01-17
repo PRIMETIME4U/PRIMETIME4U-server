@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from flask import jsonify, request
+import logging
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id
@@ -287,6 +288,7 @@ def proposal(user_id):
                     raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
+                logging.info("Added in memcache %s", "proposal" + user_id)
             return jsonify(code=0, data={"userId": user.key.id(), "proposal": proposals})
         else:
             raise InternalServerError(user_id + ' is not subscribed')
