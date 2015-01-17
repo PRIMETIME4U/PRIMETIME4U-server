@@ -15,14 +15,13 @@ def retrieve_movie_from_title(movie_title, movie_original_title, movie_url):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
-    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_title + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
-
+    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    print url
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
 
     if type(json_data) is not list:  # If it is not a list there is a problem
         raise RetrieverError(json_data["code"], json_data["message"])
-
 
     movie = Movie(id=json_data[0]["idIMDB"],
                   plot=json_data[0]["plot"],
@@ -31,10 +30,10 @@ def retrieve_movie_from_title(movie_title, movie_original_title, movie_url):
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
 
-    #html_page_plot = get(movie_url).encode('utf-8')
-    #tree = lxml.html.fromstring(html_page_plot)
-    #plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')
-    #movie.plot_it = str(plot_it)   # Save movie italian plot
+    html_page_plot = get(movie_url).encode('utf-8')
+    tree = lxml.html.fromstring(html_page_plot)
+    plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')
+    movie.plot_it = str(plot_it)   # Save movie italian plot
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]

@@ -4,7 +4,7 @@ from werkzeug.exceptions import InternalServerError
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
 BASE_URL_MYAPIFILMS = "http://www.myapifilms.com/"
-TV_TYPE = ['free', 'sky', 'premium'']
+TV_TYPE = ['free', 'sky', 'premium']
 NUMBER_SUGGESTIONS = 3
 
 
