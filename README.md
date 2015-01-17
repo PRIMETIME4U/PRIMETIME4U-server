@@ -7,7 +7,7 @@ PRIMETIME4U is an app that simply help you in the daily choose your movie for yo
 
 [PRIMETIME4U Site](http://hale-kite-786.appspot.com/)
 
-[PRIMETIME4U Client](https://github.com/PRIMETIME4U/PRIMETIME4U-client)
+[PRIMETIME4U Client](https://github.com/PRIMETIME4U/PRIMETIME4U-baseclient)
 
 Google Technologies for Cloud and Web Development - Rome 2014/2015
 
