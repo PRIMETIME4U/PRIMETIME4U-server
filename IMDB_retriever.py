@@ -1,4 +1,5 @@
 import json
+import logging
 from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
@@ -14,6 +15,8 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
+    logging.info("Retrieving %s", movie_original_title)
+
     url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
 
     json_page = get(url).encode('utf-8')
@@ -55,6 +58,8 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None):
     writers_list = json_data[0]["writers"]
 
     retrieve_artists(movie, actors_list, directors_list, writers_list)
+
+    logging.info("Retrieved %s", movie_original_title)
     return key
 
 
@@ -67,6 +72,8 @@ def retrieve_movie_from_id(movie_id):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
+    logging.info("Retrieving %s", movie_id)
+
     url = BASE_URL_MYAPIFILMS + 'imdb?idIMDB=' + movie_id + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
 
     json_page = get(url).encode('utf-8')
@@ -109,6 +116,8 @@ def retrieve_movie_from_id(movie_id):
     writers_list = json_data["writers"]
 
     retrieve_artists(movie, actors_list, directors_list, writers_list)
+
+    logging.info("Retrieved %s", movie_id)
     return key
 
 
@@ -153,6 +162,8 @@ def retrieve_artist_from_name(artist_name):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
+    logging.info("Retrieving %s", artist_name)
+
     url = BASE_URL_MYAPIFILMS + 'imdb?name=' + artist_name + '&format=JSON&filmography=0&limit=1&lang=en-us&exactFilter=0&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0'
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
@@ -166,6 +177,7 @@ def retrieve_artist_from_name(artist_name):
                     name=json_data[0]["name"],
                     photo=json_data[0]["urlPhoto"])
 
+    logging.info("Retrieved %s", artist_name)
     return artist.put()
 
 
@@ -178,6 +190,8 @@ def retrieve_artist_from_id(artist_id):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
+    logging.info("Retrieving %s", artist_id)
+
     url = BASE_URL_MYAPIFILMS + 'imdb?idName=' + artist_id + '&format=JSON&filmography=0&lang=en-us&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0'
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
@@ -186,4 +200,5 @@ def retrieve_artist_from_id(artist_id):
                     name=json_data["name"],
                     photo=json_data["urlPhoto"])
 
+    logging.info("Retrieved %s", artist_id)
     return artist.put()

@@ -8,6 +8,9 @@ from movie_selector import random_movie_selection
 from send_mail import send_suggestion
 from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError, TV_TYPE
+from google.appengine.api import urlfetch
+
+urlfetch.set_default_fetch_deadline(60)
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -45,13 +48,13 @@ def retrieve(tv_type):
                 movie_original_title = movie_title
 
             try:
-                retrieve_movie_from_title(movie_title,
-                                          movie_original_title)  # Retrieve movie from IMDB by title and store it
+                retrieve_movie_from_title(movie_original_title,
+                                          movie_title)  # Retrieve movie from IMDB by title and store it
             except ConnectionError:
                 print 'ConnectionError, I retry..'
                 try:
-                    retrieve_movie_from_title(movie_title,
-                                              movie_original_title)  # Retrieve movie from IMDB by title and store it
+                    retrieve_movie_from_title(movie_original_title,
+                                              movie_title)  # Retrieve movie from IMDB by title and store it
                 except Exception:
                     print 'No connection, next one'
                     pass

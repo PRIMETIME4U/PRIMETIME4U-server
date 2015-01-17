@@ -12,6 +12,9 @@ from models import User as modelUser
 from movie_selector import random_movie_selection
 from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow
+from google.appengine.api import urlfetch
+
+urlfetch.set_default_fetch_deadline(60)
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -272,6 +275,7 @@ def proposal(user_id):
 
                 for i in range(0, NUMBER_SUGGESTIONS):
                     movie = random_movie_selection(result_movies_schedule("free", "today"))
+                    logging.debug("Choosen: %s", movie["originalTitle"])
 
                     movie_data_store = Movie.query(
                         Movie.original_title == movie["originalTitle"]).get()  # Find movie by original title
@@ -284,8 +288,8 @@ def proposal(user_id):
                                           "time": movie["time"],
                                           "simplePlot": movie_data_store.simple_plot})
 
-                if len(proposals) == 0:
-                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
+#                if len(proposals) == 0:
+#                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
                 logging.info("Added in memcache %s", "proposal" + user_id)
