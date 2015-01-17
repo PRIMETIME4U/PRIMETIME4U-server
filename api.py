@@ -5,6 +5,7 @@ import logging
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id
 from google.appengine.api import memcache
+from google.appengine.ext import ndb
 from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie
@@ -238,8 +239,7 @@ def unsubscribe(user_id):
     """
     if request.method == 'DELETE':
 
-
-        user = User(email = user_id)  # Create user
+        user = User(email=user_id)  # Create user
 
         if user is not None:
             if not user.is_subscribed():
@@ -275,10 +275,10 @@ def proposal(user_id):
 
                 for i in range(0, NUMBER_SUGGESTIONS):
                     movie = random_movie_selection(result_movies_schedule("free", "today"))
-                    logging.debug("Choosen: %s", movie["originalTitle"])
+                    logging.debug("Chosen: %s - %s", movie["originalTitle"], movie["title"])
 
-                    movie_data_store = Movie.query(
-                        Movie.original_title == movie["originalTitle"]).get()  # Find movie by original title
+                    movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
+                                                   Movie.title == movie["title"])).get()  # Find movie by title
 
                     if movie_data_store is not None:
                         proposals.append({"idIMDB": movie_data_store.key.id(),
@@ -288,8 +288,8 @@ def proposal(user_id):
                                           "time": movie["time"],
                                           "simplePlot": movie_data_store.simple_plot})
 
-#                if len(proposals) == 0:
-#                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
+                    # if len(proposals) == 0:
+                    #                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
                 logging.info("Added in memcache %s", "proposal" + user_id)
@@ -308,7 +308,8 @@ def detail(type, id_imdb):
     :type id_imdb: string
     :return: detail's object:
         {"code": 0, "data": {"detail": {"name": name, "photo": photo}, "idIMDB": id_IMDB}}
-        {"code": 0, "data": {"detail": {"actors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "countries": [country], "directors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "genres":
+        {"code": 0, "data": {"detail": {"actors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "countries":
+        [country], "directors": [{"idIMDB": id_imdb, "name": name, "photo":photo}], "genres":
         genres, "keywords": [], "original_title": original_title, "plot": plot, "poster": poster, "rated": rated,
         "run_times": run_times, "simple_plot": simple_plot, "title": title, "trailer": trailer, "writers": [id_IMDB],
         "year": year}, "id_IMDB": id_IMDB}}
@@ -423,7 +424,8 @@ def get_tastes_list(user):
 
         movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
 
-    return jsonify(code=0, data={"userId": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
+    return jsonify(code=0,
+                   data={"userId": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
 
 
 def get_watched_movies_list(user):
