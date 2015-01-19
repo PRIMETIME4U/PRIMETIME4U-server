@@ -1,10 +1,11 @@
 import json
 import logging
+import lxml
 from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
 
-def retrieve_movie_from_title(movie_original_title, movie_title=None):
+def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=None):
     """
     Retrieve movie info from IMDB by movie title.
     :param movie_title: title of the film to retrieve info
@@ -31,6 +32,11 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None):
                   rated=json_data[0]["rated"],
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
+
+    html_page_plot = get(movie_url).encode('utf-8')
+    tree = lxml.html.fromstring(html_page_plot)
+    plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')
+    movie.plot_it = str(plot_it)   # Save movie italian plot
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]
@@ -190,8 +196,6 @@ def retrieve_artist_from_id(artist_id):
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
-    logging.info("Retrieving %s", artist_id)
-
     url = BASE_URL_MYAPIFILMS + 'imdb?idName=' + artist_id + '&format=JSON&filmography=0&lang=en-us&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0'
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
@@ -200,5 +204,4 @@ def retrieve_artist_from_id(artist_id):
                     name=json_data["name"],
                     photo=json_data["urlPhoto"])
 
-    logging.info("Retrieved %s", artist_id)
     return artist.put()

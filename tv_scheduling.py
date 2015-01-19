@@ -22,6 +22,7 @@ def get_movies_schedule(html_page):
     for movie_node in movies_node:
         title = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/text()')[0].strip().encode(
             'utf-8')  # Get title
+        movie_url = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/@href')[0]
         original_title = movie_node.xpath('.//p[@class="titolo-originale"]/text()')  # Get original title
         if len(original_title) == 0:
             original_title = None
@@ -30,7 +31,9 @@ def get_movies_schedule(html_page):
         channel = movie_node.xpath('.//h3[@class="media tv"]/text()')[0].strip().encode('utf-8')  # Get channel
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
-        movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time})
+        movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
+                            "movieUrl": movie_url})
+        #print movies_list
     return movies_list
 
 
@@ -73,7 +76,6 @@ def result_movies_schedule(tv_type, day):
 
         if schedule is not None:
             memcache.add(tv_type + day, schedule, time_for_tomorrow())  # Store the schedule in memcache
-            logging.info("Added in memcache %s", tv_type + day)
             return schedule
         else:
             raise InternalServerError("Errore sono None")
