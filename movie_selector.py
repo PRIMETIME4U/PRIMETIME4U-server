@@ -3,6 +3,7 @@ from google.appengine.ext import ndb
 from models import TasteMovie, TasteArtist, TasteGenre, User, Movie
 
 from tv_scheduling import result_movies_schedule
+from utilities import NUMBER_SUGGESTIONS
 
 
 def random_movie_selection(schedule_movies):
@@ -25,7 +26,7 @@ def taste_based_movie_selection(user, schedule_movies):
     artists_value = []
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
-        artist_id = taste_artist.id_IMDB.id()  # Get movie id from taste
+        artist_id = taste_artist.artist.id()  # Get movie id from taste
         artists_id.append(artist_id)
         artists_value.append(taste_artist.taste)
 
@@ -33,7 +34,7 @@ def taste_based_movie_selection(user, schedule_movies):
     movies_value = []
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
+        movie_id = taste_movie.movie.id()  # Get movie id from taste
         movies_id.append(movie_id)
         movies_value.append(taste_movie.taste)
 
@@ -45,6 +46,8 @@ def taste_based_movie_selection(user, schedule_movies):
         print (taste_genre.genre, taste_genre.taste)
         genres_value.append(taste_genre.taste)
 
+    data = []
+
     for movie in schedule_movies:
         points = 0
         movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
@@ -55,15 +58,31 @@ def taste_based_movie_selection(user, schedule_movies):
                 if actor.get().key.id() in artists_id:
                     print "Trovato " + str(actor.get().key.id())
                     points += artists_value[artists_id.index(actor.get().key.id())]
+
+            for director in movie_data_store.directors:
+                if director.get().key.id() in artists_id:
+                    print "Trovato " + str(director.get().key.id())
+                    points += artists_value[artists_id.index(director.get().key.id())]
+
+            for writer in movie_data_store.writers:
+                if writer.get().key.id() in artists_id:
+                    print "Trovato " + str(writer.get().key.id())
+                    points += artists_value[artists_id.index(writer.get().key.id())]
+
             for genre in movie_data_store.genres:
                 if genre in genres:
                     print "Trovato " + genre
                     points += genres_value[genres.index(genre)]
+
             print movie_data_store.key.id(), str(points)
+
+            data.append((movie, points))
         else:
             print "non ce l'ho ", str(movie["originalTitle"])
 
-    return random.choice(schedule_movies)
+    data.sort(key=lambda tup: tup[1], reverse=True)
+
+    return data[0:NUMBER_SUGGESTIONS]
 
 if __name__ == "__main__":
     print taste_based_movie_selection(User.get_by_id("test@example.com"), result_movies_schedule("free", "today"))

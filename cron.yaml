@@ -1,8 +1,4 @@
 cron:
-- description: daily movies suggestion
-  url: /task/suggest/
-  schedule: every 24 hours
-
 - description: retrieve free schedule
   url: /api/schedule/free/today
   schedule: every day 00:00

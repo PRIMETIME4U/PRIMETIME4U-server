@@ -10,9 +10,9 @@ from main import json_api
 from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
-from movie_selector import random_movie_selection
+from movie_selector import taste_based_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow, GENRES
+from utilities import RetrieverError, time_for_tomorrow, GENRES
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -287,24 +287,21 @@ def proposal(user_id):
             if proposals is None:
                 proposals = []
 
-                for i in range(0, NUMBER_SUGGESTIONS):
-                    movie = random_movie_selection(result_movies_schedule("free", "today"))
-                    logging.debug("Chosen: %s - %s", movie["originalTitle"], movie["title"])
+                movies = taste_based_movie_selection(user, result_movies_schedule("free", "today"))
+                for movie in movies:
+                    print movie[0]["originalTitle"], movie[0]["title"]
 
-                    movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
-                                                   Movie.title == movie["title"])).get()  # Find movie by title
+                    movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie[0]["originalTitle"],
+                                                   Movie.title == movie[0]["title"])).get()  # Find movie by title
 
                     if movie_data_store is not None:
                         proposals.append({"idIMDB": movie_data_store.key.id(),
-                                          "originalTitle": movie["originalTitle"] if movie["originalTitle"] is not None
-                                          else movie["title"], "poster": movie_data_store.poster,
-                                          "channel": movie["channel"],
-                                          "time": movie["time"],
+                                          "originalTitle": movie[0]["originalTitle"] if movie[0]["originalTitle"] is not None
+                                          else movie[0]["title"], "poster": movie_data_store.poster,
+                                          "channel": movie[0]["channel"],
+                                          "time": movie[0]["time"],
                                           "simplePlot": movie_data_store.simple_plot,
                                           "italianPlot": movie_data_store.plot_it})
-
-                    # if len(proposals) == 0:
-                    #                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
                 logging.info("Added in memcache %s", "proposal" + user_id)
