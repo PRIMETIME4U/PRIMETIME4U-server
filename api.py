@@ -8,14 +8,11 @@ from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from main import json_api
 from manage_user import User
-from models import Artist, Movie, TasteArtist, TasteMovie
+from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
 from movie_selector import random_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow
-from google.appengine.api import urlfetch
-
-urlfetch.set_default_fetch_deadline(60)
+from utilities import RetrieverError, NUMBER_SUGGESTIONS, time_for_tomorrow, GENRES
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -92,9 +89,18 @@ def add_tastes(user_id, type):
                     except RetrieverError as retriever_error:
                         raise InternalServerError(retriever_error)
                     movie = Movie.get_by_id(movie_key.id())
-
                 user.add_taste_movie(movie)  # Add movie to tastes
                 return get_tastes_movies_list(user)  # Return tastes
+            elif type == 'genre':
+                json_data = request.get_json()
+
+                if json_data is None:
+                    raise BadRequest
+
+                genre = json_data['genre']
+
+                user.add_taste_genre(genre)
+                return get_tastes_genres_list(user)
             else:
                 raise BadRequest
         elif request.method == 'GET':
@@ -102,6 +108,8 @@ def add_tastes(user_id, type):
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
                 return get_tastes_movies_list(user)  # Return tastes
+            elif type == 'genre':
+                return get_tastes_genres_list(user)
             elif type == 'all':
                 return get_tastes_list(user)  # Return tastes
             else:
@@ -112,8 +120,8 @@ def add_tastes(user_id, type):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
-@app.route('/api/tastes/<user_id>/<type>/<id_imdb>', methods=['DELETE'])
-def remove_taste(user_id, type, id_imdb):
+@app.route('/api/tastes/<user_id>/<type>/<id>', methods=['DELETE'])
+def remove_taste(user_id, type, id):
     """
     Endpoint that allow to list all tastes by type or add new one.
     :param user_id: email of the user
@@ -134,15 +142,21 @@ def remove_taste(user_id, type, id_imdb):
     if user is not None:
         if request.method == 'DELETE':
             if type == 'artist':
-                artist = Artist.get_by_id(id_imdb)
+                artist = Artist.get_by_id(id)
 
                 user.remove_taste_artist(artist)  # Remove artist to tastes
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                movie = Movie.get_by_id(id_imdb)
+                movie = Movie.get_by_id(id)
 
                 user.remove_taste_movie(movie)  # Remove movie to tastes
                 return get_tastes_movies_list(user)  # Return tastes
+            elif type == 'genre':
+                if id in GENRES:
+                    user.remove_taste_genre(id)
+                    return get_tastes_genres_list(user)
+                else:
+                    raise BadRequest
             else:
                 raise BadRequest
         else:
@@ -360,10 +374,12 @@ def get_tastes_artists_list(user):
 
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
-        artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
-        artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-        artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
+        if taste_artist.taste >= 1:
+            artist_id = taste_artist.artist.id()  # Get artist id from taste
+            artist = Artist.get_by_id(artist_id)  # Get artist by id
+
+            artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
 
@@ -384,12 +400,35 @@ def get_tastes_movies_list(user):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
+        movie_id = taste_movie.movie.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
+
+
+def get_tastes_genres_list(user):
+    """
+    Get a readable taste movies list.
+    :param user: user
+    :type user: Models.User
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
+        "type": type, "userId": user_id}
+    :rtype: JSON
+    """
+    tastes_genres_id = user.tastes_genres
+
+    genres = []
+
+    for taste_genre_id in tastes_genres_id:
+        taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
+
+        if taste_genre.taste >= 1:
+            genres.append({"genre": taste_genre.genre})
+
+    return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres})
 
 
 def get_tastes_list(user):
@@ -408,10 +447,12 @@ def get_tastes_list(user):
 
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
-        artist_id = taste_artist.id_IMDB.id()  # Get artist id from taste
-        artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-        artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
+        if taste_artist.taste >= 1:
+            artist_id = taste_artist.artist.id()  # Get artist id from taste
+            artist = Artist.get_by_id(artist_id)  # Get artist by id
+
+            artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
 
     tastes_movies_id = user.tastes_movies
 
@@ -419,7 +460,7 @@ def get_tastes_list(user):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.id_IMDB.id()  # Get movie id from taste
+        movie_id = taste_movie.movie.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})

@@ -8,9 +8,6 @@ from movie_selector import random_movie_selection
 from send_mail import send_suggestion
 from tv_scheduling import result_movies_schedule
 from utilities import RetrieverError, TV_TYPE
-from google.appengine.api import urlfetch
-
-urlfetch.set_default_fetch_deadline(60)
 
 app = Flask(__name__)
 app.config['DEBUG'] = True

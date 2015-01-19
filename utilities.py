@@ -2,10 +2,14 @@ import requests
 import logging
 from datetime import timedelta, datetime
 from werkzeug.exceptions import InternalServerError
+from google.appengine.api import urlfetch
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
 BASE_URL_MYAPIFILMS = "http://www.myapifilms.com/"
 TV_TYPE = ['free', 'sky', 'premium']
+GENRES = ['Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family',
+          'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport',
+          'Thriller', 'War', 'Western']
 NUMBER_SUGGESTIONS = 3
 
 
@@ -17,6 +21,8 @@ def get(url):
     :return: HTML page
     :rtype: string
     """
+    urlfetch.set_default_fetch_deadline(60)
+    logging.info("Deadline: " + str(urlfetch.get_default_fetch_deadline()))
     try:
         return requests.get(url).text
     except Exception as exception:

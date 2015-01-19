@@ -1,7 +1,7 @@
 from google.appengine.ext import ndb
 from datetime import date
 
-from utilities import TV_TYPE
+from utilities import TV_TYPE, GENRES
 # TODO: try to use https://cloud.google.com/appengine/docs/python/ndb/modelclass#Model_get_or_insert
 
 
@@ -121,8 +121,8 @@ class TasteMovie(ModelUtils, ndb.Model):
     """
     This model represents the taste of a user about a movie.
     """
-    id_IMDB = ndb.KeyProperty(Movie)
-    taste = ndb.IntegerProperty(required=True)
+    movie = ndb.KeyProperty(Movie)
+    taste = ndb.FloatProperty(required=True)
 
     def add_movie(self, movie):
         """
@@ -131,7 +131,11 @@ class TasteMovie(ModelUtils, ndb.Model):
         :type movie: Movie
         :return: None
         """
-        self.id_IMDB = movie.key
+        self.movie = movie.key
+        self.put()
+
+    def update_taste(self, taste):
+        self.taste += taste
         self.put()
 
 
@@ -139,8 +143,8 @@ class TasteArtist(ModelUtils, ndb.Model):
     """
     This model represents the taste of a user about an artist.
     """
-    id_IMDB = ndb.KeyProperty(Artist)
-    taste = ndb.IntegerProperty(required=True)
+    artist = ndb.KeyProperty(Artist)
+    taste = ndb.FloatProperty(required=True)
 
     def add_artist(self, artist):
         """
@@ -149,7 +153,23 @@ class TasteArtist(ModelUtils, ndb.Model):
         :type artist: Artist
         :return: None
         """
-        self.id_IMDB = artist.key
+        self.artist = artist.key
+        self.put()
+
+    def update_taste(self, taste):
+        self.taste += taste
+        self.put()
+
+
+class TasteGenre(ModelUtils, ndb.Model):
+    """
+    This model represents the taste of a user about a genre.
+    """
+    genre = ndb.StringProperty(choices=GENRES)
+    taste = ndb.FloatProperty(required=True)
+
+    def update_taste(self, taste):
+        self.taste += taste
         self.put()
 
 
@@ -168,7 +188,7 @@ class User(ModelUtils, ndb.Model):
     date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)
     tastes_artists = ndb.KeyProperty(TasteArtist, repeated=True)
-    tastes_genres = ndb.StringProperty(repeated=True)
+    tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
 
     def add_watched_movie(self, movie, date):
@@ -185,13 +205,13 @@ class User(ModelUtils, ndb.Model):
             self.date_watched.append(date)
             self.put()
 
-    def add_taste_movie(self, movie, taste=1):
+    def add_taste_movie(self, movie, taste=1.0):
         """
         Add user's taste of a movie.
         :param movie: movie to be voted
         :type movie: Movie
         :param taste: taste to associate to the movie
-        :type taste: integer
+        :type taste: float
         :return: None
         """
         # TODO: improve, I don't know if it is the best way to see if there is yet TasteArtist
@@ -200,28 +220,68 @@ class User(ModelUtils, ndb.Model):
         taste_movie.add_movie(movie)
         taste_movie_key = taste_movie.put()
 
+        movie = Movie.get_by_id(movie.key.id())
+        for actor in movie.actors:
+            artist = Artist.get_by_id(actor.id())
+            self.add_taste_artist(artist, 0.2)
+
+        for director in movie.directors:
+            artist = Artist.get_by_id(director.id())
+            self.add_taste_artist(artist, 0.2)
+
+        for writer in movie.writers:
+            artist = Artist.get_by_id(writer.id())
+            self.add_taste_artist(artist, 0.2)
+
+        for genre in movie.genres:
+            self.add_taste_genre(genre, 0.2)
+
         if taste_movie_key not in self.tastes_movies:
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
             self.put()
 
-    def add_taste_artist(self, artist, taste=1):
+    def add_taste_artist(self, artist, taste=1.0):
         """
         Add user's taste of an artist.
         :param artist: artist to be voted
         :type artist: Artist
         :param taste: taste to associate to the artist
-        :type taste: integer
+        :type taste: float
         :return: None
         """
-        # TODO: improve, I don't know if it is the best way to see if there is yet TasteArtist
-        taste_artist = TasteArtist(id=(artist.key.id() + self.key.id()),
-                                   taste=taste)  # Create the user's taste with unique id
-        taste_artist.add_artist(artist)
-        taste_artist_key = taste_artist.put()
+        taste_artist = TasteArtist.get_by_id(artist.key.id() + self.key.id())
+        if taste_artist is None:
+            taste_artist = TasteArtist(id=(artist.key.id() + self.key.id()),
+                                       taste=taste)  # Create the user's taste with unique id
+            taste_artist.add_artist(artist)
+            taste_artist_key = taste_artist.put()
 
-        if taste_artist_key not in self.tastes_artists:
-            self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
-            self.put()
+            if taste_artist_key not in self.tastes_artists:
+                self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
+                self.put()
+        else:
+            if taste == 1 and taste_artist.taste > 1:
+                pass
+            else:
+                taste_artist.update_taste(taste)
+
+    def add_taste_genre(self, genre, taste=1.0):
+        if genre in GENRES:
+            taste_genre = TasteGenre.get_by_id(genre + self.key.id())
+            if taste_genre is None:
+                taste_genre = TasteGenre(id=(genre + self.key.id()),
+                                         genre=genre,
+                                         taste=taste)
+                taste_genre_key = taste_genre.put()
+
+                if taste_genre_key not in self.tastes_genres:
+                    self.tastes_genres.append(taste_genre_key)
+                    self.put()
+            else:
+                if taste == 1 and taste_genre.taste > 1:
+                    pass
+                else:
+                    taste_genre.update_taste(taste)
 
     def remove_taste_movie(self, movie):
         """
@@ -231,12 +291,62 @@ class User(ModelUtils, ndb.Model):
         """
         taste_movie_id = movie.key.id() + self.key.id()
         taste_movie = TasteMovie.get_by_id(taste_movie_id)
-        taste_movie_key = taste_movie.key
 
-        taste_movie.key.delete()
-        if taste_movie_key in self.tastes_movies:
-            self.tastes_movies.remove(taste_movie_key)
-            self.put()
+        if taste_movie is not None:
+            taste_movie_key = taste_movie.key
+
+            movie = Movie.get_by_id(movie.key.id())
+            for actor in movie.actors:
+                artist = Artist.get_by_id(actor.id())
+                taste_artist = TasteArtist.get_by_id(actor.id() + self.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-0.2)
+                else:
+                    self.add_taste_artist(artist, -0.2)
+
+                if taste_artist.taste == 0:
+                    self.remove_taste_artist(artist)
+
+            for director in movie.directors:
+                artist = Artist.get_by_id(director.id())
+                taste_artist = TasteArtist.get_by_id(director.id() + self.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-0.2)
+                else:
+                    self.add_taste_artist(artist, -0.2)
+
+                if taste_artist.taste == 0:
+                    self.remove_taste_artist(artist)
+
+            for writer in movie.writers:
+                artist = Artist.get_by_id(writer.id())
+                taste_artist = TasteArtist.get_by_id(writer.id() + self.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-0.2)
+                else:
+                    self.add_taste_artist(artist, -0.2)
+
+                if taste_artist.taste == 0:
+                    self.remove_taste_artist(artist)
+
+            for genre in movie.genres:
+                taste_genre = TasteGenre.get_by_id(genre + self.key.id())
+
+                if taste_genre is not None:
+                    taste_genre.update_taste(-0.2)
+                else:
+                    self.add_taste_genre(genre, -0.2)
+
+                if taste_genre.taste == 0:
+                    self.remove_taste_genre(genre)
+
+            taste_movie.key.delete()
+            if taste_movie_key in self.tastes_movies:
+                self.tastes_movies.remove(taste_movie_key)
+                self.put()
 
     def remove_taste_artist(self, artist):
         """
@@ -246,12 +356,28 @@ class User(ModelUtils, ndb.Model):
         """
         taste_artist_id = artist.key.id() + self.key.id()
         taste_artist = TasteArtist.get_by_id(taste_artist_id)
-        taste_artist_key = taste_artist.key
+        if taste_artist.taste == 1 or taste_artist.taste == 0:
+            taste_artist_key = taste_artist.key
 
-        taste_artist.key.delete()
-        if taste_artist_key in self.tastes_artists:
-            self.tastes_artists.remove(taste_artist_key)
-            self.put()
+            taste_artist.key.delete()
+            if taste_artist_key in self.tastes_artists:
+                self.tastes_artists.remove(taste_artist_key)
+                self.put()
+        elif taste_artist.taste > 1:
+            taste_artist.update_taste(-1)
+
+    def remove_taste_genre(self, genre):
+        taste_genre_id = genre + self.key.id()
+        taste_genre = TasteGenre.get_by_id(taste_genre_id)
+        if taste_genre.taste == 1 or taste_genre.taste == 0:
+            taste_genre_key = taste_genre.key
+
+            taste_genre.key.delete()
+            if taste_genre_key in self.tastes_genres:
+                self.tastes_genres.remove(taste_genre_key)
+                self.put()
+        elif taste_genre.taste > 1:
+            taste_genre.update_taste(-1)
 
     def add_tv_type(self, type):
         """
