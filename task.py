@@ -1,4 +1,4 @@
-from requests import ConnectionError
+import logging
 from flask import Flask
 from werkzeug.exceptions import BadRequest
 from IMDB_retriever import retrieve_movie_from_title
@@ -7,7 +7,7 @@ from models import User
 from movie_selector import random_movie_selection
 from send_mail import send_suggestion
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, TV_TYPE
+from utilities import TV_TYPE, RetrieverError
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -38,26 +38,23 @@ def retrieve(tv_type):
 
     if tv_type in TV_TYPE:
         movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
-        for movie in movies:
-            movie_title = movie['title']
-            movie_original_title = movie['originalTitle']
+        while len(movies) > 0:
+            movie_title = movies[0]['title']
+            movie_original_title = movies[0]['originalTitle']
             if movie_original_title is None:
                 movie_original_title = movie_title
 
             try:
                 retrieve_movie_from_title(movie_original_title,
-                                          movie_title)  # Retrieve movie from IMDB by title and store it
-            except ConnectionError:
-                print 'ConnectionError, I retry..'
-                try:
-                    retrieve_movie_from_title(movie_original_title,
-                                              movie_title)  # Retrieve movie from IMDB by title and store it
-                except Exception:
-                    print 'No connection, next one'
-                    pass
-            except RetrieverError as retriever_error:
-                print retriever_error
-
+                                          movie_title,
+                                          movies[0]['movieUrl'])  # Retrieve movie from IMDB by title and store it
+            except Exception as exception:
+                logging.error("Error in retrieving %s: %s", movie_original_title, exception)
+                if type(exception) is RetrieverError:
+                    logging.error("Not our error...")
+                    movies.pop(0)
+                pass
+            movies.pop(0)
         return 'OK'
     else:
         raise BadRequest

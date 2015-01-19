@@ -35,8 +35,7 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=
 
     html_page_plot = get(movie_url).encode('utf-8')
     tree = lxml.html.fromstring(html_page_plot)
-    plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')
-    movie.plot_it = str(plot_it)   # Save movie italian plot
+    movie.plot_it = tree.xpath('//article[@class="scheda-desc"]/p/text()')[0]
 
     try:
         trailer_url = json_data[0]["trailer"]["videoURL"]

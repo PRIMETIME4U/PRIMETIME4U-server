@@ -300,7 +300,8 @@ def proposal(user_id):
                                           else movie["title"], "poster": movie_data_store.poster,
                                           "channel": movie["channel"],
                                           "time": movie["time"],
-                                          "simplePlot": movie_data_store.simple_plot})
+                                          "simplePlot": movie_data_store.simple_plot,
+                                          "italianPlot": movie_data_store.plot_it})
 
                     # if len(proposals) == 0:
                     #                    raise InternalServerError("Programmazione di oggi ancora non disponibile")
