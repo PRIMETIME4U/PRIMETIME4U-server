@@ -12,5 +12,5 @@ cron:
   schedule: every day 00:00
 
 - description: retrieve movies info
-  url: _ah/start/task/retrieve
+  url: /_ah/start/task/retrieve
   schedule: every day 01:00
