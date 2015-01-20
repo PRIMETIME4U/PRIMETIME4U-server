@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from flask import jsonify, request
 import logging
+import re
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id
@@ -18,7 +19,7 @@ app = json_api(__name__)
 app.config['DEBUG'] = True
 
 
-@app.route('/api/schedule/<tv_type>/<day>')
+@app.route('/api/schedule/<tv_type>/<day>', methods=['GET'])
 def schedule(tv_type, day):
     """
     Returns a JSON containing the TV programming of <tv_type> in the <day>.
@@ -27,23 +28,28 @@ def schedule(tv_type, day):
     :param day: interested day, possible value (today, tomorrow, future)
     :type day: string
     :return: schedule
-        {"code": 0, "data": {"day": day, "schedule": [{"channel": channel_name, "originalTitle": original_title,
-        "time": time, "title": title}, .. ], "type": tv_type}}
+        {"code": 0, "data": {"day": day, "schedule": [{"channel": channel_name, "movieUrl": url,
+        "originalTitle": original_title, "time": time, "title": title}, .. ], "type": tv_type}}
     :rtype: JSON
     """
-    return jsonify(code=0, data={"type": tv_type, "day": day, "schedule": result_movies_schedule(tv_type, day)})
+    if request.method == 'GET':
+        return jsonify(code=0, data={"type": tv_type, "day": day, "schedule": result_movies_schedule(tv_type, day)})
+    else:
+        raise MethodNotAllowed
 
 
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
-def add_tastes(user_id, type):
+def tastes(user_id, type):
     """
-    Endpoint that allow to list all tastes by type or add new one.
+    Endpoint that allow to list all tastes by type or add a new one.
     :param user_id: email of the user
     :type user_id: string
     :param type: string
     :type type: string
     :return: list of tastes
         {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"genre": genre}],
         "type": type, "user_id": user_id}
     :rtype: JSON
     :raise MethodNotAllowed: if method is neither POST neither GET
@@ -63,14 +69,9 @@ def add_tastes(user_id, type):
                     raise BadRequest
 
                 id_imdb = json_data['idIMDB']  # Get id
+                logging.info("From post: %s", id_imdb)
 
-                artist = Artist.get_by_id(id_imdb)  # Find movie by id
-                if artist is None:
-                    try:
-                        artist_key = retrieve_artist_from_id(id_imdb)  # Retrieve if is not in the datastore
-                    except RetrieverError as retriever_error:
-                        raise InternalServerError(retriever_error)
-                    artist = Artist.get_by_id(artist_key.id())
+                artist = get_or_retrieve_by_id(id_imdb)  # Get or retrieve artist
 
                 user.add_taste_artist(artist)  # Add artist to tastes
                 return get_tastes_artists_list(user)  # Return tastes
@@ -81,14 +82,10 @@ def add_tastes(user_id, type):
                     raise BadRequest
 
                 id_imdb = json_data['idIMDB']  # Get id
+                logging.info("From post: %s", id_imdb)
 
-                movie = Movie.get_by_id(id_imdb)  # Find movie by id
-                if movie is None:
-                    try:
-                        movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
-                    except RetrieverError as retriever_error:
-                        raise InternalServerError(retriever_error)
-                    movie = Movie.get_by_id(movie_key.id())
+                movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
+
                 user.add_taste_movie(movie)  # Add movie to tastes
                 return get_tastes_movies_list(user)  # Return tastes
             elif type == 'genre':
@@ -98,20 +95,21 @@ def add_tastes(user_id, type):
                     raise BadRequest
 
                 genre = json_data['genre']
+                logging.info("From post: %s", genre)
 
-                user.add_taste_genre(genre)
-                return get_tastes_genres_list(user)
+                user.add_taste_genre(genre)  # Add genre to tastes
+                return get_tastes_genres_list(user)  # Return tastes
             else:
                 raise BadRequest
         elif request.method == 'GET':
             if type == 'artist':
-                return get_tastes_artists_list(user)  # Return tastes
+                return get_tastes_artists_list(user)  # Return artists tastes
             elif type == 'movie':
-                return get_tastes_movies_list(user)  # Return tastes
+                return get_tastes_movies_list(user)  # Return movies tastes
             elif type == 'genre':
-                return get_tastes_genres_list(user)
+                return get_tastes_genres_list(user)  # Return genres tastes
             elif type == 'all':
-                return get_tastes_list(user)  # Return tastes
+                return get_tastes_list(user)  # Return all tastes
             else:
                 raise BadRequest
         else:
@@ -134,27 +132,29 @@ def remove_taste(user_id, type, id):
     :rtype: JSON
     :raise MethodNotAllowed: if method is neither POST neither GET
     :raise InternalServerError: if user is not subscribed
-    :raise BadRequest: if type is neither artist neither movie
+    :raise BadRequest: if type is neither artist neither movie neither genre or a good one
     :raise InternalServerError: if there is an error from MYAPIFILMS
     """
     user = modelUser.get_by_id(user_id)  # Get user
 
+    logging.info("From get: %s", id)
+
     if user is not None:
         if request.method == 'DELETE':
             if type == 'artist':
-                artist = Artist.get_by_id(id)
+                artist = get_or_retrieve_by_id(id)
 
-                user.remove_taste_artist(artist)  # Remove artist to tastes
+                user.remove_taste_artist(artist)  # Remove artist from tastes
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                movie = Movie.get_by_id(id)
+                movie = get_or_retrieve_by_id(id)
 
-                user.remove_taste_movie(movie)  # Remove movie to tastes
+                user.remove_taste_movie(movie)  # Remove movie from tastes
                 return get_tastes_movies_list(user)  # Return tastes
             elif type == 'genre':
                 if id in GENRES:
-                    user.remove_taste_genre(id)
-                    return get_tastes_genres_list(user)
+                    user.remove_taste_genre(id)  # Remove genre from tastes
+                    return get_tastes_genres_list(user)  # Return tastes
                 else:
                     raise BadRequest
             else:
@@ -168,7 +168,7 @@ def remove_taste(user_id, type, id):
 @app.route('/api/watched/<user_id>', methods=['GET', 'POST'])
 def watched(user_id):
     """
-    Endpoint that allow to list all watched movies.
+    Endpoint that allow to list all watched movies or add a new one.
     :param user_id: email of the user
     :type user_id: string
     :return: list of watched movies
@@ -191,16 +191,11 @@ def watched(user_id):
                 raise BadRequest
 
             id_imdb = json_data['idIMDB']  # Get id
+            logging.info("From post: %s", id_imdb)
 
-            movie = Movie.get_by_id(id_imdb)  # Find movie by id
-            if movie is None:
-                try:
-                    movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
-                except RetrieverError as retriever_error:
-                    raise InternalServerError(retriever_error)
-                movie = Movie.get_by_id(movie_key.id())
+            movie = get_or_retrieve_by_id(id_imdb)
 
-            yesterday = date.today() - timedelta(days=1)
+            yesterday = date.today() - timedelta(days=1)  # Calculate yesterday
 
             user.add_watched_movie(movie, yesterday)
             return get_watched_movies_list(user)  # Return tastes
@@ -292,11 +287,13 @@ def proposal(user_id):
                     print movie[0]["originalTitle"], movie[0]["title"]
 
                     movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie[0]["originalTitle"],
-                                                   Movie.title == movie[0]["title"])).get()  # Find movie by title
+                                                          Movie.title == movie[0][
+                                                              "title"])).get()  # Find movie by title
 
                     if movie_data_store is not None:
                         proposals.append({"idIMDB": movie_data_store.key.id(),
-                                          "originalTitle": movie[0]["originalTitle"] if movie[0]["originalTitle"] is not None
+                                          "originalTitle": movie[0]["originalTitle"] if movie[0][
+                                                                                            "originalTitle"] is not None
                                           else movie[0]["title"], "poster": movie_data_store.poster,
                                           "channel": movie[0]["channel"],
                                           "time": movie[0]["time"],
@@ -329,31 +326,55 @@ def detail(type, id_imdb):
     """
     if request.method == 'GET':
         if type == 'artist':
-            artist = Artist.get_by_id(id_imdb)  # Get movie
-
-            if artist is None:
-                try:
-                    artist_key = retrieve_artist_from_id(id_imdb)  # Retrieve if is not in the datastore
-                except RetrieverError as retriever_error:
-                    raise InternalServerError(retriever_error)
-
-                artist = Artist.get_by_id(artist_key.id())
+            artist = get_or_retrieve_by_id(id_imdb)
             return jsonify(code=0, data={"idIMDB": id_imdb, "type": "artist", "detail": artist.to_dict})
         elif type == 'movie':
-            movie = Movie.get_by_id(id_imdb)  # Get movie
-
-            if movie is None:
-                try:
-                    movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
-                except RetrieverError as retriever_error:
-                    raise InternalServerError(retriever_error)
-
-                movie = Movie.get_by_id(movie_key.id())
+            movie = get_or_retrieve_by_id(id_imdb)
             return jsonify(code=0, data={"idIMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
         else:
             raise BadRequest
     else:
         raise MethodNotAllowed
+
+
+def get_or_retrieve_by_id(id_imdb):
+    """
+    This function check if the id is a valid IMDb id and in this case get or retrieve the correct entity.
+    :param id_imdb: a valid IMDb id
+    :type id_imdb: string
+    :return: A model instance
+    :rtype Artist or Movie model
+    """
+
+    artist = re.compile("nm\d{7}$")
+    movie = re.compile("tt\d{7}$")
+
+    if artist.match(id_imdb):  # It is an artist's id
+        artist = Artist.get_by_id(id_imdb)  # Find artist by id
+        if artist is None:
+
+            try:
+                artist_key = retrieve_artist_from_id(id_imdb)  # Retrieve if is not in the datastore
+            except RetrieverError as retriever_error:
+                raise InternalServerError(retriever_error)
+
+            artist = Artist.get_by_id(artist_key.id())  # Get artist by id
+
+        return artist
+    elif movie.match(id_imdb):  # It is a movie's id
+        movie = Movie.get_by_id(id_imdb)  # Find movie by id
+        if movie is None:
+
+            try:
+                movie_key = retrieve_movie_from_id(id_imdb)  # Retrieve if is not in the datastore
+            except RetrieverError as retriever_error:
+                raise InternalServerError(retriever_error)
+
+            movie = Movie.get_by_id(movie_key.id())  # Get movie by id
+
+        return movie
+    else:
+        raise InternalServerError(id_imdb + " is not a valid IMDb id")
 
 
 def get_tastes_artists_list(user):
@@ -423,6 +444,7 @@ def get_tastes_genres_list(user):
     for taste_genre_id in tastes_genres_id:
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
 
+        # TODO: not use object, use a simple list
         if taste_genre.taste >= 1:
             genres.append({"genre": taste_genre.genre})
 

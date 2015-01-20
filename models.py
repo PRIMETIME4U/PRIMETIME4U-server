@@ -1,3 +1,4 @@
+import logging
 from google.appengine.ext import ndb
 from datetime import date
 
@@ -47,6 +48,7 @@ class Artist(ModelUtils, ndb.Model):
     """
     name = ndb.StringProperty(required=True)
     photo = ndb.StringProperty()
+    type = ndb.StringProperty(repeated=True)
 
     @property
     def movies(self):
@@ -234,6 +236,7 @@ class User(ModelUtils, ndb.Model):
             self.add_taste_artist(artist, 0.2)
 
         for genre in movie.genres:
+            logging.info("Genre: %s", genre)
             self.add_taste_genre(genre, 0.2)
 
         if taste_movie_key not in self.tastes_movies:

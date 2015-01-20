@@ -1,7 +1,7 @@
 from google.appengine.api import memcache
-from utilities import *
 import lxml.html
 from werkzeug.exceptions import BadRequest, InternalServerError
+from utilities import TV_TYPE, BASE_URL_FILMTV_FILM, time_for_tomorrow, get
 
 
 def get_movies_schedule(html_page):
@@ -33,7 +33,6 @@ def get_movies_schedule(html_page):
 
         movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
                             "movieUrl": movie_url})
-        #print movies_list
     return movies_list
 
 
@@ -63,7 +62,7 @@ def result_movies_schedule(tv_type, day):
     schedule = memcache.get(tv_type + day)  # Tries to retrieve the schedule from memcache
     if schedule is not None:  # Control if it was retrieved
         return schedule
-    else:
+    else:  # Else retrieve it
         if tv_type == TV_TYPE[0]:
             url = BASE_URL_FILMTV_FILM + day + "/stasera/"
         elif tv_type == TV_TYPE[1] or tv_type == TV_TYPE[2]:
@@ -71,14 +70,14 @@ def result_movies_schedule(tv_type, day):
         else:
             raise BadRequest
 
-        html_page = get(url)
-        schedule = get_movies_schedule(html_page)
+        html_page = get(url)  # Get HTML page
+        schedule = get_movies_schedule(html_page)  # Retrieve schedule
 
         if schedule is not None:
             memcache.add(tv_type + day, schedule, time_for_tomorrow())  # Store the schedule in memcache
             return schedule
         else:
-            raise InternalServerError("Errore sono None")
+            raise InternalServerError('TV scheduling not retrieved')
 
 
 if __name__ == "__main__":

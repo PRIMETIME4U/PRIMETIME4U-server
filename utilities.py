@@ -1,7 +1,8 @@
 import requests
 import logging
 from datetime import timedelta, datetime
-from werkzeug.exceptions import InternalServerError
+from flask import Flask, jsonify
+from werkzeug.exceptions import InternalServerError, default_exceptions
 from google.appengine.api import urlfetch
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
@@ -11,6 +12,38 @@ GENRES = ['Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'D
           'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport',
           'Thriller', 'War', 'Western']
 NUMBER_SUGGESTIONS = 3
+
+
+def json_api(import_name, **kwargs):
+    """
+    Creates a JSON-oriented Flask app.
+
+    All error responses that you don't specifically
+    manage yourself will have applications/json content
+    type, and will contain JSON like this (just an example)
+
+    {
+        "code": 1,
+        "errorMessage": "The requested URL was not found on the server.  If you entered the URL manually please [...] ",
+        "errorType": "404: Not Found"
+    }
+
+    More here: http://flask.pocoo.org/snippets/83/ (ad-hoc by pincopallino93)
+    """
+
+    def make_json_error(ex):
+        response = jsonify(errorMessage=str(ex.description) if hasattr(ex, 'description') else str(ex), code=1,
+                           errorType=str(ex))
+        response.status_code = 200  # (ex.code if isinstance(ex, HTTPException) else 500)
+
+        return response
+
+    app = Flask(import_name, **kwargs)
+
+    for code in default_exceptions:
+        app.error_handler_spec[None][code] = make_json_error
+
+    return app
 
 
 def get(url):

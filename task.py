@@ -32,7 +32,7 @@ def random_suggest():
 @app.route('/_ah/start/task/retrieve')
 def retrieve():
     """
-    Retrieve movie info from IMDB for all movies from today schedule.
+    Retrieve movie info from IMDB using taskqueue for all movies from today schedule.
     :return: simple confirmation string
     :rtype string
     """
@@ -46,7 +46,7 @@ def retrieve():
 @app.route('/_ah/start/task/retrieve/<tv_type>', methods=['GET'])
 def retrieve_type(tv_type):
     """
-    Retrieve movie info from IMDB for all movies from today schedule.
+    Retrieve movie info from IMDB for all movies from today schedule by tv type.
     :return: simple confirmation string
     :rtype string
     """

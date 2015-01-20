@@ -1,55 +1,15 @@
-from flask import Flask, jsonify, redirect
+from flask import redirect
 
-from werkzeug.exceptions import default_exceptions
 from google.appengine.api import users
 from manage_user import get_current_user
 from send_mail import confirm_subscription, confirm_unsubscription
+from utilities import json_api
 
-app = Flask(__name__)
+app = json_api(__name__)
 app.config['DEBUG'] = True
 
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
-
-
-__all__ = ["json_api"]
-
-
-def json_api(import_name, **kwargs):
-    """
-    Creates a JSON-oriented Flask app.
-
-    All error responses that you don't specifically
-    manage yourself will have applications/json content
-    type, and will contain JSON like this (just an example)
-
-    {
-        "code": 1,
-        "errorMessage": "The requested URL was not found on the server.  If you entered the URL manually please [...] ",
-        "errorType": "404: Not Found"
-    }
-
-    More here: http://flask.pocoo.org/snippets/83/ (ad-hoc by pincopallino93)
-    """
-
-    def make_json_error(ex):
-        response = jsonify(errorMessage=str(ex.description) if hasattr(ex, 'description') else str(ex), code=1,
-                           errorType=str(ex))
-        response.status_code = 200  # (ex.code if isinstance(ex, HTTPException) else 500)
-
-        return response
-
-    app = Flask(import_name, **kwargs)
-
-    for code in default_exceptions:
-        app.error_handler_spec[None][code] = make_json_error
-
-    return app
-
-
-app = json_api(__name__)
-
-# TODO: manage exception as maintenance for all call
 
 
 @app.route('/')
