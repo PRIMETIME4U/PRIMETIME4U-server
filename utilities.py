@@ -22,7 +22,6 @@ def get(url):
     :rtype: string
     """
     urlfetch.set_default_fetch_deadline(60)
-    logging.info("Deadline: " + str(urlfetch.get_default_fetch_deadline()))
     try:
         return requests.get(url).text
     except Exception as exception:

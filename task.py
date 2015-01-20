@@ -2,6 +2,7 @@ import logging
 from flask import Flask
 from werkzeug.exceptions import BadRequest
 from IMDB_retriever import retrieve_movie_from_title
+from google.appengine.api import taskqueue
 from models import User
 
 from movie_selector import random_movie_selection
@@ -13,7 +14,7 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 
 
-@app.route('/task/suggest/')
+@app.route('/_ah/start/task/suggest/')
 def random_suggest():
     """
     Send a random movie suggest for all users.
@@ -28,8 +29,22 @@ def random_suggest():
     return 'OK'
 
 
-@app.route('/task/retrieve/<tv_type>')
-def retrieve(tv_type):
+@app.route('/_ah/start/task/retrieve')
+def retrieve():
+    """
+    Retrieve movie info from IMDB for all movies from today schedule.
+    :return: simple confirmation string
+    :rtype string
+    """
+    taskqueue.add(url='/_ah/start/task/retrieve/free', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/sky', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/premium', method='GET')
+
+    return 'OK'
+
+
+@app.route('/_ah/start/task/retrieve/<tv_type>', methods=['GET'])
+def retrieve_type(tv_type):
     """
     Retrieve movie info from IMDB for all movies from today schedule.
     :return: simple confirmation string

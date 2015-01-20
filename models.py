@@ -2,7 +2,6 @@ from google.appengine.ext import ndb
 from datetime import date
 
 from utilities import TV_TYPE, GENRES
-# TODO: try to use https://cloud.google.com/appengine/docs/python/ndb/modelclass#Model_get_or_insert
 
 
 class ModelUtils(object):

@@ -1,0 +1,13 @@
+application: primetime4u
+module: task
+version: uno
+runtime: python27
+api_version: 1
+threadsafe: true
+
+manual_scaling:
+  instances: 2
+
+handlers:
+- url: /.*
+  script: task.app

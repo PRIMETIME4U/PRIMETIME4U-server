@@ -1,0 +1,10 @@
+application: primetime4u
+
+dispatch:
+# Default module serves the typical web resources and all static resources.
+- url: "*/favicon.ico"
+  module: default
+
+# Send all task to the one static backend.
+- url: "*/task/*"
+  module: task

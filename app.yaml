@@ -8,7 +8,7 @@ inbound_services:
 - mail
 
 handlers:
-- url: /task/.*
+- url: /_ah/start/task/.*
   script: task.app
   login: admin
 
