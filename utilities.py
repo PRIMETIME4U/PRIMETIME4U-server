@@ -7,11 +7,19 @@ from google.appengine.api import urlfetch
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
 BASE_URL_MYAPIFILMS = "http://www.myapifilms.com/"
+
 TV_TYPE = ['free', 'sky', 'premium']
+
 GENRES = ['Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family',
           'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport',
           'Thriller', 'War', 'Western']
+
 NUMBER_SUGGESTIONS = 3
+
+GENRE_WEIGHT = 0.15
+ACTOR_WEIGHT = 0.2
+DIRECTOR_WEIGHT = 0.12
+WRITER_WEIGHT = 0.1
 
 
 def json_api(import_name, **kwargs):

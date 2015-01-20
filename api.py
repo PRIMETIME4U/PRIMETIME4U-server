@@ -284,7 +284,7 @@ def proposal(user_id):
 
                 movies = taste_based_movie_selection(user, result_movies_schedule("free", "today"))
                 for movie in movies:
-                    print movie[0]["originalTitle"], movie[0]["title"]
+                    logging.info("Scelto: %s", (str(movie[0]["originalTitle"]) if movie[0]["originalTitle"] is not None else str(movie[0]["title"])))
 
                     movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie[0]["originalTitle"],
                                                           Movie.title == movie[0][
@@ -394,7 +394,7 @@ def get_tastes_artists_list(user):
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
 
-        if taste_artist.taste >= 1:
+        if taste_artist.taste >= 1 and taste_artist.added:
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
@@ -445,7 +445,7 @@ def get_tastes_genres_list(user):
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
 
         # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1:
+        if taste_genre.taste >= 1 and taste_genre.added:
             genres.append({"genre": taste_genre.genre})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres})
@@ -468,7 +468,7 @@ def get_tastes_list(user):
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
 
-        if taste_artist.taste >= 1:
+        if taste_artist.taste >= 1 and taste_artist.added:
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 

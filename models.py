@@ -2,7 +2,7 @@ import logging
 from google.appengine.ext import ndb
 from datetime import date
 
-from utilities import TV_TYPE, GENRES
+from utilities import TV_TYPE, GENRES, ACTOR_WEIGHT, DIRECTOR_WEIGHT, WRITER_WEIGHT, GENRE_WEIGHT
 
 
 class ModelUtils(object):
@@ -147,6 +147,7 @@ class TasteArtist(ModelUtils, ndb.Model):
     """
     artist = ndb.KeyProperty(Artist)
     taste = ndb.FloatProperty(required=True)
+    added = ndb.BooleanProperty(default=False)
 
     def add_artist(self, artist):
         """
@@ -169,6 +170,7 @@ class TasteGenre(ModelUtils, ndb.Model):
     """
     genre = ndb.StringProperty(choices=GENRES)
     taste = ndb.FloatProperty(required=True)
+    added = ndb.BooleanProperty(default=False)
 
     def update_taste(self, taste):
         self.taste += taste
@@ -225,19 +227,18 @@ class User(ModelUtils, ndb.Model):
         movie = Movie.get_by_id(movie.key.id())
         for actor in movie.actors:
             artist = Artist.get_by_id(actor.id())
-            self.add_taste_artist(artist, 0.2)
+            self.add_taste_artist(artist, ACTOR_WEIGHT)
 
         for director in movie.directors:
             artist = Artist.get_by_id(director.id())
-            self.add_taste_artist(artist, 0.2)
+            self.add_taste_artist(artist, DIRECTOR_WEIGHT)
 
         for writer in movie.writers:
             artist = Artist.get_by_id(writer.id())
-            self.add_taste_artist(artist, 0.2)
+            self.add_taste_artist(artist, WRITER_WEIGHT)
 
         for genre in movie.genres:
-            logging.info("Genre: %s", genre)
-            self.add_taste_genre(genre, 0.2)
+            self.add_taste_genre(genre, GENRE_WEIGHT)
 
         if taste_movie_key not in self.tastes_movies:
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
@@ -256,6 +257,10 @@ class User(ModelUtils, ndb.Model):
         if taste_artist is None:
             taste_artist = TasteArtist(id=(artist.key.id() + self.key.id()),
                                        taste=taste)  # Create the user's taste with unique id
+
+            if taste == 1.0:
+                taste_artist.added = True
+
             taste_artist.add_artist(artist)
             taste_artist_key = taste_artist.put()
 
@@ -264,7 +269,7 @@ class User(ModelUtils, ndb.Model):
                 self.put()
         else:
             if taste == 1 and taste_artist.taste > 1:
-                pass
+                taste_artist.added = True
             else:
                 taste_artist.update_taste(taste)
 
@@ -275,6 +280,10 @@ class User(ModelUtils, ndb.Model):
                 taste_genre = TasteGenre(id=(genre + self.key.id()),
                                          genre=genre,
                                          taste=taste)
+
+                if taste == 1.0:
+                    taste_genre.added = True
+
                 taste_genre_key = taste_genre.put()
 
                 if taste_genre_key not in self.tastes_genres:
@@ -282,7 +291,7 @@ class User(ModelUtils, ndb.Model):
                     self.put()
             else:
                 if taste == 1 and taste_genre.taste > 1:
-                    pass
+                    taste_genre.added = True
                 else:
                     taste_genre.update_taste(taste)
 

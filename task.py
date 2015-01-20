@@ -63,13 +63,13 @@ def retrieve_type(tv_type):
                 retrieve_movie_from_title(movie_original_title,
                                           movie_title,
                                           movies[0]['movieUrl'])  # Retrieve movie from IMDB by title and store it
+                movies.pop(0)
             except Exception as exception:
                 logging.error("Error in retrieving %s: %s", movie_original_title, exception)
                 if type(exception) is RetrieverError:
                     logging.error("Not our error...")
                     movies.pop(0)
                 pass
-            movies.pop(0)
         return 'OK'
     else:
         raise BadRequest

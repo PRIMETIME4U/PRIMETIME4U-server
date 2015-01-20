@@ -1,3 +1,4 @@
+import logging
 import random
 from google.appengine.ext import ndb
 from models import TasteMovie, TasteArtist, TasteGenre, User, Movie
@@ -18,6 +19,12 @@ def random_movie_selection(schedule_movies):
 
 
 def taste_based_movie_selection(user, schedule_movies):
+    """
+
+    :param user:
+    :param schedule_movies:
+    :return:
+    """
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
     tastes_movies_id = user.tastes_movies
     tastes_genres_id = user.tastes_genres
@@ -43,44 +50,50 @@ def taste_based_movie_selection(user, schedule_movies):
     for taste_genre_id in tastes_genres_id:
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())
         genres.append(taste_genre.genre)
-        print (taste_genre.genre, taste_genre.taste)
         genres_value.append(taste_genre.taste)
 
     data = []
+    random_choice = True
 
     for movie in schedule_movies:
         points = 0
         movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
                                               Movie.title == movie["title"])).get()
         if movie_data_store is not None:
-            print movie_data_store.key.id()
             for actor in movie_data_store.actors:
                 if actor.get().key.id() in artists_id:
-                    print "Trovato " + str(actor.get().key.id())
+                    logging.info("Trovato ",str(actor.get().key.id()))
                     points += artists_value[artists_id.index(actor.get().key.id())]
+                    random_choice = False
 
             for director in movie_data_store.directors:
                 if director.get().key.id() in artists_id:
-                    print "Trovato " + str(director.get().key.id())
+                    logging.info("Trovato %s", str(director.get().key.id()))
                     points += artists_value[artists_id.index(director.get().key.id())]
+                    random_choice = False
 
             for writer in movie_data_store.writers:
                 if writer.get().key.id() in artists_id:
-                    print "Trovato " + str(writer.get().key.id())
+                    logging.info("Trovato %s", str(writer.get().key.id()))
                     points += artists_value[artists_id.index(writer.get().key.id())]
+                    random_choice = False
 
             for genre in movie_data_store.genres:
                 if genre in genres:
-                    print "Trovato " + genre
+                    logging.info("Trovato %s", genre)
                     points += genres_value[genres.index(genre)]
+                    random_choice = False
 
-            print movie_data_store.key.id(), str(points)
+            logging.info("Titolo: %s - Punteggio: %d", movie_data_store.original_title, points)
 
             data.append((movie, points))
         else:
-            print "non ce l'ho ", str(movie["originalTitle"])
+            logging.error("Non presente nel datastore: %s", (str(movie["originalTitle"]) if movie["originalTitle"] is not None else str(movie["title"])))
 
-    data.sort(key=lambda tup: tup[1], reverse=True)
+    if random_choice:
+        random.shuffle(data)
+    else:
+        data.sort(key=lambda tup: tup[1], reverse=True)
 
     return data[0:NUMBER_SUGGESTIONS]
 
