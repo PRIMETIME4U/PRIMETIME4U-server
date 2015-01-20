@@ -11,14 +11,6 @@ cron:
   url: /api/schedule/premium/today
   schedule: every day 00:00
 
-- description: retrieve free movies info
-  url: /task/retrieve/free
-  schedule: every day 01:00
-
-- description: retrieve sky movies info
-  url: /task/retrieve/sky
-  schedule: every day 01:00
-
-- description: retrieve premium movies info
-  url: /task/retrieve/premium
+- description: retrieve movies info
+  url: _ah/start/task/retrieve
   schedule: every day 01:00
