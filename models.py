@@ -313,9 +313,9 @@ class User(ModelUtils, ndb.Model):
                 taste_artist = TasteArtist.get_by_id(actor.id() + self.key.id())
 
                 if taste_artist is not None:
-                    taste_artist.update_taste(-0.2)
+                    taste_artist.update_taste(-ACTOR_WEIGHT)
                 else:
-                    self.add_taste_artist(artist, -0.2)
+                    self.add_taste_artist(artist, -ACTOR_WEIGHT)
 
                 if taste_artist.taste == 0:
                     self.remove_taste_artist(artist)
@@ -325,9 +325,9 @@ class User(ModelUtils, ndb.Model):
                 taste_artist = TasteArtist.get_by_id(director.id() + self.key.id())
 
                 if taste_artist is not None:
-                    taste_artist.update_taste(-0.2)
+                    taste_artist.update_taste(-DIRECTOR_WEIGHT)
                 else:
-                    self.add_taste_artist(artist, -0.2)
+                    self.add_taste_artist(artist, -DIRECTOR_WEIGHT)
 
                 if taste_artist.taste == 0:
                     self.remove_taste_artist(artist)
@@ -337,9 +337,9 @@ class User(ModelUtils, ndb.Model):
                 taste_artist = TasteArtist.get_by_id(writer.id() + self.key.id())
 
                 if taste_artist is not None:
-                    taste_artist.update_taste(-0.2)
+                    taste_artist.update_taste(-WRITER_WEIGHT)
                 else:
-                    self.add_taste_artist(artist, -0.2)
+                    self.add_taste_artist(artist, -WRITER_WEIGHT)
 
                 if taste_artist.taste == 0:
                     self.remove_taste_artist(artist)
@@ -348,9 +348,9 @@ class User(ModelUtils, ndb.Model):
                 taste_genre = TasteGenre.get_by_id(genre + self.key.id())
 
                 if taste_genre is not None:
-                    taste_genre.update_taste(-0.2)
+                    taste_genre.update_taste(-GENRE_WEIGHT)
                 else:
-                    self.add_taste_genre(genre, -0.2)
+                    self.add_taste_genre(genre, -GENRE_WEIGHT)
 
                 if taste_genre.taste == 0:
                     self.remove_taste_genre(genre)

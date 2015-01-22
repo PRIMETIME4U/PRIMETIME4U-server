@@ -1,14 +1,14 @@
 cron:
 - description: retrieve free schedule
-  url: /api/schedule/free/today
+  url: /api/schedule/free/tomorrow
   schedule: every day 00:00
 
 - description: retrieve sky schedule
-  url: /api/schedule/sky/today
+  url: /api/schedule/sky/tomorrow
   schedule: every day 00:00
 
 - description: retrieve premium schedule
-  url: /api/schedule/premium/today
+  url: /api/schedule/premium/tomorrow
   schedule: every day 00:00
 
 - description: retrieve movies info
