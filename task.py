@@ -56,13 +56,15 @@ def retrieve_type(tv_type):
         while len(movies) > 0:
             movie_title = movies[0]['title']
             movie_original_title = movies[0]['originalTitle']
+            movie_year = movies[0]['year']
             if movie_original_title is None:
                 movie_original_title = movie_title
 
             try:
                 retrieve_movie_from_title(movie_original_title,
                                           movie_title,
-                                          movies[0]['movieUrl'])  # Retrieve movie from IMDB by title and store it
+                                          movies[0]['movieUrl'],
+                                          movie_year)  # Retrieve movie from IMDB by title and year and store it
                 movies.pop(0)
             except Exception as exception:
                 logging.error("Error in retrieving %s: %s", movie_original_title, exception)

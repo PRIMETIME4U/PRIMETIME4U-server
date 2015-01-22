@@ -5,7 +5,7 @@ from models import Movie, Artist
 from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS
 
 
-def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=None):
+def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=None, movie_year=None):
     """
     Retrieve movie info from IMDB by movie title.
     :param movie_title: title of the film to retrieve info
@@ -18,7 +18,8 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=
     """
     logging.info("Retrieving %s", movie_original_title)
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=' + movie_year + '&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    logging.info("Url My API Films: %s", url)
 
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
@@ -32,6 +33,8 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=
                   rated=json_data[0]["rated"],
                   simple_plot=json_data[0]["simplePlot"],
                   genres=json_data[0]["genres"])
+
+    logging.info("Url FilmTV: %s", movie_url)
 
     html_page_plot = get(movie_url).encode('utf-8')
     tree = lxml.html.fromstring(html_page_plot)

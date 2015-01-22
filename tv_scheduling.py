@@ -22,8 +22,9 @@ def get_movies_schedule(html_page):
     for movie_node in movies_node:
         title = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/text()')[0].strip().encode(
             'utf-8')  # Get title
-        movie_url = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/@href')[0]
+        movie_url = movie_node.xpath('.//a[contains(@href, "http://www.filmtv.it/film/")]/@href')[0]  # Get FilmTV url
         original_title = movie_node.xpath('.//p[@class="titolo-originale"]/text()')  # Get original title
+        year = movie_node.xpath('.//ul[@class="info cf"]/li/time/text()')[0]  # Get year
         if len(original_title) == 0:
             original_title = None
         else:
@@ -32,7 +33,7 @@ def get_movies_schedule(html_page):
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
         movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
-                            "movieUrl": movie_url})
+                            "movieUrl": movie_url, "year": year})
     return movies_list
 
 
