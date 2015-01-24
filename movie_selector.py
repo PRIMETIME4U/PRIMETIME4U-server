@@ -56,13 +56,13 @@ def taste_based_movie_selection(user, schedule_movies):
     random_choice = True
 
     for movie in schedule_movies:
-        points = 0
+        points = 0.0
         movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
                                               Movie.title == movie["title"])).get()
         if movie_data_store is not None:
             for actor in movie_data_store.actors:
                 if actor.get().key.id() in artists_id:
-                    logging.info("Trovato ",str(actor.get().key.id()))
+                    logging.info("Trovato %s", str(actor.get().key.id()))
                     points += artists_value[artists_id.index(actor.get().key.id())]
                     random_choice = False
 

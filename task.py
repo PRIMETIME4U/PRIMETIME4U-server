@@ -32,27 +32,27 @@ def random_suggest():
 @app.route('/_ah/start/task/retrieve')
 def retrieve():
     """
-    Retrieve movie info from IMDB using taskqueue for all movies from today schedule.
+    Retrieve movie info from IMDB using taskqueue for all movies from "today" schedule.
     :return: simple confirmation string
     :rtype string
     """
-    taskqueue.add(url='/_ah/start/task/retrieve/free', method='GET')
-    taskqueue.add(url='/_ah/start/task/retrieve/sky', method='GET')
-    taskqueue.add(url='/_ah/start/task/retrieve/premium', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/free/tomorrow', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/sky/tomorrow', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/premium/tomorrow', method='GET')
 
     return 'OK'
 
 
-@app.route('/_ah/start/task/retrieve/<tv_type>', methods=['GET'])
-def retrieve_type(tv_type):
+@app.route('/_ah/start/task/retrieve/<tv_type>/<day>', methods=['GET'])
+def retrieve_type(tv_type, day):
     """
-    Retrieve movie info from IMDB for all movies from today schedule by tv type.
+    Retrieve movie info from IMDB for all movies from day schedule by tv type.
     :return: simple confirmation string
     :rtype string
     """
 
     if tv_type in TV_TYPE:
-        movies = result_movies_schedule(tv_type, 'today')  # Retrieve movies from today schedule
+        movies = result_movies_schedule(tv_type, day)  # Retrieve movies from today schedule
         while len(movies) > 0:
             movie_title = movies[0]['title']
             movie_original_title = movies[0]['originalTitle']
