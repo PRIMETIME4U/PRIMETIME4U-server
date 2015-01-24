@@ -84,7 +84,7 @@ def taste_based_movie_selection(user, schedule_movies):
                     points += genres_value[genres.index(genre)]
                     random_choice = False
 
-            logging.info("Titolo: %s - Punteggio: %d", movie_data_store.original_title, points)
+            logging.info("Titolo: %s - Punteggio: %6.2f", movie_data_store.original_title, points)
 
             data.append((movie, points))
         else:
