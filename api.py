@@ -284,21 +284,28 @@ def proposal(user_id):
 
                 movies = taste_based_movie_selection(user, result_movies_schedule("free", "today"))
                 for movie in movies:
-                    logging.info("Scelto: %s", (str(movie[0]["originalTitle"]) if movie[0]["originalTitle"] is not None else str(movie[0]["title"])))
+                    logging.info("Scelto: %s", (
+                        str(movie[0]["originalTitle"]) if movie[0]["originalTitle"] is not None else str(
+                            movie[0]["title"])))
 
                     movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie[0]["originalTitle"],
                                                           Movie.title == movie[0][
                                                               "title"])).get()  # Find movie by title
+                    proposals.append({"idIMDB": movie_data_store.key.id(),
+                                      "originalTitle": movie[0]["originalTitle"] if movie[0][
+                                                                                        "originalTitle"] is not None else
+                                      movie[0]["title"],
+                                      "poster": movie_data_store.poster,
+                                      "title": movie[0]["title"] if movie[0]["title"] is not None else movie[0][
+                                          "originalTitle"],
+                                      "channel": movie[0]["channel"],
+                                      "time": movie[0]["time"],
+                                      "runTimes": movie_data_store.run_times,
+                                      "simplePlot": movie_data_store.simple_plot,
+                                      "italianPlot": movie_data_store.plot_it})
 
                     if movie_data_store is not None:
-                        proposals.append({"idIMDB": movie_data_store.key.id(),
-                                          "originalTitle": movie[0]["originalTitle"] if movie[0][
-                                                                                            "originalTitle"] is not None
-                                          else movie[0]["title"], "poster": movie_data_store.poster,
-                                          "channel": movie[0]["channel"],
-                                          "time": movie[0]["time"],
-                                          "simplePlot": movie_data_store.simple_plot,
-                                          "italianPlot": movie_data_store.plot_it})
+                        pass
 
                 memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
                 logging.info("Added in memcache %s", "proposal" + user_id)
