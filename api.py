@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from flask import jsonify, request
 import logging
 import re
@@ -206,6 +206,49 @@ def watched(user_id):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+
+@app.route('/api/watched/<user_id>/<date>', methods=['GET', 'POST'])
+def watched_date(user_id, date):
+    """
+    Endpoint that allow to list all watched movies or add a new one.
+    :param user_id: email of the user
+    :type user_id: string
+    :param date: date the movie been watched
+    :type date: date
+    :return: list of watched movies
+        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
+        "date": date}],"user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'POST':
+
+            json_data = request.get_json()  # Get JSON from POST
+
+            if json_data is None:
+                raise BadRequest
+
+            id_imdb = json_data['idIMDB']  # Get id
+            logging.info("From post: %s", id_imdb)
+
+            movie = get_or_retrieve_by_id(id_imdb)
+
+            date_object = datetime.strptime(date, '%d-%m-%Y')
+
+            user.add_watched_movie(movie, date_object)
+            return get_watched_movies_list(user)  # Return tastes
+        elif request.method == 'GET':
+            return get_watched_movies_list(user)  # Return tastes
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
 
 @app.route('/api/subscribe/', methods=['POST'])
 def subscribe():
@@ -525,7 +568,7 @@ def get_watched_movies_list(user):
                        "originalTitle": watched_movie.original_title,
                        "title": watched_movie.title,
                        "poster": watched_movie.poster,
-                       "date": date_watched_movie.strftime('%d %B %Y'),
+                       "date": date_watched_movie.strftime('%d-%m-%Y'),
                        "tasted": 1 if taste_movie is not None else 0})
 
     return jsonify(code=0, data={"userId": user.key.id(), "watched": movies})
