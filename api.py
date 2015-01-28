@@ -490,7 +490,10 @@ def get_tastes_list(user):
         movie_id = taste_movie.movie.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
+        movies.append({"idIMDB": movie_id,
+                       "originalTitle": movie.original_title,
+                       "title": movie.title,
+                       "poster": movie.poster})
 
     return jsonify(code=0,
                    data={"userId": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
@@ -520,6 +523,7 @@ def get_watched_movies_list(user):
 
         movies.append({"idIMDB": watched_movie.key.id(),
                        "originalTitle": watched_movie.original_title,
+                       "title": watched_movie.title,
                        "poster": watched_movie.poster,
                        "date": date_watched_movie.strftime('%d %B %Y'),
                        "tasted": 1 if taste_movie is not None else 0})
