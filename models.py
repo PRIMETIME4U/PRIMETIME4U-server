@@ -268,10 +268,10 @@ class User(ModelUtils, ndb.Model):
                 self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
                 self.put()
         else:
-            if taste == 1 and taste_artist.taste > 1:
+            if taste == 1:
                 taste_artist.added = True
-            else:
-                taste_artist.update_taste(taste)
+
+            taste_artist.update_taste(taste)
 
     def add_taste_genre(self, genre, taste=1.0):
         if genre in GENRES:
@@ -290,10 +290,10 @@ class User(ModelUtils, ndb.Model):
                     self.tastes_genres.append(taste_genre_key)
                     self.put()
             else:
-                if taste == 1 and taste_genre.taste > 1:
+                if taste == 1:
                     taste_genre.added = True
-                else:
-                    taste_genre.update_taste(taste)
+
+                taste_genre.update_taste(taste)
 
     def remove_taste_movie(self, movie):
         """
@@ -376,6 +376,7 @@ class User(ModelUtils, ndb.Model):
                 self.tastes_artists.remove(taste_artist_key)
                 self.put()
         elif taste_artist.taste > 1:
+            taste_artist.added = False
             taste_artist.update_taste(-1)
 
     def remove_taste_genre(self, genre):
@@ -389,6 +390,7 @@ class User(ModelUtils, ndb.Model):
                 self.tastes_genres.remove(taste_genre_key)
                 self.put()
         elif taste_genre.taste > 1:
+            taste_genre.added = False
             taste_genre.update_taste(-1)
 
     def add_tv_type(self, type):

@@ -448,7 +448,9 @@ def get_tastes_artists_list(user):
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-            artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
+            artists.append({"idIMDB": artist_id,
+                            "name": artist.name,
+                            "photo": artist.photo})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
 
@@ -472,7 +474,10 @@ def get_tastes_movies_list(user):
         movie_id = taste_movie.movie.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"idIMDB": movie_id, "originalTitle": movie.original_title, "poster": movie.poster})
+        movies.append({"idIMDB": movie_id,
+                       "originalTitle": movie.original_title,
+                       "title": movie.title,
+                       "poster": movie.poster})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
 
@@ -511,6 +516,7 @@ def get_tastes_list(user):
         "type": type, "userId": user_id}
     :rtype: JSON
     """
+    # TODO: improve it, replace with function...
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
 
     artists = []
@@ -522,7 +528,9 @@ def get_tastes_list(user):
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
-            artists.append({"idIMDB": artist_id, "name": artist.name, "photo": artist.photo})
+            artists.append({"idIMDB": artist_id,
+                            "name": artist.name,
+                            "photo": artist.photo})
 
     tastes_movies_id = user.tastes_movies
 
