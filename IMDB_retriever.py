@@ -288,7 +288,7 @@ def retrieve_search_result_list(user, query):
                 movies.append({"title": elem['title'],
                                "originalTitle": elem['originalTitle'],
                                "idIMDB": idIMDB,
-                               "urlPoster": elem['urlPoster'] if 'urlPoster' in elem else 'null',
+                               "poster": elem['urlPoster'] if 'urlPoster' in elem else 'null',
                                "year": str(elem['year']),
                                "tasted": 1 if taste_movie is not None else 0})
     except ValueError:
@@ -304,7 +304,7 @@ def retrieve_search_result_list(user, query):
                 taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
                 artists.append({"name": elem['name'],
                                 "idIMDB": idIMDB,
-                                "urlPhoto": elem['urlPhoto'] if 'urlPhoto' in elem else 'null',
+                                "photo": elem['urlPhoto'] if 'urlPhoto' in elem else 'null',
                                 "tasted": 1 if taste_artist is not None else 0})
     except ValueError:
         pass

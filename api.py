@@ -251,6 +251,7 @@ def watched_date(user_id, date):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+
 @app.route('/api/subscribe/', methods=['POST'])
 def subscribe():
     """
@@ -487,6 +488,7 @@ def get_tastes_artists_list(user):
 
             artists.append({"idIMDB": artist_id,
                             "name": artist.name,
+                            "tasted": 1,
                             "photo": artist.photo})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
@@ -514,6 +516,7 @@ def get_tastes_movies_list(user):
         movies.append({"idIMDB": movie_id,
                        "originalTitle": movie.original_title,
                        "title": movie.title,
+                       "tasted": 1,
                        "poster": movie.poster})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
@@ -538,7 +541,8 @@ def get_tastes_genres_list(user):
 
         # TODO: not use object, use a simple list
         if taste_genre.taste >= 1 and taste_genre.added:
-            genres.append({"genre": taste_genre.genre})
+            genres.append({"genre": taste_genre.genre,
+                           "tasted": 1})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres})
 
@@ -567,6 +571,7 @@ def get_tastes_list(user):
 
             artists.append({"idIMDB": artist_id,
                             "name": artist.name,
+                            "tasted": 1,
                             "photo": artist.photo})
 
     tastes_movies_id = user.tastes_movies
@@ -581,6 +586,7 @@ def get_tastes_list(user):
         movies.append({"idIMDB": movie_id,
                        "originalTitle": movie.original_title,
                        "title": movie.title,
+                       "tasted": 1,
                        "poster": movie.poster})
 
     return jsonify(code=0,
