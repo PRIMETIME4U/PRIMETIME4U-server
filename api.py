@@ -4,7 +4,8 @@ import logging
 import re
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
-from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id
+from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id, retrieve_suggest_list, \
+    retrieve_search_result_list
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from main import json_api
@@ -383,6 +384,42 @@ def detail(type, id_imdb):
             return jsonify(code=0, data={"idIMDB": id_imdb, "type": "movie", "detail": movie.to_dict})
         else:
             raise BadRequest
+    else:
+        raise MethodNotAllowed
+
+
+@app.route('/api/suggest/<user_id>/<query>')
+def suggest(user_id, query):
+    if request.method == 'GET':
+
+        user = modelUser.get_by_id(user_id)  # Get user
+        if user is not None:
+            suggestions = memcache.get(query + user_id)
+            if suggestions is None:
+                suggestions = retrieve_suggest_list(user, query)
+                memcache.add(query + user_id, suggestions)
+                logging.info("Added in memcache %s", query + user_id)
+            return jsonify(code=0, data=suggestions)
+        else:
+            raise InternalServerError(user_id + ' is not subscribed')
+    else:
+        raise MethodNotAllowed
+
+
+@app.route('/api/search/<user_id>/<query>')
+def search(user_id, query):
+    if request.method == 'GET':
+
+        user = modelUser.get_by_id(user_id)  # Get user
+        if user is not None:
+            results = memcache.get(query + user_id)
+            if results is None:
+                results = retrieve_search_result_list(user, query)
+                memcache.add(query + user_id, results)
+                logging.info("Added in memcache %s", query + user_id)
+            return jsonify(code=0, data=results)
+        else:
+            raise InternalServerError(user_id + ' is not subscribed')
     else:
         raise MethodNotAllowed
 

@@ -2,7 +2,7 @@ import requests
 import logging
 from datetime import timedelta, datetime
 from flask import Flask, jsonify
-from werkzeug.exceptions import InternalServerError, default_exceptions
+from werkzeug.exceptions import InternalServerError, Forbidden, default_exceptions
 from google.appengine.api import urlfetch
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
@@ -13,6 +13,10 @@ TV_TYPE = ['free', 'sky', 'premium']
 GENRES = ['Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family',
           'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport',
           'Thriller', 'War', 'Western']
+# TODO: translate it
+# GENRES_ITA = ['Action', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family',
+#               'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Sport',
+#               'Thriller', 'War', 'Western']
 
 NUMBER_SUGGESTIONS = 3
 
@@ -64,9 +68,11 @@ def get(url):
     """
     urlfetch.set_default_fetch_deadline(60)
     try:
-        return requests.get(url).text
+        response = requests.get(url)
     except Exception as exception:
         raise InternalServerError(exception)
+
+    return response.text
 
 
 def time_for_tomorrow():
