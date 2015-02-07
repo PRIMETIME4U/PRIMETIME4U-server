@@ -69,7 +69,7 @@ def tastes(user_id, type):
                 if json_data is None:
                     raise BadRequest
 
-                id_imdb = json_data['idIMDB']  # Get id
+                id_imdb = json_data['data']  # Get id
                 logging.info("From post: %s", id_imdb)
 
                 artist = get_or_retrieve_by_id(id_imdb)  # Get or retrieve artist
@@ -82,7 +82,7 @@ def tastes(user_id, type):
                 if json_data is None:
                     raise BadRequest
 
-                id_imdb = json_data['idIMDB']  # Get id
+                id_imdb = json_data['data']  # Get id
                 logging.info("From post: %s", id_imdb)
 
                 movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
@@ -95,7 +95,7 @@ def tastes(user_id, type):
                 if json_data is None:
                     raise BadRequest
 
-                genre = json_data['genre']
+                genre = json_data['data']
                 logging.info("From post: %s", genre)
 
                 user.add_taste_genre(genre)  # Add genre to tastes
@@ -119,8 +119,8 @@ def tastes(user_id, type):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
-@app.route('/api/tastes/<user_id>/<type>/<id>', methods=['DELETE'])
-def remove_taste(user_id, type, id):
+@app.route('/api/tastes/<user_id>/<type>/<data>', methods=['DELETE'])
+def remove_taste(user_id, type, data):
     """
     Endpoint that allow to list all tastes by type or add new one.
     :param user_id: email of the user
@@ -138,23 +138,23 @@ def remove_taste(user_id, type, id):
     """
     user = modelUser.get_by_id(user_id)  # Get user
 
-    logging.info("From get: %s", id)
+    logging.info("From get: %s", data)
 
     if user is not None:
         if request.method == 'DELETE':
             if type == 'artist':
-                artist = get_or_retrieve_by_id(id)
+                artist = get_or_retrieve_by_id(data)
 
                 user.remove_taste_artist(artist)  # Remove artist from tastes
                 return get_tastes_artists_list(user)  # Return tastes
             elif type == 'movie':
-                movie = get_or_retrieve_by_id(id)
+                movie = get_or_retrieve_by_id(data)
 
                 user.remove_taste_movie(movie)  # Remove movie from tastes
                 return get_tastes_movies_list(user)  # Return tastes
             elif type == 'genre':
-                if id in GENRES:
-                    user.remove_taste_genre(id)  # Remove genre from tastes
+                if data in GENRES:
+                    user.remove_taste_genre(data)  # Remove genre from tastes
                     return get_tastes_genres_list(user)  # Return tastes
                 else:
                     raise BadRequest
@@ -395,11 +395,7 @@ def suggest(user_id, query):
 
         user = modelUser.get_by_id(user_id)  # Get user
         if user is not None:
-            suggestions = memcache.get(query + user_id)
-            if suggestions is None:
-                suggestions = retrieve_suggest_list(user, query)
-                memcache.add(query + user_id, suggestions)
-                logging.info("Added in memcache %s", query + user_id)
+            suggestions = retrieve_suggest_list(user, query)
             return jsonify(code=0, data=suggestions)
         else:
             raise InternalServerError(user_id + ' is not subscribed')
@@ -413,11 +409,7 @@ def search(user_id, query):
 
         user = modelUser.get_by_id(user_id)  # Get user
         if user is not None:
-            results = memcache.get(query + user_id)
-            if results is None:
-                results = retrieve_search_result_list(user, query)
-                memcache.add(query + user_id, results)
-                logging.info("Added in memcache %s", query + user_id)
+            results = retrieve_search_result_list(user, query)
             return jsonify(code=0, data=results)
         else:
             raise InternalServerError(user_id + ' is not subscribed')
@@ -487,7 +479,7 @@ def get_tastes_artists_list(user):
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
             artists.append({"idIMDB": artist_id,
-                            "name": artist.name,
+                            "name": artist.name.encode('utf-8') if artist.name is not None else None,
                             "tasted": 1,
                             "photo": artist.photo})
 
@@ -514,8 +506,8 @@ def get_tastes_movies_list(user):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title,
-                       "title": movie.title,
+                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
+                       "title": movie.title.encode('utf-8') if movie.title is not None else None,
                        "tasted": 1,
                        "poster": movie.poster})
 
@@ -541,7 +533,7 @@ def get_tastes_genres_list(user):
 
         # TODO: not use object, use a simple list
         if taste_genre.taste >= 1 and taste_genre.added:
-            genres.append({"genre": taste_genre.genre,
+            genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
     return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres})
@@ -570,7 +562,7 @@ def get_tastes_list(user):
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
             artists.append({"idIMDB": artist_id,
-                            "name": artist.name,
+                            "name": artist.name.encode('utf-8') if artist.name is not None else None,
                             "tasted": 1,
                             "photo": artist.photo})
 
@@ -584,13 +576,29 @@ def get_tastes_list(user):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title,
-                       "title": movie.title,
+                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
+                       "title": movie.title.encode('utf-8') if movie.title is not None else None,
                        "tasted": 1,
                        "poster": movie.poster})
 
+    tastes_genres_id = user.tastes_genres
+
+    genres = []
+
+    for taste_genre_id in tastes_genres_id:
+        taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
+
+        # TODO: not use object, use a simple list
+        if taste_genre.taste >= 1 and taste_genre.added:
+            genres.append({"name": taste_genre.genre,
+                           "tasted": 1})
+
     return jsonify(code=0,
-                   data={"userId": user.key.id(), "type": "all", "tastes": {"artists": artists, "movies": movies}})
+                   data={"userId": user.key.id(),
+                         "type": "all",
+                         "tastes": {"artists": artists,
+                                    "movies": movies,
+                                    "genres": genres}})
 
 
 def get_watched_movies_list(user):

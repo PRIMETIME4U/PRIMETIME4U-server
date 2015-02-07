@@ -19,7 +19,7 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=
     """
     logging.info('Retrieving %s', movie_original_title)
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=' + movie_year + '&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=' + movie_year + '&technical=0&filter=M&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
     logging.info('Url My API Films: %s', url)
 
     json_page = get(url).encode('utf-8')
@@ -229,26 +229,27 @@ def retrieve_suggest_list(user, query):
 
         for elem in data:
             if not elem['id'].startswith('http://'):
-                if 'y' in elem:
-                    try:
-                        idIMDB = elem['id']
-                        taste_movie = TasteMovie.get_by_id(idIMDB + user.key.id())  # Get taste
-                        movies.append({"originalTitle": elem['l'],
-                                       "title": None,
-                                       "idIMDB": idIMDB,
-                                       "urlPoster": elem['i'][0] if 'i' in elem else 'null',
-                                       "year": str(elem['y']),
-                                       "tasted": 1 if taste_movie is not None else 0})
-                    except KeyError as err:
-                        logging.error("Error in the JSON: %s", err)
+                if 'q' in elem:
+                    if elem['q'] == "feature":
+                        try:
+                            idIMDB = elem['id']
+                            taste_movie = TasteMovie.get_by_id(idIMDB + user.key.id())  # Get taste
+                            movies.append({"originalTitle": elem['l'].encode('utf-8') if elem['l'] is not None else None,
+                                           "title": None,
+                                           "idIMDB": idIMDB,
+                                           "poster": elem['i'][0] if 'i' in elem else 'null',
+                                           "year": str(elem['y']),
+                                           "tasted": 1 if (taste_movie is not None and taste_movie.added) else 0})
+                        except KeyError as err:
+                            logging.error("Error in the JSON: %s", err)
                 else:
                     try:
                         idIMDB = elem['id']
                         taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
-                        artists.append({"name": elem['l'],
+                        artists.append({"name": elem['l'].encode('utf-8') if elem['l'] is not None else None,
                                         "idIMDB": elem['id'],
-                                        "urlPhoto": elem['i'][0] if 'i' in elem else 'null',
-                                        "tasted": 1 if taste_artist is not None else 0})
+                                        "photo": elem['i'][0] if 'i' in elem else 'null',
+                                        "tasted": 1 if (taste_artist is not None and taste_artist.added) else 0})
                     except KeyError as err:
                         logging.error("Error in the JSON: %s", err)
             else:
@@ -256,7 +257,7 @@ def retrieve_suggest_list(user, query):
     except ValueError:
         pass
 
-    [genres.append({"name": genre, "tasted": 1 if TasteGenre.get_by_id(genre + user.key.id()) is not None else 0}) for genre in GENRES if genre.lower().startswith(query.lower())]
+    [genres.append({"name": genre, "tasted": 1 if (TasteGenre.get_by_id(genre + user.key.id()) is not None and (TasteGenre.get_by_id(genre + user.key.id())).added) else 0}) for genre in GENRES if genre.lower().startswith(query.lower())]
 
     return {"query": query, "movies": movies, "artists": artists, "genres": genres}
 
@@ -265,7 +266,7 @@ def retrieve_search_result_list(user, query):
 
     movies_page = memcache.get("movies" + query.lower())
     if movies_page is None:
-        movies_page = get(BASE_URL_MYAPIFILMS + 'imdb?title=' + query + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=5&lang=it-it&actors=N&biography=0&trailer=0&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&moviePhotos=N&movieVideos=N').encode('utf-8')
+        movies_page = get(BASE_URL_MYAPIFILMS + 'imdb?title=' + query + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=M&exactFilter=0&limit=5&lang=it-it&actors=N&biography=0&trailer=0&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&moviePhotos=N&movieVideos=N').encode('utf-8')
         memcache.add("movies" + query.lower(), movies_page)
 
     artists_page = memcache.get("artists" + query.lower())
@@ -285,12 +286,12 @@ def retrieve_search_result_list(user, query):
             for elem in json_data:
                 idIMDB = elem['idIMDB']
                 taste_movie = TasteMovie.get_by_id(idIMDB + user.key.id())  # Get taste
-                movies.append({"title": elem['title'],
-                               "originalTitle": elem['originalTitle'],
+                movies.append({"title": elem['title'].encode('utf-8') if elem['title'] != "" else elem['originalTitle'].encode('utf-8'),
+                               "originalTitle": elem['originalTitle'].encode('utf-8') if elem['originalTitle'] != "" else elem['title'].encode('utf-8'),
                                "idIMDB": idIMDB,
-                               "poster": elem['urlPoster'] if 'urlPoster' in elem else 'null',
+                               "poster": elem['urlPoster'] if ('urlPoster' in elem and elem['urlPoster'] != "") else None,
                                "year": str(elem['year']),
-                               "tasted": 1 if taste_movie is not None else 0})
+                               "tasted": 1 if (taste_movie is not None and taste_movie.added) else 0})
     except ValueError:
         pass
 
@@ -302,13 +303,13 @@ def retrieve_search_result_list(user, query):
             for elem in json_data:
                 idIMDB = elem['idIMDB']
                 taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
-                artists.append({"name": elem['name'],
+                artists.append({"name": elem['name'].encode('utf-8') if elem['name'] == "" else None,
                                 "idIMDB": idIMDB,
-                                "photo": elem['urlPhoto'] if 'urlPhoto' in elem else 'null',
-                                "tasted": 1 if taste_artist is not None else 0})
+                                "photo": elem['urlPhoto'] if ('urlPhoto' in elem and elem['urlPhoto'] != "") else None,
+                                "tasted": 1 if (taste_artist is not None and taste_artist.added) else 0})
     except ValueError:
         pass
 
-    [genres.append({"name": genre}) for genre in GENRES if genre.lower().startswith(query)]
+    [genres.append({"name": genre, "tasted": 1 if (TasteGenre.get_by_id(genre + user.key.id()) is not None and (TasteGenre.get_by_id(genre + user.key.id())).added) else 0}) for genre in GENRES if genre.lower().startswith(query)]
 
     return {"query": query, "movies": movies, "artists": artists, "genres": genres}
