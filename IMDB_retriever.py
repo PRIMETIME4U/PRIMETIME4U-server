@@ -3,7 +3,7 @@ import logging
 import lxml
 from google.appengine.api import memcache
 from models import Movie, Artist, TasteMovie, TasteArtist, TasteGenre
-from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS, GENRES
+from utilities import get, RetrieverError, BASE_URL_MYAPIFILMS, GENRES, clear_url
 
 
 def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=None, movie_year=None):
@@ -30,7 +30,7 @@ def retrieve_movie_from_title(movie_original_title, movie_title=None, movie_url=
 
     movie = Movie(id=json_data[0]['idIMDB'],
                   plot=json_data[0]['plot'],
-                  poster=json_data[0]['urlPoster'],
+                  poster=clear_url(json_data[0]['urlPoster']),
                   rated=json_data[0]['rated'],
                   simple_plot=json_data[0]['simplePlot'],
                   genres=json_data[0]['genres'])
@@ -90,7 +90,7 @@ def retrieve_movie_from_id(movie_id):
 
     movie = Movie(id=json_data['idIMDB'],
                   plot=json_data['plot'],
-                  poster=json_data['urlPoster'] if ('urlPoster' in json_data and json_data['urlPoster'] != "") else None,
+                  poster=clear_url(json_data['urlPoster']) if ('urlPoster' in json_data and json_data['urlPoster'] != "") else None,
                   rated=json_data['rated'],
                   simple_plot=json_data['simplePlot'],
                   genres=json_data['genres'])
@@ -145,7 +145,7 @@ def retrieve_artists(movie, actors_list, directors_list, writers_list):
     for json_data in actors_list:
         actor = Artist(id=json_data['actorId'],
                        name=json_data['actorName'],
-                       photo=json_data['urlPhoto'])
+                       photo=clear_url(json_data['urlPhoto']))
         actor.put()
         movie.add_actor(actor)
 
@@ -181,7 +181,7 @@ def search_artist_from_name(artist_name):
 
     artist = Artist(id=json_data[0]['idIMDB'],
                     name=json_data[0]['name'],
-                    photo=json_data[0]['urlPhoto'])
+                    photo=clear_url(json_data[0]['urlPhoto']))
 
     return artist.put()
 
@@ -203,7 +203,7 @@ def retrieve_artist_from_id(artist_id):
 
     artist = Artist(id=json_data["idIMDB"],
                     name=json_data["name"],
-                    photo=json_data["urlPhoto"] if ('urlPhoto' in json_data and json_data['urlPhoto'] != "") else None)
+                    photo=clear_url(json_data["urlPhoto"]) if ('urlPhoto' in json_data and json_data['urlPhoto'] != "") else None)
 
     return artist.put()
 
@@ -237,7 +237,7 @@ def retrieve_suggest_list(user, query):
                             movies.append({"originalTitle": elem['l'].encode('utf-8') if elem['l'] is not None else None,
                                            "title": None,
                                            "idIMDB": idIMDB,
-                                           "poster": elem['i'][0] if 'i' in elem else 'null',
+                                           "poster": clear_url(elem['i'][0]) if 'i' in elem else 'null',
                                            "year": str(elem['y']),
                                            "tasted": 1 if (taste_movie is not None and taste_movie.added) else 0})
                         except KeyError as err:
@@ -248,7 +248,7 @@ def retrieve_suggest_list(user, query):
                         taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
                         artists.append({"name": elem['l'].encode('utf-8') if elem['l'] is not None else None,
                                         "idIMDB": elem['id'],
-                                        "photo": elem['i'][0] if 'i' in elem else 'null',
+                                        "photo": clear_url(elem['i'][0]) if 'i' in elem else 'null',
                                         "tasted": 1 if (taste_artist is not None and taste_artist.added) else 0})
                     except KeyError as err:
                         logging.error("Error in the JSON: %s", err)
@@ -289,7 +289,7 @@ def retrieve_search_result_list(user, query):
                 movies.append({"title": elem['title'].encode('utf-8') if elem['title'] != "" else elem['originalTitle'].encode('utf-8'),
                                "originalTitle": elem['originalTitle'].encode('utf-8') if elem['originalTitle'] != "" else elem['title'].encode('utf-8'),
                                "idIMDB": idIMDB,
-                               "poster": elem['urlPoster'] if ('urlPoster' in elem and elem['urlPoster'] != "") else None,
+                               "poster": clear_url(elem['urlPoster']) if ('urlPoster' in elem and elem['urlPoster'] != "") else None,
                                "year": str(elem['year']),
                                "tasted": 1 if (taste_movie is not None and taste_movie.added) else 0})
     except ValueError:
@@ -305,7 +305,7 @@ def retrieve_search_result_list(user, query):
                 taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
                 artists.append({"name": elem['name'].encode('utf-8') if elem['name'] != "" else None,
                                 "idIMDB": idIMDB,
-                                "photo": elem['urlPhoto'] if ('urlPhoto' in elem and elem['urlPhoto'] != "") else None,
+                                "photo": clear_url(elem['urlPhoto']) if ('urlPhoto' in elem and elem['urlPhoto'] != "") else None,
                                 "tasted": 1 if (taste_artist is not None and taste_artist.added) else 0})
     except ValueError:
         pass

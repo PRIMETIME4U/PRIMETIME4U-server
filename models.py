@@ -1,4 +1,3 @@
-import logging
 from google.appengine.ext import ndb
 from datetime import date
 

@@ -2,7 +2,7 @@ import requests
 import logging
 from datetime import timedelta, datetime
 from flask import Flask, jsonify
-from werkzeug.exceptions import InternalServerError, Forbidden, default_exceptions
+from werkzeug.exceptions import InternalServerError, default_exceptions
 from google.appengine.api import urlfetch
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"

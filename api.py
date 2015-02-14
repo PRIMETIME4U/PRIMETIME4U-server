@@ -215,7 +215,7 @@ def watched_date(user_id, date):
     :param user_id: email of the user
     :type user_id: string
     :param date: date the movie been watched
-    :type date: date
+    :type date: string
     :return: list of watched movies
         {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
         "date": date}],"user_id": user_id}
