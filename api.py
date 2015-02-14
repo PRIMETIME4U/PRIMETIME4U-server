@@ -14,7 +14,7 @@ from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
 from movie_selector import taste_based_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, time_for_tomorrow, GENRES
+from utilities import RetrieverError, time_for_tomorrow, GENRES, clear_url
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -417,6 +417,19 @@ def search(user_id, query):
         raise MethodNotAllowed
 
 
+@app.route('/api/manual/<offset>')
+def manual(offset):
+    movies = Movie.query()
+    for movie in movies.fetch(500, offset=int(offset)):
+        movie.poster = clear_url(movie.poster)
+        movie.put()
+    artists = Artist.query()
+    for artist in artists.fetch(500, offset=int(offset)):
+        artist.photo = clear_url(artist.photo)
+        artist.put()
+    return 'OK'
+
+
 def get_or_retrieve_by_id(id_imdb):
     """
     This function check if the id is a valid IMDb id and in this case get or retrieve the correct entity.
@@ -576,8 +589,8 @@ def get_tastes_list(user):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
-                       "title": movie.title.encode('utf-8') if movie.title is not None else None,
+                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
+                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
                        "tasted": 1,
                        "poster": movie.poster})
 
@@ -624,8 +637,8 @@ def get_watched_movies_list(user):
         taste_movie = TasteMovie.get_by_id(watched_movie_id + user.key.id())  # Get taste
 
         movies.append({"idIMDB": watched_movie.key.id(),
-                       "originalTitle": watched_movie.original_title,
-                       "title": watched_movie.title,
+                       "originalTitle": watched_movie.original_title.encode('utf-8') if watched_movie.original_title is not None else watched_movie.title.encode('utf-8'),
+                       "title": watched_movie.title.encode('utf-8') if watched_movie.title is not None else watched_movie.original_title.encode('utf-8'),
                        "poster": watched_movie.poster,
                        "date": date_watched_movie.strftime('%d-%m-%Y'),
                        "tasted": 1 if taste_movie is not None else 0})

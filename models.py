@@ -125,6 +125,7 @@ class TasteMovie(ModelUtils, ndb.Model):
     """
     movie = ndb.KeyProperty(Movie)
     taste = ndb.FloatProperty(required=True)
+    added = ndb.BooleanProperty(default=False)
 
     def add_movie(self, movie):
         """
@@ -221,6 +222,10 @@ class User(ModelUtils, ndb.Model):
         # TODO: improve, I don't know if it is the best way to see if there is yet TasteArtist
         taste_movie = TasteMovie(id=(movie.key.id() + self.key.id()),  # Create the user's taste with unique id
                                  taste=taste)
+
+        if taste == 1.0:
+            taste_movie.added = True
+
         taste_movie.add_movie(movie)
         taste_movie_key = taste_movie.put()
 

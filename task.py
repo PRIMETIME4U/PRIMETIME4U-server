@@ -75,3 +75,15 @@ def retrieve_type(tv_type, day):
         return 'OK'
     else:
         raise BadRequest
+
+
+@app.route('/_ah/start/task/manual/<offset>')
+def manual(offset):
+    """
+    Useful function
+    :return: simple confirmation string
+    :rtype string
+    """
+    taskqueue.add(url='/api/manual/' + offset, method='GET')
+
+    return 'OK'

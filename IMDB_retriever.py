@@ -90,7 +90,7 @@ def retrieve_movie_from_id(movie_id):
 
     movie = Movie(id=json_data['idIMDB'],
                   plot=json_data['plot'],
-                  poster=json_data['urlPoster'],
+                  poster=json_data['urlPoster'] if ('urlPoster' in json_data and json_data['urlPoster'] != "") else None,
                   rated=json_data['rated'],
                   simple_plot=json_data['simplePlot'],
                   genres=json_data['genres'])
@@ -203,7 +203,7 @@ def retrieve_artist_from_id(artist_id):
 
     artist = Artist(id=json_data["idIMDB"],
                     name=json_data["name"],
-                    photo=json_data["urlPhoto"])
+                    photo=json_data["urlPhoto"] if ('urlPhoto' in json_data and json_data['urlPhoto'] != "") else None)
 
     return artist.put()
 
@@ -303,7 +303,7 @@ def retrieve_search_result_list(user, query):
             for elem in json_data:
                 idIMDB = elem['idIMDB']
                 taste_artist = TasteArtist.get_by_id(idIMDB + user.key.id())
-                artists.append({"name": elem['name'].encode('utf-8') if elem['name'] == "" else None,
+                artists.append({"name": elem['name'].encode('utf-8') if elem['name'] != "" else None,
                                 "idIMDB": idIMDB,
                                 "photo": elem['urlPhoto'] if ('urlPhoto' in elem and elem['urlPhoto'] != "") else None,
                                 "tasted": 1 if (taste_artist is not None and taste_artist.added) else 0})

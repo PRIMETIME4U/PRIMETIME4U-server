@@ -89,6 +89,19 @@ def time_for_tomorrow():
     return seconds
 
 
+def clear_url(url):
+    """
+    Return a clear IMDb url photo.
+    :param url: url to clear
+    :return: url cleared
+    """
+    if url is "":
+        return None
+    elif url is not None:
+        end = url.index("._") if "._" in url else len(url)
+        return url[:end]
+
+
 class RetrieverError(Exception):
     """
     Exception for error in retrieving data from http://www.myapifilms.com/.
