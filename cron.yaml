@@ -14,3 +14,7 @@ cron:
 - description: retrieve movies info
   url: /_ah/start/task/retrieve
   schedule: every day 01:00
+
+- description: clear proposal and calculate new ones
+  url: /_ah/start/task/suggest
+  schedule: every day 02:00

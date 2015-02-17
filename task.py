@@ -1,6 +1,6 @@
 import logging
-from flask import Flask
-from werkzeug.exceptions import BadRequest
+from flask import Flask, request
+from werkzeug.exceptions import BadRequest, MethodNotAllowed
 from IMDB_retriever import retrieve_movie_from_title
 from google.appengine.api import taskqueue
 from models import User
@@ -14,21 +14,6 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 
 
-@app.route('/_ah/start/task/suggest/')
-def random_suggest():
-    """
-    Send a random movie suggest for all users.
-    :return: simple confirmation string
-    :rtype string
-    """
-    users = User.query()  # Get all users
-
-    for user in users.iter():
-        send_suggestion(user, random_movie_selection(result_movies_schedule('free', 'today')))  # Send suggest for user
-
-    return 'OK'
-
-
 @app.route('/_ah/start/task/retrieve')
 def retrieve():
     """
@@ -40,6 +25,38 @@ def retrieve():
     taskqueue.add(url='/_ah/start/task/retrieve/sky/tomorrow', method='GET')
     taskqueue.add(url='/_ah/start/task/retrieve/premium/tomorrow', method='GET')
 
+    return 'OK'
+
+
+@app.route('/_ah/start/task/suggest')
+def suggest():
+    """
+    :return: simple confirmation string
+    :rtype string
+    """
+    taskqueue.add(url='/_ah/start/task/proposal', method='DELETE')
+    taskqueue.add(url='/_ah/start/task/proposal', method='GET')
+
+    return 'OK'
+
+
+@app.route('/_ah/start/task/proposal', methods=['GET', 'DELETE'])
+def proposal():
+    """
+    :return: simple confirmation string
+    :rtype string
+    """
+    if request.method == 'GET':
+        users = User.query()
+        for user in users:
+            taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+    elif request.method == 'DELETE':
+        users = User.query()
+        for user in users:
+            user.proposal = None
+            user.put()
+    else:
+        raise MethodNotAllowed
     return 'OK'
 
 

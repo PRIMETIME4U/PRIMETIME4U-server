@@ -194,6 +194,7 @@ class User(ModelUtils, ndb.Model):
     tastes_artists = ndb.KeyProperty(TasteArtist, repeated=True)
     tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
+    proposal = ndb.JsonProperty()
 
     def add_watched_movie(self, movie, date):
         """

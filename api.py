@@ -1,4 +1,4 @@
-from datetime import date, timedelta, datetime
+from datetime import datetime
 from flask import jsonify, request
 import logging
 import re
@@ -6,7 +6,6 @@ import re
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id, retrieve_suggest_list, \
     retrieve_search_result_list
-from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from main import json_api
 from manage_user import User
@@ -14,7 +13,7 @@ from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
 from movie_selector import taste_based_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, time_for_tomorrow, GENRES, clear_url
+from utilities import RetrieverError, GENRES, clear_url
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -192,51 +191,8 @@ def watched(user_id):
                 raise BadRequest
 
             id_imdb = json_data['idIMDB']  # Get id
-            logging.info("From post: %s", id_imdb)
-
-            movie = get_or_retrieve_by_id(id_imdb)
-
-            yesterday = date.today() - timedelta(days=1)  # Calculate yesterday
-
-            user.add_watched_movie(movie, yesterday)
-            return get_watched_movies_list(user)  # Return tastes
-        elif request.method == 'GET':
-            return get_watched_movies_list(user)  # Return tastes
-        else:
-            raise MethodNotAllowed
-    else:
-        raise InternalServerError(user_id + ' is not subscribed')
-
-
-@app.route('/api/watched/<user_id>/<date>', methods=['GET', 'POST'])
-def watched_date(user_id, date):
-    """
-    Endpoint that allow to list all watched movies or add a new one.
-    :param user_id: email of the user
-    :type user_id: string
-    :param date: date the movie been watched
-    :type date: string
-    :return: list of watched movies
-        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
-        "date": date}],"user_id": user_id}
-    :rtype: JSON
-    :raise MethodNotAllowed: if method is neither POST neither GET
-    :raise InternalServerError: if user is not subscribed
-    :raise BadRequest: if type is neither artist neither movie
-    :raise InternalServerError: if there is an error from MYAPIFILMS
-    """
-    user = modelUser.get_by_id(user_id)  # Get user
-
-    if user is not None:
-        if request.method == 'POST':
-
-            json_data = request.get_json()  # Get JSON from POST
-
-            if json_data is None:
-                raise BadRequest
-
-            id_imdb = json_data['idIMDB']  # Get id
-            logging.info("From post: %s", id_imdb)
+            date = json_data['date']  # Get date
+            logging.info("From post: %s %s", id_imdb, date)
 
             movie = get_or_retrieve_by_id(id_imdb)
 
@@ -323,7 +279,7 @@ def proposal(user_id):
         user = modelUser.get_by_id(user_id)  # Get user
 
         if user is not None:
-            proposals = memcache.get("proposal" + user_id)  # Tries to retrieve the proposal from memcache
+            proposals = user.proposal
             if proposals is None:
                 proposals = []
 
@@ -352,8 +308,8 @@ def proposal(user_id):
                     if movie_data_store is not None:
                         pass
 
-                memcache.add("proposal" + user_id, proposals, time_for_tomorrow())  # Store proposal in memcache
-                logging.info("Added in memcache %s", "proposal" + user_id)
+                user.proposal = proposals
+                user.put()
             return jsonify(code=0, data={"userId": user.key.id(), "proposal": proposals})
         else:
             raise InternalServerError(user_id + ' is not subscribed')
