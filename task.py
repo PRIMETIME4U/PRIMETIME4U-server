@@ -34,9 +34,17 @@ def suggest():
     :return: simple confirmation string
     :rtype string
     """
-    taskqueue.add(url='/_ah/start/task/proposal', method='DELETE')
     taskqueue.add(url='/_ah/start/task/proposal', method='GET')
+    return 'OK'
 
+
+@app.route('/_ah/start/task/clear')
+def clear():
+    """
+    :return: simple confirmation string
+    :rtype string
+    """
+    taskqueue.add(url='/_ah/start/task/proposal', method='DELETE')
     return 'OK'
 
 

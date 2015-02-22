@@ -15,6 +15,10 @@ cron:
   url: /_ah/start/task/retrieve
   schedule: every day 01:00
 
-- description: clear proposal and calculate new ones
+- description: clear proposal
+  url: /_ah/start/task/clear
+  schedule: every day 06:00
+
+- description: calculate proposal
   url: /_ah/start/task/suggest
-  schedule: every day 02:00
+  schedule: every day 18:00
