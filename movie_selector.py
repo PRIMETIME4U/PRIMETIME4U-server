@@ -95,7 +95,7 @@ def taste_based_movie_selection(user, schedule_movies):
     else:
         data.sort(key=lambda tup: tup[1], reverse=True)
 
-    return data[0:NUMBER_SUGGESTIONS]
+    return data
 
 if __name__ == "__main__":
     print taste_based_movie_selection(User.get_by_id("test@example.com"), result_movies_schedule("free", "today"))

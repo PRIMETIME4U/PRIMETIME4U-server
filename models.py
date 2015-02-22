@@ -1,3 +1,4 @@
+from google.appengine.api.taskqueue import taskqueue
 from google.appengine.ext import ndb
 from datetime import date
 
@@ -249,6 +250,9 @@ class User(ModelUtils, ndb.Model):
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
             self.put()
 
+        # Recalculate proposal
+        self.remove_proposal()
+
     def add_taste_artist(self, artist, taste=1.0):
         """
         Add user's taste of an artist.
@@ -278,6 +282,9 @@ class User(ModelUtils, ndb.Model):
 
             taste_artist.update_taste(taste)
 
+        # Recalculate proposal
+        self.remove_proposal()
+
     def add_taste_genre(self, genre, taste=1.0):
         if genre in GENRES:
             taste_genre = TasteGenre.get_by_id(genre + self.key.id())
@@ -299,6 +306,9 @@ class User(ModelUtils, ndb.Model):
                     taste_genre.added = True
 
                 taste_genre.update_taste(taste)
+
+        # Recalculate proposal
+        self.remove_proposal()
 
     def remove_taste_movie(self, movie):
         """
@@ -365,6 +375,9 @@ class User(ModelUtils, ndb.Model):
                 self.tastes_movies.remove(taste_movie_key)
                 self.put()
 
+        # Recalculate proposal
+        self.remove_proposal()
+
     def remove_taste_artist(self, artist):
         """
 
@@ -384,6 +397,9 @@ class User(ModelUtils, ndb.Model):
             taste_artist.added = False
             taste_artist.update_taste(-1)
 
+        # Recalculate proposal
+        self.remove_proposal()
+
     def remove_taste_genre(self, genre):
         taste_genre_id = genre + self.key.id()
         taste_genre = TasteGenre.get_by_id(taste_genre_id)
@@ -397,6 +413,11 @@ class User(ModelUtils, ndb.Model):
         elif taste_genre.taste > 1:
             taste_genre.added = False
             taste_genre.update_taste(-1)
+        self.proposal = None
+        self.put()
+
+        # Recalculate proposal
+        self.remove_proposal()
 
     def add_tv_type(self, type):
         """
@@ -421,6 +442,13 @@ class User(ModelUtils, ndb.Model):
             self.schedule_type.remove(type)
             self.put()
 
+    def remove_proposal(self):
+        """
+
+        :return:
+        """
+        self.proposal = None
+        self.put()
 
 
 
