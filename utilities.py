@@ -18,8 +18,6 @@ TV_CHANNELS = {"Rai 1": 1, "Rai 2": 2, "Rai3": 3, "Rete 4": 4, "Canale 5": 5,  "
                "Premium Crime": 324, "Premium Extra 1": 326, "Premium Extra 2": 327}
 
 
-
-
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"
 BASE_URL_MYAPIFILMS = "http://www.myapifilms.com/"
 
