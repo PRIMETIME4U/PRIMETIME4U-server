@@ -1,3 +1,4 @@
+import logging
 from google.appengine.api import memcache
 import lxml.html
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -15,7 +16,6 @@ def get_movies_schedule(html_page):
     :rtype: list of dict
     """
     movies_list = []
-
     tree = lxml.html.fromstring(html_page)
 
     movies_node = tree.xpath('//article[@class="item item-scheda item-scheda-film cf option-view-list"]')  # Get movies
@@ -33,8 +33,11 @@ def get_movies_schedule(html_page):
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
         if channel != "Rsi La1" and channel != "Rsi La2":  # Remove the swiss channels
-            movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
-                            "movieUrl": movie_url, "year": year})
+            value = {"title": title, "originalTitle": original_title, "channel": channel, "time": time,
+                            "movieUrl": movie_url, "year": year}
+            movies_list.append(value) if value not in movies_list else logging.info("Movie already in schedule")
+            # Control of doubles in schedule
+
     return movies_list
 
 
