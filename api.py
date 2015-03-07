@@ -41,7 +41,7 @@ def schedule(tv_type, day):
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
 def tastes(user_id, type):
     """
-    Endpoint that allow to list all tastes by type or add a new one.
+    Endpoint that allow to list all tastes by type (first page) or add a new one.
     :param user_id: email of the user
     :type user_id: string
     :param type: string
@@ -117,6 +117,45 @@ def tastes(user_id, type):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+@app.route('/api/tastes/<user_id>/<type>/<page>', methods=['GET'])
+def tastes_page(user_id, type, page):
+    """
+    Endpoint that allow to list all tastes by type (by page) or add a new one.
+    :param user_id: email of the user
+    :type user_id: string
+    :param type: string
+    :type type: string
+    :param page: number of page
+    :type page:
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"genre": genre}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'GET':
+            if type == 'artist':
+                return get_tastes_artists_list(user, int(page))  # Return artists tastes
+            elif type == 'movie':
+                return get_tastes_movies_list(user, int(page))  # Return movies tastes
+            elif type == 'genre':
+                return get_tastes_genres_list(user, int(page))  # Return genres tastes
+            elif type == 'all':
+                return get_tastes_list(user)  # Return all tastes
+            else:
+                raise BadRequest
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
 
 @app.route('/api/tastes/<user_id>/<type>/<data>', methods=['DELETE'])
 def remove_taste(user_id, type, data):
@@ -165,15 +204,15 @@ def remove_taste(user_id, type, data):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
-@app.route('/api/watched/<user_id>', methods=['GET', 'POST'])
+@app.route('/api/watched/<user_id>/', methods=['GET', 'POST'])
 def watched(user_id):
     """
-    Endpoint that allow to list all watched movies or add a new one.
+    Endpoint that allow to list all watched movies (first page) or add a new one.
     :param user_id: email of the user
     :type user_id: string
     :return: list of watched movies
         {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
-        "date": date}],"user_id": user_id}
+        "date": date}],"user_id": user_id, "prevPage": prevPage, "nextPage": nextPage}
     :rtype: JSON
     :raise MethodNotAllowed: if method is neither POST neither GET
     :raise InternalServerError: if user is not subscribed
@@ -207,6 +246,32 @@ def watched(user_id):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+@app.route('/api/watched/<user_id>/<page>', methods=['GET'])
+def watched_page(user_id, page):
+    """
+    Endpoint that allow to list all watched movies listed by pages, the FIRST PAGE is 0. It uses pagination.
+    :param user_id: email of the user
+    :type user_id: string
+    :param page: page to send
+    :type page: integer
+    :return: list of watched movies by page
+        {"code": 0, "data": {"movies": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url,
+        "date": date}],"user_id": user_id, "prevPage": prevPage, "nextPage": nextPage}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is not GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'GET':
+            return get_watched_movies_list(user, int(page))  # Return tastes
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
 
 @app.route('/api/subscribe/', methods=['POST'])
 def subscribe():
@@ -427,7 +492,7 @@ def get_or_retrieve_by_id(id_imdb):
         raise InternalServerError(id_imdb + " is not a valid IMDb id")
 
 
-def get_tastes_artists_list(user):
+def get_tastes_artists_list(user, page=0):
     """
     Get a readable taste artists list.
     :param user: user
@@ -456,7 +521,7 @@ def get_tastes_artists_list(user):
     return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
 
 
-def get_tastes_movies_list(user):
+def get_tastes_movies_list(user, page=0):
     """
     Get a readable taste movies list.
     :param user: user
@@ -484,7 +549,7 @@ def get_tastes_movies_list(user):
     return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
 
 
-def get_tastes_genres_list(user):
+def get_tastes_genres_list(user, page=0):
     """
     Get a readable taste movies list.
     :param user: user
@@ -571,21 +636,38 @@ def get_tastes_list(user):
                                     "genres": genres}})
 
 
-def get_watched_movies_list(user):
+def get_watched_movies_list(user, page=0):
     """
     Get a readable watched movie list.
     :param user: user
     :type user: Models.User
     :return: list of watched movies
         {"code": 0, "data": {"movies": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url,
-        "date": date}],"userId": user_id}
+        "date": date}],"userId": user_id, "prevPage": prevPage, "nextPage": nextPage}
     :rtype: JSON
     """
     watched_movies_id = user.watched_movies  # Get all taste_artists' keys
 
     movies = []
 
-    for i in range(0, len(watched_movies_id)):
+    if (page + 1)*10 > len(watched_movies_id):  # Finding max element in page
+        last_elem = len(watched_movies_id)
+    else:
+        last_elem = (page + 1)*10
+
+    if (page + 1)*10 < len(watched_movies_id):  # Preparing url for next page
+        next_page = str(page + 1)
+        next_page_url = '/api/watched/' + user.key.id() + '/' + next_page
+    else:
+        next_page_url = None
+
+    if page > 0:  # Preparing url for prev page
+        prev_page = str(page - 1)
+        prev_page_url = '/api/watched/' + user.key.id() + '/' + prev_page
+    else:
+        prev_page_url = None
+
+    for i in range(page * 10, last_elem):  # Preparing JSON with list of movies watched for current page
         watched_movie_id = watched_movies_id[i].id()
         watched_movie = Movie.get_by_id(watched_movie_id)  # Get movie
 
@@ -600,4 +682,5 @@ def get_watched_movies_list(user):
                        "date": date_watched_movie.strftime('%d-%m-%Y'),
                        "tasted": 1 if taste_movie is not None else 0})
 
-    return jsonify(code=0, data={"userId": user.key.id(), "watched": movies})
+    return jsonify(code=0, data={"userId": user.key.id(), "watched": movies,
+                                 "nextPage": next_page_url, "previousPage": prev_page_url})
