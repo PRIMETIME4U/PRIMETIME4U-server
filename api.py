@@ -13,7 +13,7 @@ from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
 from movie_selector import taste_based_movie_selection
 from tv_scheduling import result_movies_schedule
-from utilities import RetrieverError, GENRES, clear_url
+from utilities import RetrieverError, GENRES, clear_url, channel_number
 
 app = json_api(__name__)
 app.config['DEBUG'] = True
@@ -300,6 +300,7 @@ def proposal(user_id):
                                       "title": movie[0]["title"] if movie[0]["title"] is not None else movie[0][
                                           "originalTitle"],
                                       "channel": movie[0]["channel"],
+                                      "channelNumber": channel_number(movie[0]["channel"]),
                                       "time": movie[0]["time"],
                                       "runTimes": movie_data_store.run_times,
                                       "simplePlot": movie_data_store.simple_plot,
