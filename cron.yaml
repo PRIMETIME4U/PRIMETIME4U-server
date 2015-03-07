@@ -21,4 +21,4 @@ cron:
 
 - description: calculate proposal
   url: /_ah/start/task/suggest
-  schedule: every day 18:00
+  schedule: every day 07:00
