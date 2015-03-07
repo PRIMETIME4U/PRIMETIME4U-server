@@ -32,7 +32,8 @@ def get_movies_schedule(html_page):
         channel = movie_node.xpath('.//h3[@class="media tv"]/text()')[0].strip().encode('utf-8')  # Get channel
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
 
-        movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
+        if channel != "Rsi La1" and channel != "Rsi La2":  # Remove the swiss channels
+            movies_list.append({"title": title, "originalTitle": original_title, "channel": channel, "time": time,
                             "movieUrl": movie_url, "year": year})
     return movies_list
 
