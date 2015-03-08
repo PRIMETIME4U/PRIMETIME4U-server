@@ -1,6 +1,8 @@
 from google.appengine.api.taskqueue import taskqueue
 from google.appengine.ext import ndb
 from datetime import date
+from google.appengine.api import taskqueue
+import logging
 
 from utilities import TV_TYPE, GENRES, ACTOR_WEIGHT, DIRECTOR_WEIGHT, WRITER_WEIGHT, GENRE_WEIGHT
 
@@ -196,6 +198,7 @@ class User(ModelUtils, ndb.Model):
     tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
     proposal = ndb.JsonProperty()
+    repeat_movies = ndb.JsonProperty(choices=[True, False], default=True)
 
     def add_watched_movie(self, movie, date):
         """
@@ -457,8 +460,12 @@ class User(ModelUtils, ndb.Model):
                 if i not in new_list:
                     new_list.append(i)
 
-        self.tv_type = new_list
-        self.put()
+        if new_list != self.tv_type:
+            logging.info("changed tv_type list")
+            self.tv_type = new_list
+            self.put()
+            self.remove_proposal()
+            taskqueue.add(url='/api/proposal/' + self.key.id(), method='GET')
 
         return True
 

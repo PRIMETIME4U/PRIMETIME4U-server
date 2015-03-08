@@ -475,7 +475,7 @@ def settings(user_id):
             tv_type_list = user.tv_type
 
             return jsonify(code=0, userId=user.key.id(), tvType=tv_type_list, name=user.name, gender=user.gender,
-                           birthYear=user.birth_year)
+                           birthYear=user.birth_year, repeatChoice=user.repeat_movies)
 
         elif request.method == 'POST':
             json_data = request.get_json()  # Get JSON from POST
