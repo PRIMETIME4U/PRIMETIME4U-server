@@ -85,5 +85,23 @@ def result_movies_schedule(tv_type, day):
             raise InternalServerError('TV scheduling not retrieved')
 
 
+def result_movies_schedule_list(tv_type_list):
+    """
+    This combine all the movies in schedule for the different tv types present in the list
+
+    :param tv_type_list: list of tv types
+    :return: return the JSON with all the schedule for current list
+    """
+    schedule_list = []
+
+    if tv_type_list == []:
+        logging.info("no tv type set")
+        tv_type_list = ["free"]
+
+    for i in tv_type_list:
+        schedule_list = schedule_list + result_movies_schedule(i, "today")
+
+    return schedule_list
+
 if __name__ == "__main__":
     print result_movies_schedule("free", "today")

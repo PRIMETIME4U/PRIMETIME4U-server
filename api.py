@@ -12,7 +12,7 @@ from manage_user import User
 from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
 from models import User as modelUser
 from movie_selector import taste_based_movie_selection
-from tv_scheduling import result_movies_schedule
+from tv_scheduling import result_movies_schedule, result_movies_schedule_list
 from utilities import RetrieverError, GENRES, clear_url, channel_number
 
 app = json_api(__name__)
@@ -117,6 +117,7 @@ def tastes(user_id, type):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+
 @app.route('/api/tastes/<user_id>/<type>/<page>', methods=['GET'])
 def tastes_page(user_id, type, page):
     """
@@ -156,6 +157,7 @@ def tastes_page(user_id, type, page):
             raise MethodNotAllowed
     else:
         raise InternalServerError(user_id + ' is not subscribed')
+
 
 @app.route('/api/tastes/<user_id>/<type>/<data>', methods=['DELETE'])
 def remove_taste(user_id, type, data):
@@ -246,6 +248,7 @@ def watched(user_id):
     else:
         raise InternalServerError(user_id + ' is not subscribed')
 
+
 @app.route('/api/watched/<user_id>/<page>', methods=['GET'])
 def watched_page(user_id, page):
     """
@@ -272,6 +275,7 @@ def watched_page(user_id, page):
             raise MethodNotAllowed
     else:
         raise InternalServerError(user_id + ' is not subscribed')
+
 
 @app.route('/api/subscribe/', methods=['POST'])
 def subscribe():
@@ -348,7 +352,9 @@ def proposal(user_id):
             if proposals is None:
                 proposals = []
 
-                movies = taste_based_movie_selection(user, result_movies_schedule("free", "today"))
+                tv_type_list = user.tv_type
+                movies = taste_based_movie_selection(user, result_movies_schedule_list(tv_type_list))
+
                 for movie in movies:
                     logging.info("Scelto: %s", (
                         str(movie[0]["originalTitle"]) if movie[0]["originalTitle"] is not None else str(
@@ -451,6 +457,42 @@ def manual(offset):
         artist.put()
     return 'OK'
 
+# TODO: Finish the setting considering al the possible elements to be insert in the GET and in the POST
+@app.route('/api/settings/<user_id>', methods=['GET', 'POST'])
+def settings(user_id):
+    """
+    This function helps to retrieve and modify the settings of the application.
+    :param user_id: the email of the user
+    :type user_id: string
+    :return: JSON in case of the GET, and null in case of POST and there's no error
+
+    The POST request has to be done { "tvType": [ "free", "premium",...],
+    """
+    user = modelUser.get_by_id(user_id)
+
+    if user is not None:
+        if request.method == 'GET':
+            tv_type_list = user.tv_type
+
+            return jsonify(code=0, userId=user.key.id(), tvType=tv_type_list, name=user.name, gender=user.gender,
+                           birthYear=user.birth_year)
+
+        elif request.method == 'POST':
+            json_data = request.get_json()  # Get JSON from POST
+            if json_data is None:
+                raise BadRequest
+
+            tv_type_list = json_data['tvType']   # Reading tv type and modifying the list
+            if not user.modify_tv_type(tv_type_list):
+                raise BadRequest
+
+            return 'OK'
+
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
+
 
 def get_or_retrieve_by_id(id_imdb):
     """
@@ -461,8 +503,8 @@ def get_or_retrieve_by_id(id_imdb):
     :rtype Artist or Movie model
     """
 
-    artist = re.compile("nm\d{7}$")
-    movie = re.compile("tt\d{7}$")
+    artist = re.compile('nm\d{7}$')
+    movie = re.compile('tt\d{7}$')
 
     if artist.match(id_imdb):  # It is an artist's id
         artist = Artist.get_by_id(id_imdb)  # Find artist by id
@@ -684,3 +726,5 @@ def get_watched_movies_list(user, page=0):
 
     return jsonify(code=0, data={"userId": user.key.id(), "watched": movies,
                                  "nextPage": next_page_url, "previousPage": prev_page_url})
+
+

@@ -9,12 +9,14 @@ from google.appengine.api import urlfetch
 
 TV_CHANNELS = {"Rai 1": 1, "Rai 2": 2, "Rai3": 3, "Rete 4": 4, "Canale 5": 5,  "Italia 1": 6, "La7": 7, "MTV": 8,
                "Deejay TV": 9, "Rai 4": 21, "Iris": 22, "Rai 5": 23, "Rai Movie": 24, "Rai Premium": 25, "Cielo": 26,
-               "Class TV": 27, "TV 2000": 28, "La7D": 29, "La5": 30, "Real Time": 31, "QVC": 32, "ABC": 33,
+               "Class TV": 27, "TV 2000": 28, "LA7D": 29, "La5": 30, "Real Time": 31, "QVC": 32, "ABC": 33,
                "Mediaset Extra": 34, "Mediaset Italia 2": 35, "RTL 102.5 TV": 36, "Giallo": 38, "Top Crime": 39,
                "Boing": 40, "K2": 41, "Rai Gulp": 42, "Rai YOYO": 43, "Frisbee": 44, "DMAX": 52, "Premium Cinema": 311,
                "Premium Emotion": 312, "Premium Energy": 313, "Premium Cinema Comedy": 314,
                "Studio Universal": 315, "Premium Cinema HD": 320, "Joi": 321, "Mya": 322, "Premium Action": 323,
-               "Premium Crime": 324, "Premium Extra 1": 326, "Premium Extra 2": 327}
+               "Premium Crime": 324, "Premium Extra 1": 326, "Premium Extra 2": 327, "Axn Sci-Fi": 134,
+               "Sky Cinema Cult": 314, "Horror Channel": 135, "Sky Cinema Family": 306, "Sky 3D": 150,
+               "Sky Cinema Passion": 308, "Sky Cinema Classics": 315, "Sky Cinema Comedy": 310, "Sky Cinema Max": 312}
 
 
 BASE_URL_FILMTV_FILM = "http://www.filmtv.it/programmi-tv/film/"

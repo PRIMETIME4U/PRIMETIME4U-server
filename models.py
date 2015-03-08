@@ -427,8 +427,8 @@ class User(ModelUtils, ndb.Model):
         :return: None
         """
 
-        if type not in self.schedule_type:
-            self.schedule_type.append(type)
+        if type not in self.tv_type:
+            self.tv_type.append(type)
             self.put()
 
     def remove_tv_type(self, type):
@@ -438,9 +438,29 @@ class User(ModelUtils, ndb.Model):
         :type type: string representing the type to be removed
         :return: None
         """
-        if type in self.schedule_type:
-            self.schedule_type.remove(type)
+        if type in self.tv_type:
+            self.tv_type.remove(type)
             self.put()
+
+    def modify_tv_type(self, tv_type_list):
+        """
+        This function controls the given list and modify the actual list of tv_type
+        :param tv_type_list: list of tv type
+        :return: True if list is correct and was modified, False if and element of list it's wrong
+        """
+        new_list = []
+
+        for i in tv_type_list:
+            if i != "free" and i != "sky" and i != "premium":
+                return False
+            else:
+                if i not in new_list:
+                    new_list.append(i)
+
+        self.tv_type = new_list
+        self.put()
+
+        return True
 
     def remove_proposal(self):
         """
