@@ -74,7 +74,10 @@ def tastes(user_id, type):
                 artist = get_or_retrieve_by_id(id_imdb)  # Get or retrieve artist
 
                 user.add_taste_artist(artist)  # Add artist to tastes
-                return get_tastes_artists_list(user)  # Return tastes
+                artists_page = generate_artists(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
+                                 "next_page": artists_page["next_page"]})  # Return artists tastes
             elif type == 'movie':
                 json_data = request.get_json()  # Get JSON from POST
 
@@ -85,9 +88,11 @@ def tastes(user_id, type):
                 logging.info("From post: %s", id_imdb)
 
                 movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
-
                 user.add_taste_movie(movie)  # Add movie to tastes
-                return get_tastes_movies_list(user)  # Return tastes
+                movies_page = generate_movies(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies_page["movies"],
+                                 "next_page": movies_page["next_page"]})
             elif type == 'genre':
                 json_data = request.get_json()
 
@@ -98,18 +103,42 @@ def tastes(user_id, type):
                 logging.info("From post: %s", genre)
 
                 user.add_taste_genre(genre)  # Add genre to tastes
-                return get_tastes_genres_list(user)  # Return tastes
+                genres_page = generate_genres(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres_page["genres"],
+                                 "next_page": genres_page["next_page"]}) # Return genres tastes
             else:
                 raise BadRequest
+
         elif request.method == 'GET':
             if type == 'artist':
-                return get_tastes_artists_list(user)  # Return artists tastes
+                artists_page = generate_artists(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
+                                 "next_page": artists_page["next_page"]})  # Return artists tastes
+
             elif type == 'movie':
-                return get_tastes_movies_list(user)  # Return movies tastes
+                movies_page = generate_movies(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies_page["movies"],
+                                 "next_page": movies_page["next_page"]})
+
             elif type == 'genre':
-                return get_tastes_genres_list(user)  # Return genres tastes
+                genres_page = generate_genres(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres_page["genres"],
+                                 "next_page": genres_page["next_page"]}) # Return genres tastes
             elif type == 'all':
-                return get_tastes_list(user)  # Return all tastes
+                artists_page = generate_artists(user)
+                movie_page = generate_movies(user)
+                genres_page = generate_genres(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "all",
+                                             "tastes": {"artists": artists_page["artists"],
+                                            "next_page_artists": artists_page["next_page"],
+                                            "movies": movie_page["movies"], "next_page_movies": movie_page["next_page"],
+                                            "genres": genres_page["genres"],
+                                            "next_page_genres": genres_page["next_page"]}})
             else:
                 raise BadRequest
         else:
@@ -144,13 +173,22 @@ def tastes_page(user_id, type, page):
     if user is not None:
         if request.method == 'GET':
             if type == 'artist':
-                return get_tastes_artists_list(user, int(page))  # Return artists tastes
+                artists_page = generate_artists(user, int(page))
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
+                                 "next_page": artists_page["next_page"]})  # Returns artists tastes
+
             elif type == 'movie':
-                return get_tastes_movies_list(user, int(page))  # Return movies tastes
+                movies_page = generate_movies(user, int(page))
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies_page["movies"],
+                                 "next_page": movies_page["next_page"]})  # Returns movies tastes
+
             elif type == 'genre':
-                return get_tastes_genres_list(user, int(page))  # Return genres tastes
-            elif type == 'all':
-                return get_tastes_list(user)  # Return all tastes
+                genres_page = generate_genres(user, int(page))
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres_page["genres"],
+                                 "next_page": genres_page["next_page"]})  # Returns genres tastes
             else:
                 raise BadRequest
         else:
@@ -186,16 +224,24 @@ def remove_taste(user_id, type, data):
                 artist = get_or_retrieve_by_id(data)
 
                 user.remove_taste_artist(artist)  # Remove artist from tastes
-                return get_tastes_artists_list(user)  # Return tastes
+                artists_page = generate_artists(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
+                                 "next_page": artists_page["next_page"]})  # Return artists tastes
             elif type == 'movie':
                 movie = get_or_retrieve_by_id(data)
-
                 user.remove_taste_movie(movie)  # Remove movie from tastes
-                return get_tastes_movies_list(user)  # Return tastes
+                movies_page = generate_movies(user)
+
+                return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies_page["movies"],
+                                 "next_page": movies_page["next_page"]})
             elif type == 'genre':
                 if data in GENRES:
                     user.remove_taste_genre(data)  # Remove genre from tastes
-                    return get_tastes_genres_list(user)  # Return tastes
+                    genres_page = generate_genres(user)
+
+                    return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": genres_page["genres"],
+                                 "next_page": genres_page["next_page"]})  # Return genres tastes
                 else:
                     raise BadRequest
             else:
@@ -533,25 +579,26 @@ def get_or_retrieve_by_id(id_imdb):
     else:
         raise InternalServerError(id_imdb + " is not a valid IMDb id")
 
+# TODO: argument next functions
 
-def get_tastes_artists_list(user, page=0):
-    """
-    Get a readable taste artists list.
-    :param user: user
-    :type user: Models.User
-    :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"idIMDB": id,"name": name, "photo": photo_url}],
-        "type": type, "userId": user_id}
-    :rtype: JSON
-    """
+def generate_artists(user, page=0):
+
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
-
     artists = []
 
-    for taste_artist_id in tastes_artists_id:
+    count = 0
+    for i in range(page, len(tastes_artists_id)):
+        taste_artist_id = tastes_artists_id[i]
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
 
         if taste_artist.taste >= 1 and taste_artist.added:
+            count = count +1
+            if count == 6:
+                next_page_artists = '/api/tastes/' + user.key.id() + '/artist/' + str(i + 1)
+
+            if count == 7:
+                break
+
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
@@ -560,95 +607,29 @@ def get_tastes_artists_list(user, page=0):
                             "tasted": 1,
                             "photo": artist.photo})
 
-    return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists})
+    if count <= 6:
+        next_page_artists = None
+
+    return {"artists": artists, "next_page": next_page_artists}
 
 
-def get_tastes_movies_list(user, page=0):
-    """
-    Get a readable taste movies list.
-    :param user: user
-    :type user: Models.User
-    :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
-        "type": type, "userId": user_id}
-    :rtype: JSON
-    """
-    tastes_movies_id = user.tastes_movies
-
-    movies = []
-
-    for taste_movie_id in tastes_movies_id:
-        taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.movie.id()  # Get movie id from taste
-        movie = Movie.get_by_id(movie_id)  # Get movie by id
-
-        movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
-                       "title": movie.title.encode('utf-8') if movie.title is not None else None,
-                       "tasted": 1,
-                       "poster": movie.poster})
-
-    return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies})
-
-
-def get_tastes_genres_list(user, page=0):
-    """
-    Get a readable taste movies list.
-    :param user: user
-    :type user: Models.User
-    :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
-        "type": type, "userId": user_id}
-    :rtype: JSON
-    """
-    tastes_genres_id = user.tastes_genres
-
-    genres = []
-
-    for taste_genre_id in tastes_genres_id:
-        taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
-
-        # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1 and taste_genre.added:
-            genres.append({"name": taste_genre.genre,
-                           "tasted": 1})
-
-    return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres})
-
-
-def get_tastes_list(user):
-    """
-    Get a readable taste artists list.
-    :param user: user
-    :type user: Models.User
-    :return: list of tastes
-        {"code": 0, "data": {"tastes": [{"idIMDB": id,"originalTitle": original_title, "poster": poster_url}],
-        "type": type, "userId": user_id}
-    :rtype: JSON
-    """
-    # TODO: improve it, replace with function...
-    tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
-
-    artists = []
-
-    for taste_artist_id in tastes_artists_id:
-        taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
-
-        if taste_artist.taste >= 1 and taste_artist.added:
-            artist_id = taste_artist.artist.id()  # Get artist id from taste
-            artist = Artist.get_by_id(artist_id)  # Get artist by id
-
-            artists.append({"idIMDB": artist_id,
-                            "name": artist.name.encode('utf-8') if artist.name is not None else None,
-                            "tasted": 1,
-                            "photo": artist.photo})
+def generate_movies(user, page=0):
 
     tastes_movies_id = user.tastes_movies
-
     movies = []
 
-    for taste_movie_id in tastes_movies_id:
+    count = 0
+    for i in range(page, len(tastes_movies_id)):
+        taste_movie_id = tastes_movies_id[i]
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
+        count = count + 1
+
+        if count == 4:
+            next_page_movies = '/api/tastes/' + user.key.id() + '/movie/' + str(i + 1)
+
+        if count == 5:
+                break
+
         movie_id = taste_movie.movie.id()  # Get movie id from taste
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
@@ -658,24 +639,36 @@ def get_tastes_list(user):
                        "tasted": 1,
                        "poster": movie.poster})
 
-    tastes_genres_id = user.tastes_genres
+    if count <= 4:
+        next_page_movies = None
 
+    return {"movies": movies, "next_page": next_page_movies}
+
+
+def generate_genres(user, page=0):
+
+    tastes_genres_id = user.tastes_genres
     genres = []
 
-    for taste_genre_id in tastes_genres_id:
+    count = 0
+    for i in range(page, len(tastes_genres_id)):
+        taste_genre_id = tastes_genres_id[i]
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
 
         # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1 and taste_genre.added:
+        if taste_genre.taste >= 1.0 and taste_genre.added:
+            count = count + 1
+            if count == 4:
+                next_page_genres = '/api/tastes/' + user.key.id() + '/genre/' + str(i + 1)
+            if count == 5:
+                break
+
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
+    if count <= 4:
+        next_page_genres = None
 
-    return jsonify(code=0,
-                   data={"userId": user.key.id(),
-                         "type": "all",
-                         "tastes": {"artists": artists,
-                                    "movies": movies,
-                                    "genres": genres}})
+    return {"genres": genres, "next_page": next_page_genres}
 
 
 def get_watched_movies_list(user, page=0):
