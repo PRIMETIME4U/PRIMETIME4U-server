@@ -20,8 +20,8 @@ class ModelUtils(object):
         if type(self) is Movie:
 
             if 'run_times' in result:
-                runTime = result['run_time']
-                del result['run_time']
+                runTime = result['run_times']
+                del result['run_times']
                 result['runTimes'] = runTime
 
             if 'plot_it' in result:
