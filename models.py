@@ -19,6 +19,26 @@ class ModelUtils(object):
 
         if type(self) is Movie:
 
+            if 'run_times' in result:
+                runTime = result['run_time']
+                del result['run_time']
+                result['runTimes'] = runTime
+
+            if 'plot_it' in result:
+                plotIt = result['plot_it']
+                del result['plot_it']
+                result['plotIt'] = plotIt
+
+            if 'original_title' in result:
+                originalTitle = result['original_title']
+                del result['original_title']
+                result['originalTitle'] = originalTitle
+
+            if 'simple_plot' in result:
+                simplePlot = result['simple_plot']
+                del result['simple_plot']
+                result['simplePlot'] = simplePlot
+
             result['genres'] = " | ".join(result['genres'])
 
             actors = []
@@ -198,7 +218,8 @@ class User(ModelUtils, ndb.Model):
     tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
     proposal = ndb.JsonProperty()
-    repeat_movies = ndb.JsonProperty(choices=[True, False], default=True)
+    repeat_movies = ndb.BooleanProperty(choices=[True, False], default=True)
+    language = ndb.StringProperty(choices=["ita", "eng"], default="ita")
 
     def add_watched_movie(self, movie, date):
         """
