@@ -197,6 +197,50 @@ def tastes_page(user_id, type, page):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
+@app.route('/api/untaste/<user_id>', methods=['POST'])
+def untaste(user_id):
+    # TODO: rewrite description
+    """
+    Endpoint that allow to list all tastes by type (first page) or add a new one.
+    :param user_id: email of the user
+    :type user_id: string
+    :param type: string
+    :type type: string
+    :return: list of tastes
+        {"code": 0, "data": {"tastes": [{"id_IMDB": id,"original_title": original_title, "poster": poster_url}],
+        "type": type, "user_id": user_id}
+        {"code": 0, "data": {"tastes": [{"genre": genre}],
+        "type": type, "user_id": user_id}
+    :rtype: JSON
+    :raise MethodNotAllowed: if method is neither POST neither GET
+    :raise InternalServerError: if user is not subscribed
+    :raise BadRequest: if type is neither artist neither movie
+    :raise InternalServerError: if there is an error from MYAPIFILMS
+    """
+    user = modelUser.get_by_id(user_id)  # Get user
+
+    if user is not None:
+        if request.method == 'POST':
+
+            json_data = request.get_json()  # Get JSON from POST
+
+            if json_data is None:
+                raise BadRequest
+
+            id_imdb = json_data['data']  # Get id
+            logging.info("From post: %s, untaste", id_imdb)
+
+            movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
+            user.add_taste_movie(movie, -1)  # Add movie to tastes
+
+            return "OK"
+
+        else:
+            raise MethodNotAllowed
+    else:
+        raise InternalServerError(user_id + ' is not subscribed')
+
+
 @app.route('/api/tastes/<user_id>/<type>/<data>', methods=['DELETE'])
 def remove_taste(user_id, type, data):
     """
