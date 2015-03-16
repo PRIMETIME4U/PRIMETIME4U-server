@@ -27,7 +27,7 @@ class ModelUtils(object):
             if 'plot_it' in result:
                 plotIt = result['plot_it']
                 del result['plot_it']
-                result['plotIt'] = plotIt
+                result['italianPlot'] = plotIt
 
             if 'original_title' in result:
                 originalTitle = result['original_title']
@@ -257,18 +257,18 @@ class User(ModelUtils, ndb.Model):
         movie = Movie.get_by_id(movie.key.id())
         for actor in movie.actors:
             artist = Artist.get_by_id(actor.id())
-            self.add_taste_artist(artist, ACTOR_WEIGHT)
+            self.add_taste_artist(artist, ACTOR_WEIGHT * taste)
 
         for director in movie.directors:
             artist = Artist.get_by_id(director.id())
-            self.add_taste_artist(artist, DIRECTOR_WEIGHT)
+            self.add_taste_artist(artist, DIRECTOR_WEIGHT * taste)
 
         for writer in movie.writers:
             artist = Artist.get_by_id(writer.id())
-            self.add_taste_artist(artist, WRITER_WEIGHT)
+            self.add_taste_artist(artist, WRITER_WEIGHT * taste)
 
         for genre in movie.genres:
-            self.add_taste_genre(genre, GENRE_WEIGHT)
+            self.add_taste_genre(genre, GENRE_WEIGHT * taste)
 
         if taste_movie_key not in self.tastes_movies:
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
