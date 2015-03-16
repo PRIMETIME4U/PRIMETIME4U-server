@@ -296,7 +296,7 @@ def remove_taste(user_id, type, data):
         raise InternalServerError(user_id + ' is not subscribed')
 
 
-@app.route('/api/watched/<user_id>/', methods=['GET', 'POST'])
+@app.route('/api/watched/<user_id>', methods=['GET', 'POST'])
 def watched(user_id):
     """
     Endpoint that allow to list all watched movies (first page) or add a new one.
