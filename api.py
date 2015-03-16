@@ -233,7 +233,7 @@ def untaste(user_id):
             movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
             user.add_taste_movie(movie, -1)  # Add movie to tastes
 
-            return "OK"
+            return jsonify(data="OK")
 
         else:
             raise MethodNotAllowed
