@@ -207,10 +207,10 @@ class User(ModelUtils, ndb.Model):
     When create it remember to declare it:
         User(id="email", ..)
     """
+    gcm_key = ndb.StringProperty()
     name = ndb.StringProperty(required=True)
     birth_year = ndb.IntegerProperty()
     gender = ndb.StringProperty(choices=["M", "F"])
-    tv_type = ndb.StringProperty(choices=TV_TYPE, repeated=True)
     watched_movies = ndb.KeyProperty(Movie, repeated=True)
     date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)
@@ -218,8 +218,13 @@ class User(ModelUtils, ndb.Model):
     tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
     proposal = ndb.JsonProperty()
-    repeat_movies = ndb.BooleanProperty(choices=[True, False], default=True)
     language = ndb.StringProperty(choices=["ita", "eng"], default="ita")
+
+    tv_type = ndb.StringProperty(choices=TV_TYPE, repeated=True)
+    time_notification = ndb.IntegerProperty(default=61200000)
+    enable_notification = ndb.BooleanProperty(choices=[True, False], default=True)
+    repeat_choice = ndb.BooleanProperty(choices=[True, False], default=True)
+
 
     def add_watched_movie(self, movie, date):
         """
@@ -489,6 +494,45 @@ class User(ModelUtils, ndb.Model):
             taskqueue.add(url='/api/proposal/' + self.key.id(), method='GET')
 
         return True
+
+# TODO: complete description of next functions
+    def modify_repeat_choice(self, repeat_choice):
+
+        if repeat_choice == True:
+            self.repeat_choice = True
+
+        elif repeat_choice == False:
+            self.repeat_choice = False
+
+        else:
+            return False
+
+        self.put()
+        return True
+
+    def modify_notification(self, enable_notification):
+
+        if enable_notification == True:
+            self.enable_notification = True
+
+        elif enable_notification == False:
+            self.enable_notification = False
+
+        else:
+            return False
+
+        self.put()
+        return True
+
+    def modify_time_notification(self, time_notification):
+
+        if isinstance(time_notification, (int, long)):
+            self.time_notification = time_notification
+            self.put()
+            return True
+
+        else:
+            return False
 
     def remove_proposal(self):
         """

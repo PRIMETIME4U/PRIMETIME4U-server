@@ -558,27 +558,44 @@ def settings(user_id):
 
     The POST request has to be done { "tvType": [ "free", "premium",...],
     """
+    
     user = modelUser.get_by_id(user_id)
-
     if user is not None:
         if request.method == 'GET':
-            tv_type_list = user.tv_type
 
-            return jsonify(code=0, userId=user.key.id(), tvType=tv_type_list, name=user.name, gender=user.gender,
-                           birthYear=user.birth_year, repeatChoice=user.repeat_movies)
+            return jsonify(code=0, userId=user.key.id(), tv_type=user.tv_type, repeatChoice=user.repeat_choice,
+                           enableNotification=user.enable_notification, timeNotification=user.time_notification)
 
         elif request.method == 'POST':
             json_data = request.get_json()  # Get JSON from POST
+            logging.info("changing settings")
             if json_data is None:
                 raise BadRequest
 
             tv_type_list = json_data['tvType']   # Reading tv type and modifying the list
             if not user.modify_tv_type(tv_type_list):
+                logging.info("bad tv type")
+                raise BadRequest
+
+            repeat_choice = json_data['repeatChoice']
+            if not user.modify_repeat_choice(repeat_choice):
+                logging.info("bad repeatChoice")
+                raise BadRequest
+
+            enable_notification = json_data['enableNotification']
+            if not user.modify_notification(enable_notification):
+                logging.info("bad enableNotification")
+                raise BadRequest
+
+            time_notification = json_data['timeNotification']
+            if not user.modify_time_notification(time_notification):
+                logging.info("bad timeNotification")
                 raise BadRequest
 
             return 'OK'
 
         else:
+            logging.info("method")
             raise MethodNotAllowed
     else:
         raise InternalServerError(user_id + ' is not subscribed')
