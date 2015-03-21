@@ -6,6 +6,7 @@ import re
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id, retrieve_suggest_list, \
     retrieve_search_result_list
+from gcm import GCM
 from google.appengine.ext import ndb
 from main import json_api
 from manage_user import User
@@ -381,6 +382,8 @@ def subscribe():
 
         json_data = request.get_json()  # Get JSON from POST
 
+        logging.info(json_data)
+
         if json_data is None:
             raise BadRequest
 
@@ -535,23 +538,31 @@ def search(user_id, query):
         raise MethodNotAllowed
 
 
-@app.route('/api/manual/<offset>')
-def manual(offset):
-    movies = Movie.query()
-    for movie in movies.fetch(500, offset=int(offset)):
-        movie.poster = clear_url(movie.poster)
-        movie.put()
-    artists = Artist.query()
-    for artist in artists.fetch(500, offset=int(offset)):
-        artist.photo = clear_url(artist.photo)
-        artist.put()
+@app.route('/api/manual/<data>')
+def manual(data):
+    # movies = Movie.query()
+    # for movie in movies.fetch(500, offset=int(offset)):
+    #     movie.poster = clear_url(movie.poster)
+    #     movie.put()
+    # artists = Artist.query()
+    # for artist in artists.fetch(500, offset=int(offset)):
+    #     artist.photo = clear_url(artist.photo)
+    #     artist.put()
+
+    gcm = GCM("AIzaSyAPfZ91t379OWzTiyALsInNnYsWhemF_o0")
+    data = {'message': data}
+
+    reg_id = 'APA91bHoYzyf0npBXsbZ7GYcl5aR3j0Fz8EN2aATaid4hCgo8uGsq3M2XdUPC6FTxR-zJ0KFR0S3-yOeUQSlI6mWHD7w3n7-9u3zTZPjubpgpJdZNlHJJ8pYxNemwn6f0GQa-3hN1FDsK7T4OPuOwUSyxGp0So3GZQ'
+
+    gcm.plaintext_request(registration_id=reg_id, data=data)
+
     return 'OK'
 
 # TODO: Finish the setting considering al the possible elements to be insert in the GET and in the POST
 @app.route('/api/settings/<user_id>', methods=['GET', 'POST'])
 def settings(user_id):
     """
-    This function helps to retrieve and modify the settings of the application.
+    This function helps to retrieve and modify the settings of the application.\
     :param user_id: the email of the user
     :type user_id: string
     :return: JSON in case of the GET, and null in case of POST and there's no error
