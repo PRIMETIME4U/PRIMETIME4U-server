@@ -395,7 +395,7 @@ def subscribe():
             raise InternalServerError(user_id + ' is already subscribed')
         else:
             user.subscribe(name=json_data['userName'], birth_year=json_data['userBirthYear'],
-                           gender=json_data['userGender'])
+                           gender=json_data['userGender'], gcm_key=json_data['privateKey'])
             return jsonify(code=0, data={"userId": user_id, "message": "User subscribed successful!"})
     else:
         raise MethodNotAllowed

@@ -8,7 +8,7 @@ class User(users.User):
     Class inherit from users.User in order to add some useful methods.
     """
 
-    def subscribe(self, name=None, birth_year=None, gender=None):
+    def subscribe(self, name=None, birth_year=None, gender=None, gcm_key=None):
         """
         Add user in the datastore.
         :param name: name of the user
@@ -28,6 +28,9 @@ class User(users.User):
             user.birth_year = int(birth_year)
         if gender is not None:
             user.gender = gender.upper()
+
+        if gcm_key is not None:
+            user.gcm_key = gcm_key
 
         user.put()
 
@@ -68,3 +71,29 @@ def get_current_user():
         return User()
     except UserNotFoundError:
         return None
+
+'''
+# TODO: finish next parts
+def sort_user_tastes(user_id):
+    """
+    It order all the tastes, one type at time, the artists, the movies and the genres.
+    :param user_id: user id who to order tastes
+    :return: None
+    """
+
+    user = modelUser.get_by_id(user_id)
+
+    #sort_movies_tastes(user)
+    #sort_artists_tastes(user)
+    #sort_genres_tastes(user)
+
+
+def sort_movies_tastes(user):
+
+    movie_tastes = user.tastes_movies
+
+
+def sort_artists_tastes(user):
+
+    artists_tastes = user.tastes_artists
+'''

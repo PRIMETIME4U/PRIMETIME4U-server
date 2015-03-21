@@ -317,3 +317,38 @@ def retrieve_search_result_list(user, query):
     [genres.append({"name": genre, "tasted": 1 if (TasteGenre.get_by_id(genre + user.key.id()) is not None and (TasteGenre.get_by_id(genre + user.key.id())).added) else 0}) for genre in GENRES if genre.lower().startswith(query)]
 
     return {"query": query, "movies": movies, "artists": artists, "genres": genres}
+
+'''
+# TODO: next to be finished
+def retrieve_movie_title_from_id(movie_id, language):
+    """
+    Retrieve movie info from IMDB by movie id.
+    :param movie_id: original title of the film to retrieve info
+    :type movie_id: string
+    :return: Movie's key
+    :rtype: ndb.Key
+    :raise RetrieverError: if there is an error from MYAPIFILMS
+    """
+    logging.info('Retrieving %s', movie_id)
+
+    url = BASE_URL_MYAPIFILMS + 'imdb?idIMDB=' + movie_id + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=0&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+
+    json_page = get(url).encode('utf-8')
+    json_data = json.loads(json_page)
+
+    movie = Movie(id=json_data['idIMDB'],
+                  plot=json_data['plot'],
+                  poster=clear_url(json_data['urlPoster']) if ('urlPoster' in json_data and json_data['urlPoster'] != "") else None,
+                  rated=json_data['rated'],
+                  simple_plot=json_data['simplePlot'],
+                  genres=json_data['genres'])
+
+    movie.original_title = json_data['title']
+
+    akas = json_data['akas']
+    for aka in akas:
+        if aka['country'] == 'Italy':
+            movie.title = aka['title']
+
+    return key
+'''
