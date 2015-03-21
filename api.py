@@ -574,11 +574,14 @@ def settings(user_id):
     if user is not None:
         if request.method == 'GET':
 
-            return jsonify(code=0, userId=user.key.id(), tv_type=user.tv_type, repeatChoice=user.repeat_choice,
+            return jsonify(code=0, userId=user.key.id(), tvType=user.tv_type, repeatChoice=user.repeat_choice,
                            enableNotification=user.enable_notification, timeNotification=user.time_notification)
 
         elif request.method == 'POST':
             json_data = request.get_json()  # Get JSON from POST
+
+            logging.info(json_data)
+
             logging.info("changing settings")
             if json_data is None:
                 raise BadRequest
