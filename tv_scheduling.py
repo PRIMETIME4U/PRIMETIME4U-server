@@ -31,10 +31,12 @@ def get_movies_schedule(html_page):
             original_title = original_title[0].strip().encode('utf-8')
         channel = movie_node.xpath('.//h3[@class="media tv"]/text()')[0].strip().encode('utf-8')  # Get channel
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
-
+        director = movie_node.xpath('.//p[@class="regia"]/text()')[0].strip().encode('utf-8')   # Get director
+        genre = movie_node.xpath('.//ul[@class="info cf"]/li/text()')[0].encode('utf-8')  # Get genre
+        cast = movie_node.xpath('.//p[@class="cast"]/text()')[0].strip().encode('utf-8')  # Get cast
         if channel != "Rsi La1" and channel != "Rsi La2":  # Remove the swiss channels
             value = {"title": title, "originalTitle": original_title, "channel": channel, "time": time,
-                            "movieUrl": movie_url, "year": year}
+                     "movieUrl": movie_url, "year": year, "director": director, "genres": genre, "cast": cast}
             movies_list.append(value) if value not in movies_list else logging.info("Movie already in schedule")
             # Control of doubles in schedule
 

@@ -82,14 +82,21 @@ def retrieve_type(tv_type, day):
             movie_title = movies[0]['title']
             movie_original_title = movies[0]['originalTitle']
             movie_year = movies[0]['year']
+            movie_genre = movies[0]['genres']
+            movie_director = movies[0]['director']
+            movie_cast = movies[0]['cast']
+
             if movie_original_title is None:
                 movie_original_title = movie_title
 
             try:
                 retrieve_movie_from_title(movie_original_title,
+                                          movie_director,
+                                          movie_cast,
                                           movie_title,
                                           movies[0]['movieUrl'],
-                                          movie_year)  # Retrieve movie from IMDB by title and year and store it
+                                          movie_year,
+                                          movie_genre)  # Retrieve movie from IMDB(or not) by title and year and store it
                 movies.pop(0)
             except Exception as exception:
                 logging.error("Error in retrieving %s: %s", movie_original_title, exception)
