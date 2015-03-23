@@ -8,7 +8,7 @@ class User(users.User):
     Class inherit from users.User in order to add some useful methods.
     """
 
-    def subscribe(self, name=None, birth_year=None, gender=None, gcm_key=None):
+    def subscribe(self, name=None, birth_year=None, gender=None, gcm_key=None, tv_type=["free"]):
         """
         Add user in the datastore.
         :param name: name of the user
@@ -31,6 +31,8 @@ class User(users.User):
 
         if gcm_key is not None:
             user.gcm_key = gcm_key
+
+        user.modify_tv_type(tv_type)
 
         user.put()
 
