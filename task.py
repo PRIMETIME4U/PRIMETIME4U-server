@@ -155,7 +155,7 @@ def push(user_id):
 
     reg_id = user.gcm_key
 
-    if reg_id is not None:
+    if reg_id is not None and user.enable_notification is not False:
         gcm.plaintext_request(registration_id=reg_id, data=data)
 
     return 'OK'
