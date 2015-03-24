@@ -344,6 +344,8 @@ def subscribe():
     if request.method == 'POST':
 
         json_data = request.get_json()  # Get JSON from POST
+        logging.info("From post: ")
+        logging.info(json_data)
 
         if json_data is None:
             raise BadRequest
