@@ -42,7 +42,7 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
                       year=movie_year,
                       original_title=movie_original_title,
                       title=movie_title,
-                      genres=movie_genre)
+                      genres=[movie_genre])
 
         actors_string = movie_cast
         directors_list = movie_director
@@ -73,8 +73,9 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
     else:
         directors_list = json_data[0]['directors']
         print movie_director
-        print directors_list[0]['name']
-        if movie_director == directors_list[0]['name']:
+        prova = directors_list[0]['name'].encode('utf-8')
+        print prova
+        if (movie_director in directors_list[0]['name'].encode('utf-8')) or (directors_list[0]['name'].encode('utf-8') in movie_director):
             movie = Movie(id=json_data[0]['idIMDB'],
                           plot=json_data[0]['plot'],
                           poster=clear_url(json_data[0]['urlPoster']),
@@ -99,7 +100,6 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
             year = json_data[0]['year']
             if len(year) > 4:
                 year = year[-4:]
-
             movie.year = year
 
             actors_list = json_data[0]['actors']
@@ -258,9 +258,9 @@ def retrieve_artists(movie, actors_list, directors_list, writers_list):
 def search_artist_from_name(artist_name, movie=None, director_name=None):
     """
     Retrieve artist info from IMDB by name of artist.
-    :param artist_name: name of the artist to retrieve info
+    :param artist_name: name of the actor to retrieve info
     :type artist_name: string
-    :return: Artist's key
+    :return: Actor's key
     :rtype: ndb.Key
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """

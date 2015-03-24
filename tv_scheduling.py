@@ -33,7 +33,11 @@ def get_movies_schedule(html_page):
         time = movie_node.xpath('.//time[@class="data"]/text()')[0][2:].strip()  # Get time
         director = movie_node.xpath('.//p[@class="regia"]/text()')[0].strip().encode('utf-8')   # Get director
         genre = movie_node.xpath('.//ul[@class="info cf"]/li/text()')[0].encode('utf-8')  # Get genre
-        cast = movie_node.xpath('.//p[@class="cast"]/text()')[0].strip().encode('utf-8')  # Get cast
+        cast = movie_node.xpath('.//p[@class="cast"]/text()')
+        if len(cast) == 0:
+            cast = None
+        else:
+            cast = movie_node.xpath('.//p[@class="cast"]/text()')[0].strip().encode('utf-8')  # Get cast
         if channel != "Rsi La1" and channel != "Rsi La2":  # Remove the swiss channels
             value = {"title": title, "originalTitle": original_title, "channel": channel, "time": time,
                      "movieUrl": movie_url, "year": year, "director": director, "genres": genre, "cast": cast}
