@@ -345,20 +345,29 @@ def subscribe():
 
         json_data = request.get_json()  # Get JSON from POST
 
-        logging.info("subscribe infos: " + json_data)
-
         if json_data is None:
             raise BadRequest
 
         user_id = json_data['userId']  # Get user_id
 
+        try:
+            private_key = json_data['privateKey']
+        except Exception:
+            private_key = None
+            logging.info('privateKey not found')
+
         user = User(email=user_id)  # Create user
 
         if user.is_subscribed():
-            return jsonify(code=1, data={"userId": user_id, "message": "User subscribed successful!"},
+            user = modelUser.get_by_id(user_id)
+            if private_key != None:
+                user.gcm_key = private_key
+                user.put()
+            return jsonify(code=1, data={"userId": user_id, "message": "User already subscribed"},
                            tvType=user.tv_type, repeatChoice=user.repeat_choice,
                            enableNotification=user.enable_notification, timeNotification=user.time_notification)
         else:
+            logging.info("subrscribing user")
             user.subscribe(name=json_data['userName'], birth_year=json_data['userBirthYear'],
                            gender=json_data['userGender'], gcm_key=json_data['privateKey'])
 
@@ -880,5 +889,3 @@ def get_tastes_list(user):
                          "tastes": {"artists": artists,
                                     "movies": movies,
                                     "genres": genres}})
-
-
