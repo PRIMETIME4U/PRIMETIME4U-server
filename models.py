@@ -315,6 +315,7 @@ class User(ModelUtils, ndb.Model):
         self.remove_proposal()
 
     def add_taste_genre(self, genre, taste=1.0):
+        logging.info("genre added")
         if genre in GENRES:
             taste_genre = TasteGenre.get_by_id(genre + self.key.id())
             if taste_genre is None:
