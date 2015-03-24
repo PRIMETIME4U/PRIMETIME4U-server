@@ -5,16 +5,14 @@
 *The only app that allows you to plop down to the couch and simply enjoy a movie.*
 
 ## What is it?
-PRIMETIME4U is an app that simply help you in the daily choose your movie for your evening. It collects your tastes and it finds for you the best movie in the evening.
-
-[PRIMETIME4U Site](http://hale-kite-786.appspot.com/)
+PRIMETIME4U is an app that simply help you in the daily choose of your movie for your evening. It collects your tastes and it finds for you the best movie in the evening. It's Android based, so we suggest you to read more detailed informations in client repository:
 
 [PRIMETIME4U Client](https://github.com/PRIMETIME4U/PRIMETIME4U-baseclient)
 
 Google Technologies for Cloud and Web Development - Rome 2014/2015
 
 ## Free API
-We also provide you for free a simple API in order to get Italian TV schedules. You can ask the schedule of today, tomorrow and the day after tomorrow of the FREE TV, SKY TV and Mediaset Premium TV.
+We also provide you for free a simple API in order to get Italian TV movie schedules. You can ask the schedule of today, tomorrow and the day after tomorrow of the FREE TV, SKY TV and Mediaset Premium TV.
 
 1. Go to:
 
