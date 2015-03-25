@@ -794,10 +794,11 @@ def get_tastes_movies_list(user, page=0):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.movie.id()  # Get movie id from taste
-        movie = Movie.get_by_id(movie_id)  # Get movie by id
+        if taste_movie.taste > 1 and taste_movie.added:
+            movie_id = taste_movie.movie.id()  # Get movie id from taste
+            movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"idIMDB": movie_id,
+            movies.append({"idIMDB": movie_id,
                        "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
                        "title": movie.title.encode('utf-8') if movie.title is not None else None,
                        "tasted": 1,
@@ -824,7 +825,8 @@ def get_tastes_genres_list(user, page=0):
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
 
         # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1 and taste_genre.added:
+        if taste_genre.taste >= 1.0 and taste_genre.added:
+            logging.info("genre")
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
@@ -864,10 +866,11 @@ def get_tastes_list(user):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.movie.id()  # Get movie id from taste
-        movie = Movie.get_by_id(movie_id)  # Get movie by id
+        if taste_movie.taste  >=1 and taste_movie.added:
+            movie_id = taste_movie.movie.id()  # Get movie id from taste
+            movie = Movie.get_by_id(movie_id)  # Get movie by id
 
-        movies.append({"idIMDB": movie_id,
+            movies.append({"idIMDB": movie_id,
                        "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
                        "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
                        "tasted": 1,
