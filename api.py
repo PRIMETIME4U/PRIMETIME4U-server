@@ -633,7 +633,11 @@ def get_or_retrieve_by_id(id_imdb):
 
         return movie
     else:
-        raise InternalServerError(id_imdb + " is not a valid IMDb id")
+        new_movie = Movie().get_by_id(id_imdb)
+        if new_movie != None:
+            return new_movie
+        else:
+            raise InternalServerError(id_imdb + " is not a valid IMDb id or film.TV id")
 
 # TODO: argument next functions
 
@@ -655,7 +659,6 @@ def generate_artists(user, page=0):
                             "name": artist.name.encode('utf-8') if artist.name is not None else None,
                             "tasted": 1,
                             "photo": artist.photo})
-
 
     return artists
 
