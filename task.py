@@ -4,6 +4,9 @@ from werkzeug.exceptions import BadRequest, MethodNotAllowed
 from IMDB_retriever import retrieve_movie_from_title
 from google.appengine.api import taskqueue
 from models import User
+from datetime import datetime
+from google.appengine.ext import ndb
+from gcm import GCM
 
 from movie_selector import random_movie_selection
 from send_mail import send_suggestion
@@ -117,5 +120,42 @@ def manual(offset):
     :rtype string
     """
     taskqueue.add(url='/api/manual/' + offset, method='GET')
+
+    return 'OK'
+
+
+@app.route('/_ah/start/task/notification')
+def notification():
+
+    logging.info("Started push notification control")
+    time_in_ms = datetime.now().hour*3600000 + datetime.now().minute*60000 + datetime.now().second*1000
+    users = User.query()
+
+    for i in users:
+        if i.time_notification <= time_in_ms + 300000 and i.time_notification >= time_in_ms - 300000:
+            taskqueue.add(url='/_ah/start/task/push/'+i.key.id(), method='GET')
+    return "OK"
+
+
+@app.route('/_ah/start/task/push/<user_id>', methods=['GET'])
+def push(user_id):
+    # movies = Movie.query()
+    # for movie in movies.fetch(500, offset=int(offset)):
+    #     movie.poster = clear_url(movie.poster)
+    #     movie.put()
+    # artists = Artist.query()
+    # for artist in artists.fetch(500, offset=int(offset)):
+    #     artist.photo = clear_url(artist.photo)
+    #     artist.put()
+
+    user = User.get_by_id(user_id)
+    data = "PRIMETIME4U ha nuove proposte per te"
+    gcm = GCM("AIzaSyAPfZ91t379OWzTiyALsInNnYsWhemF_o0")
+    data = {'message': data}
+
+    reg_id = user.gcm_key
+
+    if reg_id is not None and user.enable_notification is not False:
+        gcm.plaintext_request(registration_id=reg_id, data=data)
 
     return 'OK'
