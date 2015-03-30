@@ -41,7 +41,7 @@ def schedule(tv_type, day):
 
 @app.route('/api/tastes/<user_id>/<type>', methods=['GET', 'POST'])
 def tastes(user_id, type):
-  """
+    """
     Endpoint that allow to list all tastes by type (first page) or add a new one.
     :param user_id: email of the user
     :type user_id: string
@@ -58,9 +58,9 @@ def tastes(user_id, type):
     :raise BadRequest: if type is neither artist neither movie
     :raise InternalServerError: if there is an error from MYAPIFILMS
     """
-  user = modelUser.get_by_id(user_id)  # Get user
+    user = modelUser.get_by_id(user_id)  # Get user
 
-  if user is not None:
+    if user is not None:
         if request.method == 'POST':
             if type == 'artist':
 
@@ -115,7 +115,7 @@ def tastes(user_id, type):
                 raise BadRequest
         else:
             raise MethodNotAllowed
-  else:
+    else:
         raise InternalServerError(user_id + ' is not subscribed')
 
 
@@ -147,20 +147,21 @@ def tastes_page(user_id, type, page):
             if type == 'artist':
                 artists_page = generate_artists(user, int(page))
 
-                return jsonify(code=0, data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
-                                 "next_page": artists_page["next_page"]})  # Returns artists tastes
+                return jsonify(code=0,
+                               data={"userId": user.key.id(), "type": "artist", "tastes": artists_page["artists"],
+                                     "next_page": artists_page["next_page"]})  # Returns artists tastes
 
             elif type == 'movie':
                 movies_page = generate_movies(user, int(page))
 
                 return jsonify(code=0, data={"userId": user.key.id(), "type": "movie", "tastes": movies_page["movies"],
-                                 "next_page": movies_page["next_page"]})  # Returns movies tastes
+                                             "next_page": movies_page["next_page"]})  # Returns movies tastes
 
             elif type == 'genre':
                 genres_page = generate_genres(user, int(page))
 
                 return jsonify(code=0, data={"userId": user.key.id(), "type": "genre", "tastes": genres_page["genres"],
-                                 "next_page": genres_page["next_page"]})  # Returns genres tastes
+                                             "next_page": genres_page["next_page"]})  # Returns genres tastes
             else:
                 raise BadRequest
         else:
@@ -512,8 +513,8 @@ def search(user_id, query):
 def manual(data):
     # movies = Movie.query()
     # for movie in movies.fetch(500, offset=int(offset)):
-    #     movie.poster = clear_url(movie.poster)
-    #     movie.put()
+    # movie.poster = clear_url(movie.poster)
+    # movie.put()
     # artists = Artist.query()
     # for artist in artists.fetch(500, offset=int(offset)):
     #     artist.photo = clear_url(artist.photo)
@@ -528,6 +529,7 @@ def manual(data):
 
     return 'OK'
 
+
 # TODO: Finish the setting considering al the possible elements to be insert in the GET and in the POST
 @app.route('/api/settings/<user_id>', methods=['GET', 'POST'])
 def settings(user_id):
@@ -539,7 +541,7 @@ def settings(user_id):
 
     The POST request has to be done { "tvType": [ "free", "premium",...],
     """
-    
+
     user = modelUser.get_by_id(user_id)
     if user is not None:
         if request.method == 'GET':
@@ -556,7 +558,7 @@ def settings(user_id):
             if json_data is None:
                 raise BadRequest
 
-            tv_type_list = json_data['tvType']   # Reading tv type and modifying the list
+            tv_type_list = json_data['tvType']  # Reading tv type and modifying the list
             if not user.modify_tv_type(tv_type_list):
                 logging.info("bad tv type")
                 raise BadRequest
@@ -622,12 +624,16 @@ def get_or_retrieve_by_id(id_imdb):
 
         return movie
     else:
-        raise InternalServerError(id_imdb + " is not a valid IMDb id")
+        new_movie = Movie().get_by_id(id_imdb)
+        if new_movie != None:
+            return new_movie
+        else:
+            raise InternalServerError(id_imdb + " is not a valid IMDb id or film.TV id")
+
 
 # TODO: argument next functions
 
 def generate_artists(user, page=0):
-
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
     artists = []
 
@@ -636,7 +642,6 @@ def generate_artists(user, page=0):
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
 
         if taste_artist.taste >= 1 and taste_artist.added:
-
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
@@ -645,12 +650,10 @@ def generate_artists(user, page=0):
                             "tasted": 1,
                             "photo": artist.photo})
 
-
     return artists
 
 
 def generate_movies(user, page=0):
-
     tastes_movies_id = user.tastes_movies
     movies = []
 
@@ -662,8 +665,10 @@ def generate_movies(user, page=0):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
-                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
+                       "originalTitle": movie.original_title.encode(
+                           'utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
+                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode(
+                           'utf-8'),
                        "tasted": 1,
                        "poster": movie.poster})
 
@@ -671,7 +676,6 @@ def generate_movies(user, page=0):
 
 
 def generate_genres(user, page=0):
-
     tastes_genres_id = user.tastes_genres
     genres = []
 
@@ -681,7 +685,6 @@ def generate_genres(user, page=0):
 
         # TODO: not use object, use a simple list
         if taste_genre.taste >= 1.0 and taste_genre.added:
-
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
@@ -702,12 +705,12 @@ def get_watched_movies_list(user, page=0):
 
     movies = []
 
-    if (page + 1)*10 > len(watched_movies_id):  # Finding max element in page
+    if (page + 1) * 10 > len(watched_movies_id):  # Finding max element in page
         last_elem = len(watched_movies_id)
     else:
-        last_elem = (page + 1)*10
+        last_elem = (page + 1) * 10
 
-    if (page + 1)*10 < len(watched_movies_id):  # Preparing url for next page
+    if (page + 1) * 10 < len(watched_movies_id):  # Preparing url for next page
         next_page = str(page + 1)
         next_page_url = '/api/watched/' + user.key.id() + '/' + next_page
     else:
@@ -728,8 +731,12 @@ def get_watched_movies_list(user, page=0):
         taste_movie = TasteMovie.get_by_id(watched_movie_id + user.key.id())  # Get taste
 
         movies.append({"idIMDB": watched_movie.key.id(),
-                       "originalTitle": watched_movie.original_title.encode('utf-8') if watched_movie.original_title is not None else watched_movie.title.encode('utf-8'),
-                       "title": watched_movie.title.encode('utf-8') if watched_movie.title is not None else watched_movie.original_title.encode('utf-8'),
+                       "originalTitle": watched_movie.original_title.encode(
+                           'utf-8') if watched_movie.original_title is not None else watched_movie.title.encode(
+                           'utf-8'),
+                       "title": watched_movie.title.encode(
+                           'utf-8') if watched_movie.title is not None else watched_movie.original_title.encode(
+                           'utf-8'),
                        "poster": watched_movie.poster,
                        "date": date_watched_movie.strftime('%d-%m-%Y'),
                        "tasted": 1 if taste_movie is not None else 0})
@@ -787,7 +794,8 @@ def get_tastes_movies_list(user, page=0):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else None,
+                       "originalTitle": movie.original_title.encode(
+                           'utf-8') if movie.original_title is not None else None,
                        "title": movie.title.encode('utf-8') if movie.title is not None else None,
                        "tasted": 1,
                        "poster": movie.poster})
@@ -857,8 +865,10 @@ def get_tastes_list(user):
         movie = Movie.get_by_id(movie_id)  # Get movie by id
 
         movies.append({"idIMDB": movie_id,
-                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
-                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
+                       "originalTitle": movie.original_title.encode(
+                           'utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
+                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode(
+                           'utf-8'),
                        "tasted": 1,
                        "poster": movie.poster})
 
