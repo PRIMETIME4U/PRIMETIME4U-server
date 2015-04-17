@@ -105,7 +105,7 @@ def retrieve_type(tv_type, day):
                 logging.error("Error in retrieving %s: %s", movie_original_title, exception)
                 if type(exception) is RetrieverError:
                     logging.error("Not our error...")
-                    movies.pop(0)
+                movies.pop(0)
                 pass
         return 'OK'
     else:

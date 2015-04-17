@@ -47,7 +47,7 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
         actors_string = movie_cast
         directors_list = movie_director
         writers_list = []
-        print actors_string
+        #print actors_string
 
         actors_list = []
         begin = 0
@@ -72,9 +72,9 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
         movie.put()
     else:
         directors_list = json_data[0]['directors']
-        print movie_director
-        prova = directors_list[0]['name'].encode('utf-8')
-        print prova
+        #print movie_director
+        #prova = directors_list[0]['name'].encode('utf-8')
+        #print prova
         if (movie_director in directors_list[0]['name'].encode('utf-8')) or (directors_list[0]['name'].encode('utf-8') in movie_director):
             movie = Movie(id=json_data[0]['idIMDB'],
                           plot=json_data[0]['plot'],
@@ -126,7 +126,7 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
                     break
 
             movie_id = movie_url[26: end]
-            print movie_id
+            #print movie_id
             movie = Movie(id=movie_id,
                           genres=[movie_genre],
                           year=movie_year,
@@ -136,20 +136,21 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
             actors_string = movie_cast
             directors_list = movie_director
             writers_list = []
-            print actors_string
+            #print actors_string
 
             actors_list = []
             begin = 0
             count = 0
-            for i in actors_string:
-                count += 1
-                if i == "," or count == len(actors_string) - 1:
-                    actors_list.append(actors_string[begin:count - 1])
-                    begin = count + 1
-                    search_artist_from_name(actors_list[len(actors_list) - 1], movie)
-
-            for director_name in directors_list:
-                search_artist_from_name(actors_list[len(actors_list) - 1], movie, director_name)
+            if actors_string is not None:
+                for i in actors_string:
+                    count += 1
+                    if i == "," or count == len(actors_string) - 1:
+                        actors_list.append(actors_string[begin:count - 1])
+                        begin = count + 1
+                        search_artist_from_name(actors_list[len(actors_list) - 1], movie)
+            if directors_list is not None:
+                for director_name in directors_list:
+                    search_artist_from_name(actors_list[len(actors_list) - 1], movie, director_name)
 
             html_page_plot = get(movie_url).encode('utf-8')
             tree = lxml.html.fromstring(html_page_plot)
