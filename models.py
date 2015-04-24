@@ -171,6 +171,7 @@ class TasteArtist(ModelUtils, ndb.Model):
     artist = ndb.KeyProperty(Artist)
     taste = ndb.FloatProperty(required=True)
     added = ndb.BooleanProperty(default=False)
+    moviesNumber = ndb.IntegerProperty(default=0)
 
     def add_artist(self, artist):
         """
@@ -194,10 +195,15 @@ class TasteGenre(ModelUtils, ndb.Model):
     genre = ndb.StringProperty(choices=GENRES)
     taste = ndb.FloatProperty(required=True)
     added = ndb.BooleanProperty(default=False)
+    moviesNumber = ndb.IntegerProperty(default=0)
+
 
     def update_taste(self, taste):
         self.taste += taste
         self.put()
+
+    def getTasteGenre(self, user):
+        genresLiked = len(user.taste_genres)
 
 
 class User(ModelUtils, ndb.Model):
@@ -214,8 +220,11 @@ class User(ModelUtils, ndb.Model):
     watched_movies = ndb.KeyProperty(Movie, repeated=True)
     date_watched = ndb.DateProperty(repeated=True)
     tastes_movies = ndb.KeyProperty(TasteMovie, repeated=True)
+    movies_id = ndb.StringProperty(repeated=True)
     tastes_artists = ndb.KeyProperty(TasteArtist, repeated=True)
+    artists_id = ndb.StringProperty(repeated=True)
     tastes_genres = ndb.KeyProperty(TasteGenre, repeated=True)
+    genres_id = ndb.StringProperty(choices=GENRES, repeated=True)
     tastes_keywords = ndb.KeyProperty(repeated=True)
     proposal = ndb.JsonProperty()
     language = ndb.StringProperty(choices=["ita", "eng"], default="ita")
@@ -224,6 +233,9 @@ class User(ModelUtils, ndb.Model):
     time_notification = ndb.IntegerProperty(default=61200000)
     enable_notification = ndb.BooleanProperty(choices=[True, False], default=True)
     repeat_choice = ndb.BooleanProperty(choices=[True, False], default=True)
+
+    number_artists_liked = ndb.IntegerProperty(default=0)
+    number_genres_liked = ndb.IntegerProperty(default=0)
 
 
     def add_watched_movie(self, movie, date):
@@ -276,6 +288,7 @@ class User(ModelUtils, ndb.Model):
             self.add_taste_genre(genre, GENRE_WEIGHT * taste)
 
         if taste_movie_key not in self.tastes_movies:
+            self.movies_id.append(movie.key.id())
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
             self.put()
 
@@ -304,6 +317,7 @@ class User(ModelUtils, ndb.Model):
 
             if taste_artist_key not in self.tastes_artists:
                 self.tastes_artists.append(taste_artist_key)  # Append the taste to user's tastes
+                self.artists_id.append(artist.key.id())
                 self.put()
         else:
             if taste == 1:
@@ -330,6 +344,7 @@ class User(ModelUtils, ndb.Model):
 
                 if taste_genre_key not in self.tastes_genres:
                     self.tastes_genres.append(taste_genre_key)
+                    self.genres_id.append(genre)
                     self.put()
             else:
                 if taste == 1:
@@ -422,6 +437,7 @@ class User(ModelUtils, ndb.Model):
             taste_artist.key.delete()
             if taste_artist_key in self.tastes_artists:
                 self.tastes_artists.remove(taste_artist_key)
+                self.artists_id.remove(artist.key.id())
                 self.put()
         elif taste_artist.taste > 1:
             taste_artist.added = False
@@ -439,6 +455,7 @@ class User(ModelUtils, ndb.Model):
             taste_genre.key.delete()
             if taste_genre_key in self.tastes_genres:
                 self.tastes_genres.remove(taste_genre_key)
+                self.genres_id.remove(genre)
                 self.put()
         elif taste_genre.taste > 1:
             taste_genre.added = False
@@ -542,6 +559,23 @@ class User(ModelUtils, ndb.Model):
         """
         self.proposal = None
         self.put()
+
+    def get_value_artist(self, artist_id):
+            taste_artist = TasteArtist.get_by_id(artist_id + self.key.id())  # Get taste
+            if taste_artist is not None:
+                return taste_artist.taste
+            else:
+                return 0
+
+    def get_value_genre(self, genre):
+        if genre in GENRES:
+            taste_genre = TasteGenre.get_by_id(genre + self.key.id())
+            if taste_genre is not None:
+                return taste_genre.taste
+            else:
+                return 0
+
+
 
 
 

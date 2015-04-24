@@ -539,6 +539,15 @@ def manual(data):
 
     return 'OK'
 
+@app.route('/api/manual2')
+def manual2():
+
+    user = modelUser.get_by_id("test@example.com")
+
+    value = user.get_value_artist("nm0000323")
+
+    return str(value)
+
 # TODO: Finish the setting considering al the possible elements to be insert in the GET and in the POST
 @app.route('/api/settings/<user_id>', methods=['GET', 'POST'])
 def settings(user_id):
@@ -829,7 +838,7 @@ def get_tastes_genres_list(user, page=0):
 
         # TODO: not use object, use a simple list
         if taste_genre.taste >= 1.0 and taste_genre.added:
-            logging.info("genre")
+            logging.info("reading genre in get_tastes")
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
@@ -897,3 +906,5 @@ def get_tastes_list(user):
                          "tastes": {"artists": artists,
                                     "movies": movies,
                                     "genres": genres}})
+
+
