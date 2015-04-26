@@ -132,7 +132,7 @@ def notification():
     users = User.query()
 
     for i in users:
-        if i.time_notification <= time_in_ms + 300000 and i.time_notification >= time_in_ms - 300000:
+        if i.time_notification <= time_in_ms + 300000 and i.time_notification >= time_in_ms - 300000 and i.key.id() != "vintilaniculina94@gmail.com":
             taskqueue.add(url='/_ah/start/task/push/'+i.key.id(), method='GET')
     return "OK"
 
