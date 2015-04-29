@@ -3,10 +3,12 @@ from flask import Flask, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 from IMDB_retriever import retrieve_movie_from_title
 from google.appengine.api import taskqueue
-from models import User
 from datetime import datetime
 from google.appengine.ext import ndb
 from gcm import GCM
+from models import Artist, Movie, TasteArtist, TasteMovie, TasteGenre
+from models import User
+from utilities import TV_TYPE, GENRES, ACTOR_WEIGHT, DIRECTOR_WEIGHT, WRITER_WEIGHT, GENRE_WEIGHT
 
 from movie_selector import random_movie_selection
 from send_mail import send_suggestion
@@ -17,16 +19,16 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 
 
-@app.route('/_ah/start/task/retrieve')
-def retrieve():
+@app.route('/_ah/start/task/retrieve/<time>')
+def retrieve(time):
     """
     Retrieve movie info from IMDB using taskqueue for all movies from "today" schedule.
     :return: simple confirmation string
     :rtype string
     """
-    taskqueue.add(url='/_ah/start/task/retrieve/free/tomorrow', method='GET')
-    taskqueue.add(url='/_ah/start/task/retrieve/sky/tomorrow', method='GET')
-    taskqueue.add(url='/_ah/start/task/retrieve/premium/tomorrow', method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/free/' + time, method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/sky/' + time, method='GET')
+    taskqueue.add(url='/_ah/start/task/retrieve/premium/' + time, method='GET')
 
     return 'OK'
 
@@ -127,8 +129,8 @@ def manual(offset):
 @app.route('/_ah/start/task/notification')
 def notification():
 
-    logging.info("Started push notification control")
-    time_in_ms = datetime.now().hour*3600000 + datetime.now().minute*60000 + datetime.now().second*1000
+    logging.info("Started push notification control " + str(datetime.now().hour) + ":" + str(datetime.now().minute))
+    time_in_ms = (datetime.now().hour + 1)*3600000 + datetime.now().minute*60000 + datetime.now().second*1000
     users = User.query()
 
     for i in users:
@@ -159,3 +161,89 @@ def push(user_id):
         gcm.plaintext_request(registration_id=reg_id, data=data)
 
     return 'OK'
+
+@app.route('/_ah/start/task/movie_tastes/<user_id>/<movie_id>/<taste>', methods=['GET'])
+def add_movie_tastes(user_id, movie_id, taste):
+
+        taste = float(taste)
+        user = User.get_by_id(user_id)
+        movie = Movie.get_by_id(movie_id)
+        for actor in movie.actors:
+            artist = Artist.get_by_id(actor.id())
+            user.add_taste_artist(artist, ACTOR_WEIGHT * taste)
+
+        for director in movie.directors:
+            artist = Artist.get_by_id(director.id())
+            user.add_taste_artist(artist, DIRECTOR_WEIGHT * taste)
+
+        for writer in movie.writers:
+            artist = Artist.get_by_id(writer.id())
+            user.add_taste_artist(artist, WRITER_WEIGHT * taste)
+
+        for genre in movie.genres:
+            user.add_taste_genre(genre, GENRE_WEIGHT * taste)
+
+        user.remove_proposal()
+        user.put()
+        taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+
+
+        return 'OK'
+
+@app.route('/_ah/start/task/movie_untaste/<user_id>/<movie_id>', methods=['GET'])
+def untaste_movie(user_id, movie_id):
+            movie = Movie.get_by_id(movie_id)
+            user = User.get_by_id(user_id)
+
+            for actor in movie.actors:
+                artist = Artist.get_by_id(actor.id())
+                taste_artist = TasteArtist.get_by_id(actor.id() + user.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-ACTOR_WEIGHT)
+                else:
+                    user.add_taste_artist(artist, -ACTOR_WEIGHT)
+
+                if taste_artist.taste == 0:
+                    user.remove_taste_artist(artist)
+
+            for director in movie.directors:
+                artist = Artist.get_by_id(director.id())
+                taste_artist = TasteArtist.get_by_id(director.id() + user.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-DIRECTOR_WEIGHT)
+                else:
+                    user.add_taste_artist(artist, -DIRECTOR_WEIGHT)
+
+                if taste_artist.taste == 0:
+                    user.remove_taste_artist(artist)
+
+            for writer in movie.writers:
+                artist = Artist.get_by_id(writer.id())
+                taste_artist = TasteArtist.get_by_id(writer.id() + user.key.id())
+
+                if taste_artist is not None:
+                    taste_artist.update_taste(-WRITER_WEIGHT)
+                else:
+                    user.add_taste_artist(artist, -WRITER_WEIGHT)
+
+                if taste_artist.taste == 0:
+                    user.remove_taste_artist(artist)
+
+            for genre in movie.genres:
+                taste_genre = TasteGenre.get_by_id(genre + user.key.id())
+
+                if taste_genre is not None:
+                    taste_genre.update_taste(-GENRE_WEIGHT)
+                else:
+                    user.add_taste_genre(genre, -GENRE_WEIGHT)
+
+                if taste_genre.taste == 0:
+                    user.remove_taste_genre(genre)
+
+            user.remove_proposal()
+            user.put()
+            taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+
+            return 'OK'

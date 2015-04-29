@@ -33,33 +33,49 @@ def taste_based_movie_selection(user, schedule_movies):
     artists_value = []
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
-        artist_id = taste_artist.artist.id()  # Get movie id from taste
-        artists_id.append(artist_id)
-        artists_value.append(taste_artist.taste)
+        if taste_artist is not None:
+            artist_id = taste_artist.artist.id()  # Get movie id from taste
+            artists_id.append(artist_id)
+            artists_value.append(taste_artist.taste)
+        else:
+            logging.error("Inconsistence with taste_artist")
 
     movies_id = []
     movies_value = []
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        movie_id = taste_movie.movie.id()  # Get movie id from taste
-        movies_id.append(movie_id)
-        movies_value.append(taste_movie.taste)
+        if taste_movie is not None:
+            movie_id = taste_movie.movie.id()  # Get movie id from taste
+            movies_id.append(movie_id)
+            movies_value.append(taste_movie.taste)
+        else:
+            logging.error("Inconsistence with taste_movie")
 
     genres = []
     genres_value = []
     for taste_genre_id in tastes_genres_id:
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())
-        genres.append(taste_genre.genre)
-        genres_value.append(taste_genre.taste)
+        if taste_genre is not None:
+            genres.append(taste_genre.genre)
+            genres_value.append(taste_genre.taste)
+        else:
+            logging.error("Inconsistence with taste_genre")
 
     data = []
     random_choice = True
+
+    repeatChoice = user.repeat_choice
 
     for movie in schedule_movies:
         points = 0.0
         movie_data_store = Movie.query(ndb.OR(Movie.original_title == movie["originalTitle"],
                                               Movie.title == movie["title"])).get()
+
         if movie_data_store is not None:
+            if repeatChoice is not True and movie_data_store.key in user.watched_movies:
+                logging.info("Movie already watched: " + movie_data_store.key.id())
+                continue
+
             for actor in movie_data_store.actors:
                 if actor.get().key.id() in artists_id:
                     logging.info("Trovato %s", str(actor.get().key.id()))

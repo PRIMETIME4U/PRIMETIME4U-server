@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import jsonify, request
 import logging
 import re
+from google.appengine.api import taskqueue
 
 from werkzeug.exceptions import BadRequest, MethodNotAllowed, InternalServerError
 from IMDB_retriever import retrieve_movie_from_id, retrieve_artist_from_id, retrieve_suggest_list, \
@@ -62,6 +63,8 @@ def tastes(user_id, type):
 
   if user is not None:
         if request.method == 'POST':
+
+            user.tastesInconsistence = True
             if type == 'artist':
 
                 json_data = request.get_json()  # Get JSON from POST
@@ -73,9 +76,12 @@ def tastes(user_id, type):
                 logging.info("From post: %s", id_imdb)
 
                 artist = get_or_retrieve_by_id(id_imdb)  # Get or retrieve artist
-
+                modify_Json(user, artist, "artist")
                 user.add_taste_artist(artist)  # Add artist to tastes
-                return get_tastes_artists_list(user)  # Return tastes
+                taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+
+                return jsonify(code=0) #get_tastes_artists_list(user)  # Return tastes
+
             elif type == 'movie':
                 json_data = request.get_json()  # Get JSON from POST
 
@@ -87,8 +93,13 @@ def tastes(user_id, type):
 
                 movie = get_or_retrieve_by_id(id_imdb)  # Get or retrieve movie
 
+                modify_Json(user, movie, "movie")
                 user.add_taste_movie(movie)  # Add movie to tastes
-                return get_tastes_movies_list(user)  # Return tastes
+
+                user.put()
+
+                return jsonify(code=0)    #get_tastes_movies_list(user)  # Return tastes
+
             elif type == 'genre':
                 json_data = request.get_json()
 
@@ -97,9 +108,13 @@ def tastes(user_id, type):
 
                 genre = json_data['data']
                 logging.info("From post: %s", genre)
-
+                if genre in GENRES:
+                    modify_Json(user, genre, "genre")
                 user.add_taste_genre(genre)  # Add genre to tastes
-                return get_tastes_genres_list(user)  # Return tastes
+                taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+
+                user.put()
+                return jsonify(code=0) #get_tastes_genres_list(user)  # Return tastes
             else:
                 raise BadRequest
         elif request.method == 'GET':
@@ -236,20 +251,32 @@ def remove_taste(user_id, type, data):
 
     if user is not None:
         if request.method == 'DELETE':
+            user.tastesInconsistence = True
+            user.put()
             if type == 'artist':
                 artist = get_or_retrieve_by_id(data)
 
+                delete_in_Json(user, artist, "artist")
                 user.remove_taste_artist(artist)  # Remove artist from tastes
-                return get_tastes_artists_list(user)  # Return tastes
+                taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+
+                return jsonify(code=0)
+
             elif type == 'movie':
                 movie = get_or_retrieve_by_id(data)
 
+                delete_in_Json(user, movie, "movie")
                 user.remove_taste_movie(movie)  # Remove movie from tastes
-                return get_tastes_movies_list(user)  # Return tastes
+
+                return jsonify(code=0)
+
             elif type == 'genre':
                 if data in GENRES:
+                    delete_in_Json(user, data, "genre")
                     user.remove_taste_genre(data)  # Remove genre from tastes
-                    return get_tastes_genres_list(user)  # Return tastes
+                    taskqueue.add(url='/api/proposal/' + user.key.id(), method='GET')
+                    return jsonify(code=0)
+
                 else:
                     raise BadRequest
             else:
@@ -539,6 +566,7 @@ def manual(data):
 
     return 'OK'
 
+
 # TODO: Finish the setting considering al the possible elements to be insert in the GET and in the POST
 @app.route('/api/settings/<user_id>', methods=['GET', 'POST'])
 def settings(user_id):
@@ -640,7 +668,6 @@ def get_or_retrieve_by_id(id_imdb):
             raise InternalServerError(id_imdb + " is not a valid IMDb id or film.TV id")
 
 # TODO: argument next functions
-
 def generate_artists(user, page=0):
 
     tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
@@ -712,6 +739,7 @@ def get_watched_movies_list(user, page=0):
         "date": date}],"userId": user_id, "prevPage": prevPage, "nextPage": nextPage}
     :rtype: JSON
     """
+
     watched_movies_id = user.watched_movies  # Get all taste_artists' keys
 
     movies = []
@@ -797,7 +825,7 @@ def get_tastes_movies_list(user, page=0):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        if taste_movie.taste > 1 and taste_movie.added:
+        if taste_movie.taste >= 1 and taste_movie.added:
             movie_id = taste_movie.movie.id()  # Get movie id from taste
             movie = Movie.get_by_id(movie_id)  # Get movie by id
 
@@ -828,8 +856,7 @@ def get_tastes_genres_list(user, page=0):
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
 
         # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1.0 and taste_genre.added:
-            logging.info("genre")
+        if taste_genre.taste >= 0.99 and taste_genre.added:
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
@@ -847,14 +874,24 @@ def get_tastes_list(user):
     :rtype: JSON
     """
     # TODO: improve it, replace with function...
-    tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
 
+    if user.tastesInconsistence is not True:
+        logging.info("tastes in memory")
+        return jsonify(code=0, data=user.tastesJson)
+
+    logging.info("rebuiling tastes")
+
+    tastes_artists_id = user.tastes_artists  # Get all taste_artists' keys
     artists = []
 
     for taste_artist_id in tastes_artists_id:
         taste_artist = TasteArtist.get_by_id(taste_artist_id.id())  # Get taste
 
-        if taste_artist.taste >= 1 and taste_artist.added:
+        if taste_artist is None:
+            logging.error("taste_artist is None")
+            continue
+
+        if taste_artist.taste >= 0.99 and taste_artist.added:
             artist_id = taste_artist.artist.id()  # Get artist id from taste
             artist = Artist.get_by_id(artist_id)  # Get artist by id
 
@@ -869,7 +906,11 @@ def get_tastes_list(user):
 
     for taste_movie_id in tastes_movies_id:
         taste_movie = TasteMovie.get_by_id(taste_movie_id.id())  # Get taste
-        if taste_movie.taste  >=1 and taste_movie.added:
+
+        if taste_movie is None:
+            logging.error("taste_movie is None")
+            continue
+        if taste_movie.taste >=1 and taste_movie.added :
             movie_id = taste_movie.movie.id()  # Get movie id from taste
             movie = Movie.get_by_id(movie_id)  # Get movie by id
 
@@ -885,15 +926,99 @@ def get_tastes_list(user):
 
     for taste_genre_id in tastes_genres_id:
         taste_genre = TasteGenre.get_by_id(taste_genre_id.id())  # Get taste
+        if taste_genre is None:
+            logging.error("taste_genre is None")
+            continue
 
         # TODO: not use object, use a simple list
-        if taste_genre.taste >= 1 and taste_genre.added:
+        if taste_genre.taste >= 0.99 and taste_genre.added :
             genres.append({"name": taste_genre.genre,
                            "tasted": 1})
 
-    return jsonify(code=0,
-                   data={"userId": user.key.id(),
+    dataJson = {"userId": user.key.id(),
                          "type": "all",
                          "tastes": {"artists": artists,
                                     "movies": movies,
-                                    "genres": genres}})
+                                    "genres": genres}}
+
+    user.tastesJson = dataJson
+    user.tastesInconsistence = False
+    user.put()
+
+    return jsonify(code=0, data=dataJson)
+
+
+def modify_Json(user, data, type):
+
+    if user.tastesJson is None:
+        return
+
+    logging.info("modifying Json")
+    if type == "artist":
+
+        artist = data
+        user.tastesJson["tastes"]["artists"].append({"idIMDB": artist.key.id(),
+                            "name": artist.name.encode('utf-8') if artist.name is not None else None,
+                            "tasted": 1,
+                            "photo": artist.photo})
+
+        user.tastesInconsistence = False
+        user.put()
+
+    elif type == "movie":
+        movie = data
+        user.tastesJson["tastes"]["movies"].append({"idIMDB": movie.key.id(),
+                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
+                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
+                       "tasted": 1,
+                       "poster": movie.poster})
+        user.tastesInconsistence = False
+        user.put()
+
+    elif type == "genre":
+        genre = data
+        user.tastesJson["tastes"]["genres"].append({"name": genre,
+                           "tasted": 1})
+        user.tastesInconsistence = False
+        user.put()
+
+
+def delete_in_Json(user, data, type):
+    logging.info("deleting in Json")
+    if type == "artist":
+        artist = data
+        to_delete = {"idIMDB": artist.key.id(),
+                            "name": artist.name.encode('utf-8') if artist.name is not None else None,
+                            "tasted": 1,
+                            "photo": artist.photo}
+        index = user.tastesJson["tastes"]["artists"].index(to_delete) if to_delete in user.tastesJson["tastes"]["artists"] else None
+        if index is None:
+            return
+        user.tastesJson["tastes"]["artists"].pop(index)
+
+        user.tastesInconsistence = False
+        user.put()
+
+    elif type == "movie":
+        movie = data
+        to_delete = {"idIMDB": movie.key.id(),
+                       "originalTitle": movie.original_title.encode('utf-8') if movie.original_title is not None else movie.title.encode('utf-8'),
+                       "title": movie.title.encode('utf-8') if movie.title is not None else movie.original_title.encode('utf-8'),
+                       "tasted": 1,
+                       "poster": movie.poster}
+        index = user.tastesJson["tastes"]["movies"].index(to_delete) if to_delete in user.tastesJson["tastes"]["movies"] else None
+        if index is None:
+            return
+        user.tastesJson["tastes"]["movies"].pop(index)
+        user.tastesInconsistence = False
+        user.put()
+
+    elif type == "genre":
+        genre = data
+        to_delete = {"name": genre, "tasted": 1}
+        index = user.tastesJson["tastes"]["genres"].index(to_delete) if to_delete in user.tastesJson["tastes"]["genres"] else None
+        if index is None:
+            return
+        user.tastesJson["tastes"]["genres"].pop(index)
+        user.tastesInconsistence = False
+        user.put()

@@ -225,6 +225,9 @@ class User(ModelUtils, ndb.Model):
     enable_notification = ndb.BooleanProperty(choices=[True, False], default=True)
     repeat_choice = ndb.BooleanProperty(choices=[True, False], default=True)
 
+    tastesJson = ndb.JsonProperty()
+    tastesInconsistence = ndb.BooleanProperty(choices=[True, False], default=True)
+
 
     def add_watched_movie(self, movie, date):
         """
@@ -259,28 +262,12 @@ class User(ModelUtils, ndb.Model):
         taste_movie.add_movie(movie)
         taste_movie_key = taste_movie.put()
 
-        movie = Movie.get_by_id(movie.key.id())
-        for actor in movie.actors:
-            artist = Artist.get_by_id(actor.id())
-            self.add_taste_artist(artist, ACTOR_WEIGHT * taste)
-
-        for director in movie.directors:
-            artist = Artist.get_by_id(director.id())
-            self.add_taste_artist(artist, DIRECTOR_WEIGHT * taste)
-
-        for writer in movie.writers:
-            artist = Artist.get_by_id(writer.id())
-            self.add_taste_artist(artist, WRITER_WEIGHT * taste)
-
-        for genre in movie.genres:
-            self.add_taste_genre(genre, GENRE_WEIGHT * taste)
-
         if taste_movie_key not in self.tastes_movies:
             self.tastes_movies.append(taste_movie_key)  # Append the taste to user's tastes
             self.put()
 
-        # Recalculate proposal
-        self.remove_proposal()
+        taskqueue.add(url='/_ah/start/task/movie_tastes/' + self.key.id() +
+                          '/' + movie.key.id() + '/' + str(taste), method='GET')
 
     def add_taste_artist(self, artist, taste=1.0):
         """
@@ -352,58 +339,15 @@ class User(ModelUtils, ndb.Model):
         if taste_movie is not None:
             taste_movie_key = taste_movie.key
 
-            movie = Movie.get_by_id(movie.key.id())
-            for actor in movie.actors:
-                artist = Artist.get_by_id(actor.id())
-                taste_artist = TasteArtist.get_by_id(actor.id() + self.key.id())
 
-                if taste_artist is not None:
-                    taste_artist.update_taste(-ACTOR_WEIGHT)
-                else:
-                    self.add_taste_artist(artist, -ACTOR_WEIGHT)
-
-                if taste_artist.taste == 0:
-                    self.remove_taste_artist(artist)
-
-            for director in movie.directors:
-                artist = Artist.get_by_id(director.id())
-                taste_artist = TasteArtist.get_by_id(director.id() + self.key.id())
-
-                if taste_artist is not None:
-                    taste_artist.update_taste(-DIRECTOR_WEIGHT)
-                else:
-                    self.add_taste_artist(artist, -DIRECTOR_WEIGHT)
-
-                if taste_artist.taste == 0:
-                    self.remove_taste_artist(artist)
-
-            for writer in movie.writers:
-                artist = Artist.get_by_id(writer.id())
-                taste_artist = TasteArtist.get_by_id(writer.id() + self.key.id())
-
-                if taste_artist is not None:
-                    taste_artist.update_taste(-WRITER_WEIGHT)
-                else:
-                    self.add_taste_artist(artist, -WRITER_WEIGHT)
-
-                if taste_artist.taste == 0:
-                    self.remove_taste_artist(artist)
-
-            for genre in movie.genres:
-                taste_genre = TasteGenre.get_by_id(genre + self.key.id())
-
-                if taste_genre is not None:
-                    taste_genre.update_taste(-GENRE_WEIGHT)
-                else:
-                    self.add_taste_genre(genre, -GENRE_WEIGHT)
-
-                if taste_genre.taste == 0:
-                    self.remove_taste_genre(genre)
 
             taste_movie.key.delete()
             if taste_movie_key in self.tastes_movies:
                 self.tastes_movies.remove(taste_movie_key)
                 self.put()
+
+        taskqueue.add(url='/_ah/start/task/movie_untaste/' + self.key.id() +
+                          '/' + movie.key.id(), method='GET')
 
         # Recalculate proposal
         self.remove_proposal()
@@ -416,7 +360,7 @@ class User(ModelUtils, ndb.Model):
         """
         taste_artist_id = artist.key.id() + self.key.id()
         taste_artist = TasteArtist.get_by_id(taste_artist_id)
-        if taste_artist.taste == 1 or taste_artist.taste == 0:
+        if (taste_artist.taste > 0.99 and taste_artist.taste <= 1) or taste_artist.taste == 0:
             taste_artist_key = taste_artist.key
 
             taste_artist.key.delete()
@@ -433,7 +377,7 @@ class User(ModelUtils, ndb.Model):
     def remove_taste_genre(self, genre):
         taste_genre_id = genre + self.key.id()
         taste_genre = TasteGenre.get_by_id(taste_genre_id)
-        if taste_genre.taste == 1 or taste_genre.taste == 0:
+        if (taste_genre.taste > 0.99 and taste_genre.taste <= 1) or taste_genre.taste == 0:
             taste_genre_key = taste_genre.key
 
             taste_genre.key.delete()
@@ -492,12 +436,13 @@ class User(ModelUtils, ndb.Model):
             self.tv_type = new_list
             self.put()
             self.remove_proposal()
-            taskqueue.add(url='/api/proposal/' + self.key.id(), method='GET')
 
         return True
 
 # TODO: complete description of next functions
     def modify_repeat_choice(self, repeat_choice):
+
+        logging.info("changing_repeat_choice")
 
         if repeat_choice == True:
             self.repeat_choice = True
@@ -542,6 +487,7 @@ class User(ModelUtils, ndb.Model):
         """
         self.proposal = None
         self.put()
+
 
 
 

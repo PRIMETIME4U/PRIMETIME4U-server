@@ -24,7 +24,7 @@ def retrieve_movie_from_title(movie_original_title, movie_director, movie_cast, 
     """
     logging.info('Retrieving %s', movie_original_title)
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=' + movie_year + '&technical=0&filter=M&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?title=' + movie_original_title + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=' + movie_year + '&technical=0&filter=M&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&token=307cccfe-d20b-4b69-b976-d6a024538864'
     logging.info('Url My API Films: %s', url)
 
     json_page = get(url).encode('utf-8')
@@ -177,7 +177,7 @@ def retrieve_movie_from_id(movie_id):
     """
     logging.info('Retrieving %s', movie_id)
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?idIMDB=' + movie_id + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?idIMDB=' + movie_id + '&format=JSON&aka=1&business=0&seasons=0&seasonYear=0&technical=0&filter=N&exactFilter=0&limit=1&lang=en-us&actors=S&biography=0&trailer=1&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&token=307cccfe-d20b-4b69-b976-d6a024538864'
 
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
@@ -266,7 +266,7 @@ def search_artist_from_name(artist_name, movie=None, director_name=None):
     :raise RetrieverError: if there is an error from MYAPIFILMS
     """
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?name=' + artist_name + '&format=JSON&filmography=0&limit=1&lang=en-us&exactFilter=0&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?name=' + artist_name + '&format=JSON&filmography=0&limit=1&lang=en-us&exactFilter=0&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&token=307cccfe-d20b-4b69-b976-d6a024538864'
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
     if type(json_data) is not list:  # If it is not a list there is a problem
@@ -302,7 +302,7 @@ def retrieve_artist_from_id(artist_id):
     """
     logging.info('Retrieving %s', artist_id)
 
-    url = BASE_URL_MYAPIFILMS + 'imdb?idName=' + artist_id + '&format=JSON&filmography=0&lang=en-us&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0'
+    url = BASE_URL_MYAPIFILMS + 'imdb?idName=' + artist_id + '&format=JSON&filmography=0&lang=en-us&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0&token=307cccfe-d20b-4b69-b976-d6a024538864'
     json_page = get(url).encode('utf-8')
     json_data = json.loads(json_page)
 
@@ -371,12 +371,12 @@ def retrieve_search_result_list(user, query):
 
     movies_page = memcache.get("movies" + query.lower())
     if movies_page is None:
-        movies_page = get(BASE_URL_MYAPIFILMS + 'imdb?title=' + query + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=M&exactFilter=0&limit=5&lang=it-it&actors=N&biography=0&trailer=0&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&moviePhotos=N&movieVideos=N').encode('utf-8')
+        movies_page = get(BASE_URL_MYAPIFILMS + 'imdb?title=' + query + '&format=JSON&aka=0&business=0&seasons=0&seasonYear=0&technical=0&filter=M&exactFilter=0&limit=5&lang=it-it&actors=N&biography=0&trailer=0&uniqueName=0&filmography=0&bornDied=0&starSign=0&actorActress=0&actorTrivia=0&movieTrivia=0&awards=0&moviePhotos=N&movieVideos=N&token=307cccfe-d20b-4b69-b976-d6a024538864').encode('utf-8')
         memcache.add("movies" + query.lower(), movies_page)
 
     artists_page = memcache.get("artists" + query.lower())
     if artists_page is None:
-        artists_page = get(BASE_URL_MYAPIFILMS + 'imdb?name=' + query + '&format=JSON&filmography=0&limit=5&lang=it-it&exactFilter=0&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0').encode('utf-8')
+        artists_page = get(BASE_URL_MYAPIFILMS + 'imdb?name=' + query + '&format=JSON&filmography=0&limit=5&lang=it-it&exactFilter=0&bornDied=0&starSign=0&uniqueName=0&actorActress=0&actorTrivia=0&actorPhotos=N&actorVideos=N&salary=0&spouses=0&tradeMark=0&personalQuotes=0&token=307cccfe-d20b-4b69-b976-d6a024538864').encode('utf-8')
         memcache.add("artists" + query, artists_page)
 
     movies = []
