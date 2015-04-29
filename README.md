@@ -9,6 +9,8 @@ PRIMETIME4U is an app that simply help you in the daily choose of your movie for
 
 [PRIMETIME4U Client](https://github.com/PRIMETIME4U/PRIMETIME4U-baseclient)
 
+[How our recommendation system works](https://docs.google.com/document/d/1AALG1tcJMI-OZP4XGkd6WfMp2avsg1fm1Zuzbw3WY84/edit?usp=sharing)
+
 Google Technologies for Cloud and Web Development - Rome 2014/2015
 
 ## Free API
